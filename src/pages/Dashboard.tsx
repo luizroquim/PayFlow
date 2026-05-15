@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { NovaSolicitacao } from "../components/NovaSolicitacao";
 import { useNavigate } from "react-router-dom";
+import { Filtros } from "../components/Filtros";
 
 interface Solicitacao {
   id: string;
@@ -22,6 +23,7 @@ interface Solicitacao {
 export function Dashboard() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [abaAtiva, setAbaAtiva] = useState<"pendente" | "comprado">("pendente");
+  const [filtro, setFiltro] = useState(""); // Novo estado para o filtro
   const [mostrarModal, setMostrarModal] = useState(false);
   const [solicitacaoParaEditar, setSolicitacaoParaEditar] = useState<Solicitacao | null>(null);
   
@@ -52,12 +54,20 @@ export function Dashboard() {
 
     let query = supabase.from("solicitacoes").select(`*, perfis (nome_completo)`).eq("status", abaAtiva);
     
-    // Se não for pagador, vê apenas as suas próprias solicitações
     if (!pagador) query = query.eq("user_id", user.id);
 
     const { data, error } = await query.order("created_at", { ascending: false });
     if (!error) setSolicitacoes(data as Solicitacao[] || []);
   }
+
+  // Lógica de Filtragem: busca no título ou no nome do perfil
+  const solicitacoesFiltradas = solicitacoes.filter((item) => {
+    const termo = filtro.toLowerCase();
+    return (
+      item.titulo.toLowerCase().includes(termo) ||
+      (item.perfis?.nome_completo || "").toLowerCase().includes(termo)
+    );
+  });
 
   async function confirmarPagamento() {
     if (!itemEmPagamento) return;
@@ -128,75 +138,82 @@ export function Dashboard() {
       </header>
 
       <main style={{ maxWidth: "1000px", margin: "40px auto", padding: "0 20px" }}>
+        
+        {/* COMPONENTE DE FILTROS */}
+        <Filtros valor={filtro} setValor={setFiltro} />
+
         {/* ABAS */}
         <div style={{ display: "flex", gap: "10px", marginBottom: "30px", backgroundColor: "#f1f5f9", padding: "5px", borderRadius: "12px", width: "fit-content" }}>
           <button onClick={() => setAbaAtiva("pendente")} style={{ padding: "10px 25px", borderRadius: "10px", border: "none", cursor: "pointer", backgroundColor: abaAtiva === "pendente" ? "#fff" : "transparent", color: abaAtiva === "pendente" ? "#0284c7" : "#64748b", fontWeight: 600, boxShadow: abaAtiva === "pendente" ? "0 2px 4px rgba(0,0,0,0.05)" : "none" }}>Pendentes</button>
           <button onClick={() => setAbaAtiva("comprado")} style={{ padding: "10px 25px", borderRadius: "10px", border: "none", cursor: "pointer", backgroundColor: abaAtiva === "comprado" ? "#fff" : "transparent", color: abaAtiva === "comprado" ? "#10b981" : "#64748b", fontWeight: 600, boxShadow: abaAtiva === "comprado" ? "0 2px 4px rgba(0,0,0,0.05)" : "none" }}>Concluídas</button>
         </div>
 
-        {/* LISTAGEM */}
+        {/* LISTAGEM - Agora utiliza a lista filtrada */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {solicitacoes.map((item) => (
-            <div key={item.id} style={{ backgroundColor: "#fff", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <h3 style={{ margin: "0 0 4px 0", fontSize: "1.2rem", color: "#0f172a" }}>{item.titulo}</h3>
-                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#64748b" }}>Solicitado por: <strong>{item.perfis?.nome_completo}</strong></p>
+          {solicitacoesFiltradas.length > 0 ? (
+            solicitacoesFiltradas.map((item) => (
+              <div key={item.id} style={{ backgroundColor: "#fff", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <h3 style={{ margin: "0 0 4px 0", fontSize: "1.2rem", color: "#0f172a" }}>{item.titulo}</h3>
+                    <p style={{ margin: 0, fontSize: "0.85rem", color: "#64748b" }}>Solicitado por: <strong>{item.perfis?.nome_completo}</strong></p>
+                  </div>
+                  <span style={{ backgroundColor: item.status === "pendente" ? "#fff7ed" : "#f0fdf4", color: item.status === "pendente" ? "#c2410c" : "#166534", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "bold", textTransform: "uppercase" }}>
+                    {item.status}
+                  </span>
                 </div>
-                <span style={{ backgroundColor: item.status === "pendente" ? "#fff7ed" : "#f0fdf4", color: item.status === "pendente" ? "#c2410c" : "#166534", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "bold", textTransform: "uppercase" }}>
-                  {item.status}
-                </span>
-              </div>
 
-              <div style={{ margin: "16px 0", fontSize: "0.95rem", lineHeight: "1.6" }}>{item.descricao}</div>
+                <div style={{ margin: "16px 0", fontSize: "0.95rem", lineHeight: "1.6" }}>{item.descricao}</div>
 
-              {/* ANEXOS */}
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
-                {item.link_compra && (
-                  <a href={item.link_compra} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", borderRadius: "8px", backgroundColor: "#f0f9ff", color: "#0369a1", fontSize: "0.8rem", textDecoration: "none", border: "1px solid #bae6fd" }}>🔗 Link do Produto</a>
-                )}
-                
-                {item.boleto_url && (
-                  <a href={item.boleto_url} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", borderRadius: "8px", backgroundColor: "#fff7ed", color: "#c2410c", fontSize: "0.8rem", textDecoration: "none", border: "1px solid #ffedd5", fontWeight: "bold" }}>📄 Ver Boleto/Orçamento</a>
-                )}
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
+                  {item.link_compra && (
+                    <a href={item.link_compra} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", borderRadius: "8px", backgroundColor: "#f0f9ff", color: "#0369a1", fontSize: "0.8rem", textDecoration: "none", border: "1px solid #bae6fd" }}>🔗 Link do Produto</a>
+                  )}
+                  
+                  {item.boleto_url && (
+                    <a href={item.boleto_url} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", borderRadius: "8px", backgroundColor: "#fff7ed", color: "#c2410c", fontSize: "0.8rem", textDecoration: "none", border: "1px solid #ffedd5", fontWeight: "bold" }}>📄 Ver Boleto/Orçamento</a>
+                  )}
 
-                {item.comprovante_url && (
-                  <a href={item.comprovante_url} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", borderRadius: "8px", backgroundColor: "#f0fdf4", color: "#166534", fontSize: "0.8rem", textDecoration: "none", border: "1px solid #dcfce7", fontWeight: "bold" }}>✅ Ver Comprovante</a>
-                )}
-              </div>
-
-              {/* DATAS */}
-              <div style={{ fontSize: "0.75rem", color: "#94a3b8", display: "flex", gap: "20px", marginBottom: "20px" }}>
-                <span>🗓 Criado em: {new Date(item.created_at).toLocaleString("pt-BR")}</span>
-                {item.data_pagamento && <span style={{ color: "#10b981", fontWeight: "bold" }}>💰 Pago em: {new Date(item.data_pagamento).toLocaleString("pt-BR")}</span>}
-              </div>
-
-              {/* RODAPÉ DO CARD */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "20px" }}>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  {item.user_id === currentUserId && item.status === "pendente" && (
-                    <>
-                      <button onClick={() => { setSolicitacaoParaEditar(item); setMostrarModal(true); }} style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #e2e8f0", backgroundColor: "#fff", cursor: "pointer", fontSize: "0.85rem" }}>📝 Editar</button>
-                      <button onClick={() => excluirSolicitacao(item.id)} style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #fee2e2", color: "#ef4444", backgroundColor: "#fff", cursor: "pointer" }}>🗑️</button>
-                    </>
+                  {item.comprovante_url && (
+                    <a href={item.comprovante_url} target="_blank" rel="noreferrer" style={{ padding: "8px 14px", borderRadius: "8px", backgroundColor: "#f0fdf4", color: "#166534", fontSize: "0.8rem", textDecoration: "none", border: "1px solid #dcfce7", fontWeight: "bold" }}>✅ Ver Comprovante</a>
                   )}
                 </div>
 
-                {isPagador && item.status === "pendente" && (
-                  <button 
-                    onClick={() => { setItemEmPagamento(item); setMostrarModalPagamento(true); }} 
-                    style={{ backgroundColor: "#10b981", color: "#fff", border: "none", padding: "10px 24px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}
-                  >
-                    💳 Confirmar Pagamento
-                  </button>
-                )}
+                <div style={{ fontSize: "0.75rem", color: "#94a3b8", display: "flex", gap: "20px", marginBottom: "20px" }}>
+                  <span>🗓 Criado em: {new Date(item.created_at).toLocaleString("pt-BR")}</span>
+                  {item.data_pagamento && <span style={{ color: "#10b981", fontWeight: "bold" }}>💰 Pago em: {new Date(item.data_pagamento).toLocaleString("pt-BR")}</span>}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "20px" }}>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    {item.user_id === currentUserId && item.status === "pendente" && (
+                      <>
+                        <button onClick={() => { setSolicitacaoParaEditar(item); setMostrarModal(true); }} style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #e2e8f0", backgroundColor: "#fff", cursor: "pointer", fontSize: "0.85rem" }}>📝 Editar</button>
+                        <button onClick={() => excluirSolicitacao(item.id)} style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #fee2e2", color: "#ef4444", backgroundColor: "#fff", cursor: "pointer" }}>🗑️</button>
+                      </>
+                    )}
+                  </div>
+
+                  {isPagador && item.status === "pendente" && (
+                    <button 
+                      onClick={() => { setItemEmPagamento(item); setMostrarModalPagamento(true); }} 
+                      style={{ backgroundColor: "#10b981", color: "#fff", border: "none", padding: "10px 24px", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}
+                    >
+                      💳 Confirmar Pagamento
+                    </button>
+                  )}
+                </div>
               </div>
+            ))
+          ) : (
+            <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
+              Nenhuma solicitação encontrada com este termo.
             </div>
-          ))}
+          )}
         </div>
       </main>
 
-      {/* MODAL NOVA SOLICITAÇÃO */}
+      {/* MODAIS (NOVA SOLICITAÇÃO E PAGAMENTO) MANTIDOS IGUAIS */}
       {mostrarModal && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, backdropFilter: "blur(4px)" }}>
           <div style={{ width: "90%", maxWidth: "480px", backgroundColor: "#fff", borderRadius: "20px", padding: "30px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }}>
@@ -209,7 +226,6 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* MODAL PAGAMENTO */}
       {mostrarModalPagamento && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 2000 }}>
           <div style={{ backgroundColor: "#fff", padding: "35px", borderRadius: "20px", width: "400px" }}>
