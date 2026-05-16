@@ -1,0 +1,322 @@
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
+import { NovaSolicitacao } from "../../components/NovaSolicitacao";
+import { useNavigate } from "react-router-dom";
+import { Filtros } from "../../components/Filtros";
+import { CardSolicitacao } from "../../components/CardSolicitacao";
+import { ArrowDownUp, LogOut, ChevronLeft, ChevronRight,CirclePlus } from 'lucide-react';
+import * as S from "./styles";
+
+interface Solicitacao {
+  id: string;
+  titulo: string;
+  descricao: string;
+  link_compra: string;
+  status: string;
+  created_at: string;
+  data_pagamento: string | null;
+  boleto_url: string;
+  comprovante_url: string;
+  user_id: string;
+  perfis?: {
+    nome_completo: string;
+  };
+}
+
+export function Dashboard() {
+  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
+  const [abaAtiva, setAbaAtiva] = useState<"pendente" | "comprado">("pendente");
+  const [filtro, setFiltro] = useState("");
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [solicitacaoParaEditar, setSolicitacaoParaEditar] = useState<Solicitacao | null>(null);
+
+  const [mostrarModalPagamento, setMostrarModalPagamento] = useState(false);
+  const [itemEmPagamento, setItemEmPagamento] = useState<Solicitacao | null>(null);
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [enviando, setEnviando] = useState(false);
+
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | undefined>("");
+  const [isPagador, setIsPagador] = useState(false);
+  const navigate = useNavigate();
+
+  // 🎯 ESTADOS DA PAGINAÇÃO
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const itensPorPagina = 6; // Quantidade de cards por página
+
+  // Sincronização limpa com o banco de dados (Apenas quando a aba ativa mudar)
+  useEffect(() => {
+    carregarDados();
+  }, [abaAtiva]);
+
+  async function carregarDados() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate("/");
+      return;
+    }
+
+    setCurrentUserId(user.id);
+    setUserEmail(user.email);
+
+    const { data: perfil } = await supabase
+      .from("perfis")
+      .select("funcao")
+      .eq("id", user.id)
+      .single();
+    
+    const pagador = perfil?.funcao === "pagador";
+    setIsPagador(pagador);
+
+    let query = supabase
+      .from("solicitacoes")
+      .select(`*, perfis (nome_completo)`)
+      .eq("status", abaAtiva);
+
+    if (!pagador) query = query.eq("user_id", user.id);
+
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
+    if (!error) setSolicitacoes((data as Solicitacao[]) || []);
+  }
+
+  const solicitacoesFiltradas = solicitacoes.filter((item) => {
+    const termo = filtro.toLowerCase();
+    return (
+      item.titulo.toLowerCase().includes(termo) ||
+      (item.perfis?.nome_completo || "").toLowerCase().includes(termo)
+    );
+  });
+
+  // 🎯 LÓGICA DERIVADA INTELIGENTE (Substitui o useEffect do Filtro)
+  const totalPaginas = Math.ceil(solicitacoesFiltradas.length / itensPorPagina);
+  
+  // Proteção para o caso de o usuário estar na página 3 e filtrar algo que só dá 1 página
+  const paginaSegura = paginaAtual > totalPaginas ? 1 : paginaAtual;
+
+  const indiceUltimoItem = paginaSegura * itensPorPagina;
+  const indicePrimeiroItem = indiceUltimoItem - itensPorPagina;
+  const cardsDaPaginaAtual = solicitacoesFiltradas.slice(indicePrimeiroItem, indiceUltimoItem);
+
+  async function confirmarPagamento() {
+    if (!itemEmPagamento) return;
+    setEnviando(true);
+
+    try {
+      let urlComprovante = "";
+      if (arquivo) {
+        const fileExt = arquivo.name.split(".").pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+        const { error: upErr } = await supabase.storage
+          .from("documentos-solicitacao")
+          .upload(fileName, arquivo);
+
+        if (upErr) throw upErr;
+
+        const { data: urlData } = supabase.storage
+          .from("documentos-solicitacao")
+          .getPublicUrl(fileName);
+        urlComprovante = urlData.publicUrl;
+      }
+
+      const { error: updateError } = await supabase
+        .from("solicitacoes")
+        .update({
+          status: "comprado",
+          comprovante_url: urlComprovante,
+          data_pagamento: new Date().toISOString(),
+        })
+        .eq("id", itemEmPagamento.id);
+
+      if (updateError) throw updateError;
+
+      setMostrarModalPagamento(false);
+      setArquivo(null);
+      carregarDados();
+    } catch (err: unknown) {
+      alert("Erro ao processar pagamento: " + (err as Error).message);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  async function excluirSolicitacao(id: string) {
+    if (!confirm("Tem certeza que deseja excluir esta solicitação?")) return;
+    const { error } = await supabase.from("solicitacoes").delete().eq("id", id);
+    if (error) alert("Erro ao excluir");
+    else carregarDados();
+  }
+
+  return (
+    <S.Container>
+      {/* HEADER RESPONSIVO */}
+      <S.Header>
+        <div className="brand-wrapper">
+          <div className="logo-box"><ArrowDownUp color="white" size={20} /></div>
+          <h2>Gestão de Pagamentos</h2>
+        </div>
+        
+        <div className="user-controls">
+          <span className="user-email">{userEmail}</span>
+          <button
+            className="btn-new-request"
+            onClick={() => {
+              setSolicitacaoParaEditar(null);
+              setMostrarModal(true);
+            }}
+          >
+             <CirclePlus size={16}/> Nova Solicitação
+          </button>
+          <button
+            className="btn-logout"
+            onClick={() => {
+              supabase.auth.signOut();
+              navigate("/");
+            }}
+          >
+             <LogOut size={19} />
+          </button>
+        </div>
+      </S.Header>
+
+      {/* CONTEÚDO PRINCIPAL */}
+      <S.MainContent>
+        <Filtros valor={filtro} setValor={setFiltro} />
+
+        {/* SELETOR DE ABAS RESPONSIVO */}
+        <S.TabContainer>
+          <S.TabButton
+            isActive={abaAtiva === "pendente"}
+            onClick={() => {
+              setAbaAtiva("pendente");
+              setPaginaAtual(1); // 🎯 Reseta a paginação no clique do evento
+            }}
+            tabType="pendente"
+          >
+            Pendentes
+          </S.TabButton>
+          <S.TabButton
+            isActive={abaAtiva === "comprado"}
+            onClick={() => {
+              setAbaAtiva("comprado");
+              setPaginaAtual(1); // 🎯 Reseta a paginação no clique do evento
+            }}
+            tabType="comprado"
+          >
+            Concluídas
+          </S.TabButton>
+        </S.TabContainer>
+
+        {/* LISTAGEM DE CARDS (Fatiados para a página atual) */}
+        <S.CardsStack>
+          {cardsDaPaginaAtual.length > 0 ? (
+            cardsDaPaginaAtual.map((item) => (
+              <CardSolicitacao
+                key={item.id}
+                item={item}
+                currentUserId={currentUserId}
+                isPagador={isPagador}
+                onEdit={(itemEditar) => {
+                  setSolicitacaoParaEditar(itemEditar);
+                  setMostrarModal(true);
+                }}
+                onDelete={excluirSolicitacao}
+                onPay={(itemPagar) => {
+                  setItemEmPagamento(itemPagar);
+                  setMostrarModalPagamento(true);
+                }}
+              />
+            ))
+          ) : (
+            <S.EmptyState>
+              Nenhuma solicitação encontrada com este termo.
+            </S.EmptyState>
+          )}
+        </S.CardsStack>
+
+        {/* 🎯 COMPONENTE VISUAL DE PAGINAÇÃO SEGURO */}
+        {totalPaginas > 1 && (
+          <S.PaginationContainer>
+            <S.PaginationButton 
+              onClick={() => setPaginaAtual(prev => Math.max(prev - 1, 1))}
+              disabled={paginaSegura === 1}
+            >
+              <ChevronLeft size={16} /> Anterior
+            </S.PaginationButton>
+
+            {Array.from({ length: totalPaginas }, (_, index) => (
+              <S.PaginationButton
+                key={index + 1}
+                isActive={paginaSegura === index + 1}
+                onClick={() => setPaginaAtual(index + 1)}
+              >
+                {index + 1}
+              </S.PaginationButton>
+            ))}
+
+            <S.PaginationButton
+              onClick={() => setPaginaAtual(prev => Math.min(prev + 1, totalPaginas))}
+              disabled={paginaSegura === totalPaginas}
+            >
+              Próximo <ChevronRight size={16} />
+            </S.PaginationButton>
+          </S.PaginationContainer>
+        )}
+      </S.MainContent>
+
+      {/* MODAL: NOVA SOLICITAÇÃO */}
+      {mostrarModal && (
+        <S.ModalOverlay>
+          <S.ModalContent maxWidth="480px">
+            <NovaSolicitacao
+              key={solicitacaoParaEditar?.id || "nova-solicitacao"}
+              onSucesso={() => {
+                setMostrarModal(false);
+                carregarDados();
+              }}
+              dadosParaEditar={solicitacaoParaEditar}
+            />
+            <button className="btn-close-modal" onClick={() => setMostrarModal(false)}>
+              Voltar para a lista
+            </button>
+          </S.ModalContent>
+        </S.ModalOverlay>
+      )}
+
+      {/* MODAL: PAGAMENTO */}
+      {mostrarModalPagamento && (
+        <S.ModalOverlay>
+          <S.ModalContent maxWidth="400px">
+            <h3>Finalizar Processo</h3>
+            <p className="modal-description">
+              Carregue o comprovante de transferência ou pagamento bancário.
+            </p>
+
+            <input
+              type="file"
+              className="file-input"
+              onChange={(e) => setArquivo(e.target.files ? e.target.files[0] : null)}
+            />
+
+            <div className="modal-actions">
+              <button className="btn-submit-payment" onClick={confirmarPagamento} disabled={enviando}>
+                {enviando ? "A processar..." : "Confirmar"}
+              </button>
+              <button
+                className="btn-cancel-payment"
+                onClick={() => {
+                  setMostrarModalPagamento(false);
+                  setArquivo(null);
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </S.ModalContent>
+        </S.ModalOverlay>
+      )}
+    </S.Container>
+  );
+}

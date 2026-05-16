@@ -1,3 +1,4 @@
+import { Search } from 'lucide-react';
 
 interface FiltrosProps {
   valor: string;
@@ -11,13 +12,13 @@ export function Filtros({ valor, setValor, placeholder }: FiltrosProps) {
       {/* Ícone opcional para um visual mais moderno */}
       <div style={{
         position: "absolute",
-        left: "14px",
+        left: "10px",
         top: "50%",
         transform: "translateY(-50%)",
         color: "#94a3b8",
         pointerEvents: "none"
       }}>
-        🔍
+        <Search />
       </div>
 
       <input

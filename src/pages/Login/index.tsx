@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase"; 
 import { useNavigate } from "react-router-dom";
+import conta from "../../assets/conta.png"
 
 import * as S from "./styles"; 
 
@@ -60,7 +61,10 @@ export function Login() {
           <div className="logo-placeholder">
           
             
-            <div className="logo-text"><div className="Pay">PAY</div> <div className="Flow">FLOW</div></div>
+            <div className="logo-text">
+              
+              <img src={conta} alt="" />
+              <div className="Pay">Pay</div> <div className="Flow">Flow</div></div>
             <span>SISTEMA DE SOLICITAÇÃO DE PAGAMENTOS</span>
          
 
