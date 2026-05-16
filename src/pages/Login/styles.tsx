@@ -55,11 +55,17 @@ export const Header = styled.div`
 
 
 
+
   span {
     font-size: 0.6rem;
     color: #074966;
     text-align: center;
     line-height: 1.2;
+  }
+
+  img{
+    width:50px;
+    height:50px;
   }
 `;
 
