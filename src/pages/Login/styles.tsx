@@ -18,11 +18,11 @@ export const LoginCard = styled.div`
   max-width: 400px;
   text-align: center;
 
-  h3{
-    margin-top:0.9rem;
-    font-size:0.5rem;
-    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-    color:gray;
+  h3 {
+    margin-top: 0.9rem;
+    font-size: 0.5rem;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    color: gray;
   }
 `;
 
@@ -32,29 +32,19 @@ export const Header = styled.div`
   justify-content: center;
   gap: 1px;
   margin-bottom: 15px;
-  
 
-
-
-  .logo-text{
-    display:flex;
-    font-size:3rem
-
+  .logo-text {
+    display: flex;
+    font-size: 3rem;
   }
 
-  .Pay{
-    color:#074966;
-    
-
+  .Pay {
+    color: #074966;
   }
 
-  .Flow{
-    color:#079cdc;
-    
+  .Flow {
+    color: #079cdc;
   }
-
-
-
 
   span {
     font-size: 0.6rem;
@@ -63,9 +53,9 @@ export const Header = styled.div`
     line-height: 1.2;
   }
 
-  img{
-    width:50px;
-    height:50px;
+  img {
+    width: 50px;
+    height: 50px;
   }
 `;
 
@@ -116,8 +106,6 @@ export const Input = styled.input`
   }
 `;
 
-
-
 export const ActionButton = styled.button`
   background-color: #079cdc;
   color: white;
@@ -134,7 +122,84 @@ export const ActionButton = styled.button`
   }
 `;
 
+// 🎯 COMPONENTE ADICIONADO: Caixa de erro customizada para o Login/Cadastro
+export const ErrorMessage = styled.div`
+  background-color: #fef2f2; /* Fundo vermelho bem suave */
+  border: 1px solid #fee2e2;
+  color: #ef4444; /* Texto vermelho de atenção */
+  padding: 12px 16px;
+  border-radius: 10px; /* Alinhado com o border-radius dos seus inputs */
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 
+  /* Animação suave para o erro não surgir travado na tela */
+  animation: fadeIn 0.2s ease-in-out;
 
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
 
+// 🎯 COMPONENTE ADICIONADO: Caixa de sucesso para quando a conta for criada
+export const SuccessMessage = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  background-color: #f0fdf4; /* Fundo verde bem suave */
+  border: 1px solid #bbf7d0;
+  border-radius: 16px;
+  color: #166534;
+  margin: 20px 0;
+  animation: scaleUp 0.3s ease-in-out;
 
+  .icon-box {
+    background-color: #dcfce7;
+    color: #15803d;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 1.8rem;
+  }
+
+  h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #14532d;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #166534;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  @keyframes scaleUp {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+`;

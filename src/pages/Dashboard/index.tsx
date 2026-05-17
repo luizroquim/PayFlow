@@ -4,7 +4,8 @@ import { NovaSolicitacao } from "../../components/NovaSolicitacao";
 import { useNavigate } from "react-router-dom";
 import { Filtros } from "../../components/Filtros";
 import { CardSolicitacao } from "../../components/CardSolicitacao";
-import { ArrowDownUp, LogOut, ChevronLeft, ChevronRight,CirclePlus } from 'lucide-react';
+import { LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import icon from "../../assets/icon.ico"
 import * as S from "./styles";
 
 interface Solicitacao {
@@ -35,16 +36,18 @@ export function Dashboard() {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
 
+  // 🎯 NOVOS ESTADOS PARA A MODAL DE EXCLUSÃO CUSTOMIZADA
+  const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false);
+  const [idItemParaExcluir, setIdItemParaExcluir] = useState<string | null>(null);
+
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | undefined>("");
   const [isPagador, setIsPagador] = useState(false);
   const navigate = useNavigate();
 
-  // 🎯 ESTADOS DA PAGINAÇÃO
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const itensPorPagina = 6; // Quantidade de cards por página
+  const itensPorPagina = 6;
 
-  // Sincronização limpa com o banco de dados (Apenas quando a aba ativa mudar)
   useEffect(() => {
     carregarDados();
   }, [abaAtiva]);
@@ -89,10 +92,7 @@ export function Dashboard() {
     );
   });
 
-  // 🎯 LÓGICA DERIVADA INTELIGENTE (Substitui o useEffect do Filtro)
   const totalPaginas = Math.ceil(solicitacoesFiltradas.length / itensPorPagina);
-  
-  // Proteção para o caso de o usuário estar na página 3 e filtrar algo que só dá 1 página
   const paginaSegura = paginaAtual > totalPaginas ? 1 : paginaAtual;
 
   const indiceUltimoItem = paginaSegura * itensPorPagina;
@@ -142,11 +142,24 @@ export function Dashboard() {
     }
   }
 
-  async function excluirSolicitacao(id: string) {
-    if (!confirm("Tem certeza que deseja excluir esta solicitação?")) return;
-    const { error } = await supabase.from("solicitacoes").delete().eq("id", id);
-    if (error) alert("Erro ao excluir");
-    else carregarDados();
+  // 🎯 FUNÇÃO DE EXCLUSÃO ATUALIZADA: Sem o confirm() travando a tela
+  async function executarExclusao() {
+    if (!idItemParaExcluir) return;
+
+    const { error } = await supabase
+      .from("solicitacoes")
+      .delete()
+      .eq("id", idItemParaExcluir);
+
+    if (error) {
+      alert("Erro ao excluir");
+    } else {
+      carregarDados();
+    }
+
+    // Fecha a modal e limpa o ID selecionado
+    setMostrarModalExcluir(false);
+    setIdItemParaExcluir(null);
   }
 
   return (
@@ -154,7 +167,7 @@ export function Dashboard() {
       {/* HEADER RESPONSIVO */}
       <S.Header>
         <div className="brand-wrapper">
-          <div className="logo-box"><ArrowDownUp color="white" size={20} /></div>
+          <div className="logo-box"> <img src={icon} alt="" /></div>
           <h2>Gestão de Pagamentos</h2>
         </div>
         
@@ -167,7 +180,7 @@ export function Dashboard() {
               setMostrarModal(true);
             }}
           >
-             <CirclePlus size={16}/> Nova Solicitação
+             + Nova Solicitação
           </button>
           <button
             className="btn-logout"
@@ -191,7 +204,7 @@ export function Dashboard() {
             isActive={abaAtiva === "pendente"}
             onClick={() => {
               setAbaAtiva("pendente");
-              setPaginaAtual(1); // 🎯 Reseta a paginação no clique do evento
+              setPaginaAtual(1);
             }}
             tabType="pendente"
           >
@@ -201,7 +214,7 @@ export function Dashboard() {
             isActive={abaAtiva === "comprado"}
             onClick={() => {
               setAbaAtiva("comprado");
-              setPaginaAtual(1); // 🎯 Reseta a paginação no clique do evento
+              setPaginaAtual(1);
             }}
             tabType="comprado"
           >
@@ -209,7 +222,7 @@ export function Dashboard() {
           </S.TabButton>
         </S.TabContainer>
 
-        {/* LISTAGEM DE CARDS (Fatiados para a página atual) */}
+        {/* LISTAGEM DE CARDS */}
         <S.CardsStack>
           {cardsDaPaginaAtual.length > 0 ? (
             cardsDaPaginaAtual.map((item) => (
@@ -222,7 +235,11 @@ export function Dashboard() {
                   setSolicitacaoParaEditar(itemEditar);
                   setMostrarModal(true);
                 }}
-                onDelete={excluirSolicitacao}
+                // 🎯 INTERCEPTA A EXCLUSÃO: Em vez de apagar direto, abre a nossa modal
+                onDelete={(id) => {
+                  setIdItemParaExcluir(id);
+                  setMostrarModalExcluir(true);
+                }}
                 onPay={(itemPagar) => {
                   setItemEmPagamento(itemPagar);
                   setMostrarModalPagamento(true);
@@ -236,7 +253,7 @@ export function Dashboard() {
           )}
         </S.CardsStack>
 
-        {/* 🎯 COMPONENTE VISUAL DE PAGINAÇÃO SEGURO */}
+        {/* PAGINAÇÃO */}
         {totalPaginas > 1 && (
           <S.PaginationContainer>
             <S.PaginationButton 
@@ -315,6 +332,36 @@ export function Dashboard() {
               </button>
             </div>
           </S.ModalContent>
+        </S.ModalOverlay>
+      )}
+
+      {/* 🎯 NOVA MODAL: CONFIRMAÇÃO DE EXCLUSÃO CUSTOMIZADA */}
+      {mostrarModalExcluir && (
+        <S.ModalOverlay>
+          <S.ConfirmModalContent>
+            <h3>Excluir Solicitação?</h3>
+            <p>Esta ação não poderá ser desfeita. O item será removido permanentemente do fluxo de pagamentos.</p>
+            
+            <div className="actions">
+              <button 
+                type="button" 
+                className="btn-cancel" 
+                onClick={() => {
+                  setMostrarModalExcluir(false);
+                  setIdItemParaExcluir(null);
+                }}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button" 
+                className="btn-delete" 
+                onClick={executarExclusao}
+              >
+                Sim, excluir
+              </button>
+            </div>
+          </S.ConfirmModalContent>
         </S.ModalOverlay>
       )}
     </S.Container>

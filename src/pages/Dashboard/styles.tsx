@@ -14,7 +14,7 @@ export const Header = styled.header`
   padding: 15px 20px;
   display: flex;
   flex-direction: column; /* Empilha no mobile por padrão */
-  gap: 15px;
+  gap: 10px;
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
@@ -31,14 +31,20 @@ export const Header = styled.header`
     gap: 12px;
 
     .logo-box {
-      background-color: #079cdc;
+      background-color: #ffffff;
       color: #fff;
-      padding: 8px;
+      padding: 1px;
       border-radius: 8px;
       font-size: 1.2rem;
       display: flex;
       align-items: center;
       justify-content: center;
+
+      img{
+        width:2rem;
+        height:2rem;
+
+      }
     }
 
     h2 {
@@ -315,5 +321,65 @@ export const PaginationButton = styled.button<{ isActive?: boolean }>`
   @media (max-width: 480px) {
     padding: 10px 16px;
     font-size: 0.85rem;
+  }
+`;
+
+
+// --- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ---
+export const ConfirmModalContent = styled.div`
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  h3 {
+    font-size: 1.2rem;
+    color: #0f172a;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+
+  p {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+
+    button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-cancel {
+      background-color: #f1f5f9;
+      color: #475569;
+
+      &:hover {
+        background-color: #e2e8f0;
+      }
+    }
+
+    .btn-delete {
+      background-color: #ef4444; /* Vermelho do Tailwind */
+      color: #ffffff;
+
+      &:hover {
+        background-color: #dc2626;
+      }
+    }
   }
 `;
