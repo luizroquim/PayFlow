@@ -5,6 +5,7 @@ export const Container = styled.div`
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  width:100vw;
   background-color: #e9eff5; // Fundo azulado bem claro da imagem
   font-family: 'Inter', sans-serif;
 `;
@@ -14,7 +15,7 @@ export const LoginCard = styled.div`
   padding: 40px;
   border-radius: 24px; // Bordas bem arredondadas
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  width: 90%;
   max-width: 400px;
   text-align: center;
 
