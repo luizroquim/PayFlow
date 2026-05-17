@@ -1,21 +1,21 @@
 import { useState } from "react";
-import { supabase } from "../../lib/supabase"; 
+import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
 import conta from "../../assets/conta.png";
 
-import * as S from "./styles"; 
+import * as S from "./styles";
 
 export function Login() {
-  const [nome, setNome] = useState(""); 
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  
+
   // 🎯 1. NOVO ESTADO: Controla a exibição da tela de sucesso temporária
   const [sucessoCadastro, setSucessoCadastro] = useState(false);
-  
+
   const navigate = useNavigate();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -32,7 +32,9 @@ export function Login() {
 
         if (error) {
           if (error.message === "Invalid login credentials") {
-            setErro("E-mail ou senha incorretos. Verifique os dados e tente novamente.");
+            setErro(
+              "E-mail ou senha incorretos. Verifique os dados e tente novamente.",
+            );
           } else {
             setErro(error.message);
           }
@@ -48,15 +50,15 @@ export function Login() {
           options: {
             data: {
               full_name: nome.trim(),
-            }
-          }
+            },
+          },
         });
-        
+
         if (error) {
           setErro("Erro ao criar conta: " + error.message);
           return;
         }
-        
+
         // 🎯 2. GATILHO DE SUCESSO: Ativa a tela verde de sucesso e limpa os campos
         setSucessoCadastro(true);
         setNome("");
@@ -67,7 +69,7 @@ export function Login() {
         setTimeout(() => {
           setSucessoCadastro(false);
           setIsLogin(true);
-        }, 3500);
+        }, 5000);
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -96,8 +98,8 @@ export function Login() {
         {/* Esconde o seletor de abas se o sucesso estiver ativo para focar na mensagem */}
         {!sucessoCadastro && (
           <S.TabSelector>
-            <S.TabButton 
-              active={isLogin} 
+            <S.TabButton
+              active={isLogin}
               onClick={() => {
                 setIsLogin(true);
                 setErro(null);
@@ -106,8 +108,8 @@ export function Login() {
             >
               Entrar
             </S.TabButton>
-            <S.TabButton 
-              active={!isLogin} 
+            <S.TabButton
+              active={!isLogin}
               onClick={() => {
                 setIsLogin(false);
                 setErro(null);
@@ -124,11 +126,20 @@ export function Login() {
           <S.SuccessMessage>
             <div className="icon-box">✓</div>
             <h4>Conta criada com sucesso!</h4>
-            <p>Sua conta foi registrada no PayFlow. Redirecionando você para a tela de acesso...</p>
+            <p>
+              Sua conta foi registrada no PayFlow. Redirecionando você para a
+              tela de acesso...
+            </p>
           </S.SuccessMessage>
         ) : (
           <>
-            <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "20px" }}>
+            <p
+              style={{
+                color: "#64748b",
+                fontSize: "0.9rem",
+                marginBottom: "20px",
+              }}
+            >
               {isLogin ? "Acesse sua conta para continuar" : "Crie sua conta "}
             </p>
 
@@ -139,10 +150,10 @@ export function Login() {
               {!isLogin && (
                 <>
                   <label htmlFor="nome">Nome completo</label>
-                  <S.Input 
+                  <S.Input
                     id="nome"
-                    type="text" 
-                    placeholder="Seu nome" 
+                    type="text"
+                    placeholder="Seu nome"
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     required
@@ -151,19 +162,19 @@ export function Login() {
               )}
 
               <label htmlFor="email">Seu e-mail</label>
-              <S.Input 
+              <S.Input
                 id="email"
-                type="email" 
-                placeholder="exemplo@email.com" 
+                type="email"
+                placeholder="exemplo@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
 
               <label htmlFor="password">Sua senha</label>
-              <S.Input 
+              <S.Input
                 id="password"
-                type="password" 
+                type="password"
                 placeholder="Digite sua senha"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
@@ -171,12 +182,16 @@ export function Login() {
               />
 
               <S.ActionButton type="submit" disabled={carregando}>
-                {carregando ? "Aguarde..." : (isLogin ? "Acessar Plataforma" : "Criar Conta")}
+                {carregando
+                  ? "Aguarde..."
+                  : isLogin
+                    ? "Acessar Plataforma"
+                    : "Criar Conta"}
               </S.ActionButton>
             </S.Form>
           </>
         )}
-        
+
         <h3>Desenvolvido por Luiz Phelipe</h3>
       </S.LoginCard>
     </S.Container>
