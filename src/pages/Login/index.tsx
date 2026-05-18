@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
 import conta from "../../assets/conta.png";
@@ -13,10 +14,20 @@ export function Login() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  // 🎯 1. NOVO ESTADO: Controla a exibição da tela de sucesso temporária
+  // 🎯 Controla a exibição da tela de sucesso temporária
   const [sucessoCadastro, setSucessoCadastro] = useState(false);
 
   const navigate = useNavigate();
+
+  // 🎯 GUARDA DE TRÂNSITO: Detecta o e-mail de reset de senha e redireciona automaticamente
+  useEffect(() => {
+    const hash = window.location.hash;
+
+    if (hash && hash.includes("type=recovery")) {
+      // Redireciona para a página de criar a nova senha passando os tokens na URL
+      navigate(`/reset-password${hash}`);
+    }
+  }, [navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,13 +70,13 @@ export function Login() {
           return;
         }
 
-        // 🎯 2. GATILHO DE SUCESSO: Ativa a tela verde de sucesso e limpa os campos
+        // 🎯 GATILHO DE SUCESSO: Ativa a tela verde de sucesso e limpa os campos
         setSucessoCadastro(true);
         setNome("");
         setEmail("");
         setSenha("");
 
-        // Aguarda 3.5 segundos mostrando a mensagem e depois joga o usuário para o Login
+        // Aguarda 5 segundos mostrando a mensagem e depois joga o usuário para o Login
         setTimeout(() => {
           setSucessoCadastro(false);
           setIsLogin(true);
@@ -121,7 +132,7 @@ export function Login() {
           </S.TabSelector>
         )}
 
-        {/* 🎯 3. COMPORTAMENTO CONDICIONAL: Mostra Sucesso OU mostra o Formulário */}
+        {/* 🎯 COMPORTAMENTO CONDICIONAL: Mostra Sucesso OU mostra o Formulário */}
         {sucessoCadastro ? (
           <S.SuccessMessage>
             <div className="icon-box">✓</div>
