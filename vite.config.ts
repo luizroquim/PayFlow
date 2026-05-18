@@ -22,6 +22,7 @@ export default defineConfig({
         background_color: "#ffffff", // Cor de fundo da tela de splash
         display: "standalone", // Roda em tela cheia, sem barra de navegador
         orientation: "portrait",
+        lang: 'pt-BR',
         start_url: "/",
         icons: [
           {
