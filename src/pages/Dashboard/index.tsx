@@ -36,7 +36,6 @@ export function Dashboard() {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  // 🎯 NOVOS ESTADOS PARA A MODAL DE EXCLUSÃO CUSTOMIZADA
   const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false);
   const [idItemParaExcluir, setIdItemParaExcluir] = useState<string | null>(null);
 
@@ -48,16 +47,40 @@ export function Dashboard() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 6;
 
+  // 🎯 1. NOVO EFECT: Escudo protetor de autenticação robusto
+  useEffect(() => {
+    // Checagem inicial sutil ao montar a tela
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/");
+      }
+    });
+
+    // Ouvinte em tempo real: Só desloga se o evento for explicitamente SIGNED_OUT
+    // Ignora o INITIAL_SESSION que causava o bug na troca de abas
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || (!session && event !== "INITIAL_SESSION")) {
+        navigate("/");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  // 🎯 2. AJUSTE NO EFFECT DE CARGA: Roda ao mudar de aba ou quando o ID do usuário estabilizar
   useEffect(() => {
     carregarDados();
-  }, [abaAtiva]);
+  }, [abaAtiva, currentUserId]);
 
+  // 🎯 3. FUNÇÃO PURIFICADA: Removemos o "navigate" abrupto daqui de dentro
   async function carregarDados() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/");
-      return;
-    }
+    // Usamos getSession para buscar as informações do usuário atual sem forçar revalidação agressiva
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    
+    if (!user) return; // Se não tem usuário ainda, o outro useEffect cuida de expulsar
 
     setCurrentUserId(user.id);
     setUserEmail(user.email);
@@ -142,7 +165,6 @@ export function Dashboard() {
     }
   }
 
-  // 🎯 FUNÇÃO DE EXCLUSÃO ATUALIZADA: Sem o confirm() travando a tela
   async function executarExclusao() {
     if (!idItemParaExcluir) return;
 
@@ -157,14 +179,12 @@ export function Dashboard() {
       carregarDados();
     }
 
-    // Fecha a modal e limpa o ID selecionado
     setMostrarModalExcluir(false);
     setIdItemParaExcluir(null);
   }
 
   return (
     <S.Container>
-      {/* HEADER RESPONSIVO */}
       <S.Header>
         <div className="brand-wrapper">
           <div className="logo-box"> <img src={icon} alt="" /></div>
@@ -194,11 +214,9 @@ export function Dashboard() {
         </div>
       </S.Header>
 
-      {/* CONTEÚDO PRINCIPAL */}
       <S.MainContent>
         <Filtros valor={filtro} setValor={setFiltro} />
 
-        {/* SELETOR DE ABAS RESPONSIVO */}
         <S.TabContainer>
           <S.TabButton
             isActive={abaAtiva === "pendente"}
@@ -222,7 +240,6 @@ export function Dashboard() {
           </S.TabButton>
         </S.TabContainer>
 
-        {/* LISTAGEM DE CARDS */}
         <S.CardsStack>
           {cardsDaPaginaAtual.length > 0 ? (
             cardsDaPaginaAtual.map((item) => (
@@ -235,7 +252,6 @@ export function Dashboard() {
                   setSolicitacaoParaEditar(itemEditar);
                   setMostrarModal(true);
                 }}
-                // 🎯 INTERCEPTA A EXCLUSÃO: Em vez de apagar direto, abre a nossa modal
                 onDelete={(id) => {
                   setIdItemParaExcluir(id);
                   setMostrarModalExcluir(true);
@@ -253,7 +269,6 @@ export function Dashboard() {
           )}
         </S.CardsStack>
 
-        {/* PAGINAÇÃO */}
         {totalPaginas > 1 && (
           <S.PaginationContainer>
             <S.PaginationButton 
@@ -283,7 +298,6 @@ export function Dashboard() {
         )}
       </S.MainContent>
 
-      {/* MODAL: NOVA SOLICITAÇÃO */}
       {mostrarModal && (
         <S.ModalOverlay>
           <S.ModalContent maxWidth="480px">
@@ -302,7 +316,6 @@ export function Dashboard() {
         </S.ModalOverlay>
       )}
 
-      {/* MODAL: PAGAMENTO */}
       {mostrarModalPagamento && (
         <S.ModalOverlay>
           <S.ModalContent maxWidth="400px">
@@ -335,7 +348,6 @@ export function Dashboard() {
         </S.ModalOverlay>
       )}
 
-      {/* 🎯 NOVA MODAL: CONFIRMAÇÃO DE EXCLUSÃO CUSTOMIZADA */}
       {mostrarModalExcluir && (
         <S.ModalOverlay>
           <S.ConfirmModalContent>
