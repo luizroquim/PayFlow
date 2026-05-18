@@ -4,7 +4,7 @@ import { NovaSolicitacao } from "../../components/NovaSolicitacao";
 import { useNavigate } from "react-router-dom";
 import { Filtros } from "../../components/Filtros";
 import { CardSolicitacao } from "../../components/CardSolicitacao";
-import { LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LogOut, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import icon from "../../assets/icon.ico"
 import * as S from "./styles";
 
@@ -35,6 +35,7 @@ export function Dashboard() {
   const [itemEmPagamento, setItemEmPagamento] = useState<Solicitacao | null>(null);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
 
   const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false);
   const [idItemParaExcluir, setIdItemParaExcluir] = useState<string | null>(null);
@@ -47,17 +48,30 @@ export function Dashboard() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 6;
 
-  // 🎯 1. NOVO EFECT: Escudo protetor de autenticação robusto
+  // 🎯 1. ESCUDO DE AUTENTICAÇÃO
   useEffect(() => {
-    // Checagem inicial sutil ao montar a tela
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+    async function inicializarUsuario() {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
         navigate("/");
+        return;
       }
-    });
 
-    // Ouvinte em tempo real: Só desloga se o evento for explicitamente SIGNED_OUT
-    // Ignora o INITIAL_SESSION que causava o bug na troca de abas
+      setCurrentUserId(session.user.id);
+      setUserEmail(session.user.email);
+
+      const { data: perfil } = await supabase
+        .from("perfis")
+        .select("funcao")
+        .eq("id", session.user.id)
+        .single();
+      
+      setIsPagador(perfil?.funcao === "pagador");
+    }
+
+    inicializarUsuario();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || (!session && event !== "INITIAL_SESSION")) {
         navigate("/");
@@ -69,42 +83,65 @@ export function Dashboard() {
     };
   }, [navigate]);
 
-  // 🎯 2. AJUSTE NO EFFECT DE CARGA: Roda ao mudar de aba ou quando o ID do usuário estabilizar
+  // 🎯 2. EFFECT DE DISPARO REESTRUTURADO (Padrão Oficial Recomendado pelo React)
   useEffect(() => {
-    carregarDados();
-  }, [abaAtiva, currentUserId]);
+    let ativo = true;
 
-  // 🎯 3. FUNÇÃO PURIFICADA: Removemos o "navigate" abrupto daqui de dentro
-  async function carregarDados() {
-    // Usamos getSession para buscar as informações do usuário atual sem forçar revalidação agressiva
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    
-    if (!user) return; // Se não tem usuário ainda, o outro useEffect cuida de expulsar
+    async function carregarDadosDoBanco() {
+      if (!currentUserId) return;
 
-    setCurrentUserId(user.id);
-    setUserEmail(user.email);
+      try {
+        let query = supabase
+          .from("solicitacoes")
+          .select(`*, perfis (nome_completo)`)
+          .eq("status", abaAtiva);
 
-    const { data: perfil } = await supabase
-      .from("perfis")
-      .select("funcao")
-      .eq("id", user.id)
-      .single();
-    
-    const pagador = perfil?.funcao === "pagador";
-    setIsPagador(pagador);
+        if (!isPagador) {
+          query = query.eq("user_id", currentUserId);
+        }
 
-    let query = supabase
-      .from("solicitacoes")
-      .select(`*, perfis (nome_completo)`)
-      .eq("status", abaAtiva);
+        const { data, error } = await query.order("created_at", { ascending: false });
+        
+        // 🏁 Só altera os estados locais se o componente continuar ativo na tela
+        if (ativo && !error && data) {
+          setSolicitacoes(data as Solicitacao[]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
+        if (ativo) {
+          setCarregando(false);
+        }
+      }
+    }
 
-    if (!pagador) query = query.eq("user_id", user.id);
+    carregarDadosDoBanco();
 
-    const { data, error } = await query.order("created_at", {
-      ascending: false,
-    });
-    if (!error) setSolicitacoes((data as Solicitacao[]) || []);
+    return () => {
+      ativo = false;
+    };
+  }, [abaAtiva, currentUserId, isPagador]); // Executa de forma limpa a cada mudança de estado chave
+
+  // 🎯 3. FUNÇÃO AUXILIAR PARA ATUALIZAÇÕES MANUAIS (Gatilhos de Modais de Ações)
+  // Criada para disparar apenas quando um item for pago, excluído ou editado
+  async function forcarAtualizacaoManual() {
+    if (!currentUserId) return;
+    setCarregando(true);
+    try {
+      let query = supabase
+        .from("solicitacoes")
+        .select(`*, perfis (nome_completo)`)
+        .eq("status", abaAtiva);
+
+      if (!isPagador) query = query.eq("user_id", currentUserId);
+
+      const { data, error } = await query.order("created_at", { ascending: false });
+      if (!error && data) setSolicitacoes(data as Solicitacao[]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCarregando(false);
+    }
   }
 
   const solicitacoesFiltradas = solicitacoes.filter((item) => {
@@ -157,7 +194,8 @@ export function Dashboard() {
 
       setMostrarModalPagamento(false);
       setArquivo(null);
-      carregarDados();
+      
+      await forcarAtualizacaoManual();
     } catch (err: unknown) {
       alert("Erro ao processar pagamento: " + (err as Error).message);
     } finally {
@@ -176,7 +214,7 @@ export function Dashboard() {
     if (error) {
       alert("Erro ao excluir");
     } else {
-      carregarDados();
+      await forcarAtualizacaoManual();
     }
 
     setMostrarModalExcluir(false);
@@ -221,6 +259,7 @@ export function Dashboard() {
           <S.TabButton
             isActive={abaAtiva === "pendente"}
             onClick={() => {
+              setCarregando(true); 
               setAbaAtiva("pendente");
               setPaginaAtual(1);
             }}
@@ -231,6 +270,7 @@ export function Dashboard() {
           <S.TabButton
             isActive={abaAtiva === "comprado"}
             onClick={() => {
+              setCarregando(true);
               setAbaAtiva("comprado");
               setPaginaAtual(1);
             }}
@@ -241,7 +281,12 @@ export function Dashboard() {
         </S.TabContainer>
 
         <S.CardsStack>
-          {cardsDaPaginaAtual.length > 0 ? (
+          {carregando ? (
+            <S.EmptyState style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+              <Loader2 className="animate-spin" size={28} color="#079cdc" />
+              Buscando solicitações atualizadas...
+            </S.EmptyState>
+          ) : cardsDaPaginaAtual.length > 0 ? (
             cardsDaPaginaAtual.map((item) => (
               <CardSolicitacao
                 key={item.id}
@@ -269,7 +314,7 @@ export function Dashboard() {
           )}
         </S.CardsStack>
 
-        {totalPaginas > 1 && (
+        {totalPaginas > 1 && !carregando && (
           <S.PaginationContainer>
             <S.PaginationButton 
               onClick={() => setPaginaAtual(prev => Math.max(prev - 1, 1))}
@@ -303,9 +348,9 @@ export function Dashboard() {
           <S.ModalContent maxWidth="480px">
             <NovaSolicitacao
               key={solicitacaoParaEditar?.id || "nova-solicitacao"}
-              onSucesso={() => {
+              onSucesso={async () => {
                 setMostrarModal(false);
-                carregarDados();
+                await forcarAtualizacaoManual();
               }}
               dadosParaEditar={solicitacaoParaEditar}
             />
