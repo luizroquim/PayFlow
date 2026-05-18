@@ -13,21 +13,48 @@ export function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-
-  // 🎯 Controla a exibição da tela de sucesso temporária
   const [sucessoCadastro, setSucessoCadastro] = useState(false);
+
+  // Estados para controlar o fluxo de "Esqueci minha senha"
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [sucessoResetEmail, setSucessoResetEmail] = useState(false);
 
   const navigate = useNavigate();
 
-  // 🎯 GUARDA DE TRÂNSITO: Detecta o e-mail de reset de senha e redireciona automaticamente
+  // Detecta o e-mail de reset de senha vindo do Supabase e redireciona
   useEffect(() => {
     const hash = window.location.hash;
-
     if (hash && hash.includes("type=recovery")) {
-      // Redireciona para a página de criar a nova senha passando os tokens na URL
       navigate(`/reset-password${hash}`);
     }
   }, [navigate]);
+
+  // Função que envia o e-mail de recuperação automaticamente
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setCarregando(true);
+    setErro(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        // Redireciona o usuário de volta para o ambiente correto (Local ou Vercel)
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setSucessoResetEmail(true);
+      setEmail("");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErro(error.message);
+      } else {
+        setErro("Erro ao enviar e-mail de recuperação.");
+      }
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,9 +70,7 @@ export function Login() {
 
         if (error) {
           if (error.message === "Invalid login credentials") {
-            setErro(
-              "E-mail ou senha incorretos. Verifique os dados e tente novamente.",
-            );
+            setErro("E-mail ou senha incorretos. Verifique os dados e tente novamente.");
           } else {
             setErro(error.message);
           }
@@ -70,13 +95,11 @@ export function Login() {
           return;
         }
 
-        // 🎯 GATILHO DE SUCESSO: Ativa a tela verde de sucesso e limpa os campos
         setSucessoCadastro(true);
         setNome("");
         setEmail("");
         setSenha("");
 
-        // Aguarda 5 segundos mostrando a mensagem e depois joga o usuário para o Login
         setTimeout(() => {
           setSucessoCadastro(false);
           setIsLogin(true);
@@ -106,100 +129,163 @@ export function Login() {
           </div>
         </S.Header>
 
-        {/* Esconde o seletor de abas se o sucesso estiver ativo para focar na mensagem */}
-        {!sucessoCadastro && (
-          <S.TabSelector>
-            <S.TabButton
-              active={isLogin}
-              onClick={() => {
-                setIsLogin(true);
-                setErro(null);
-              }}
-              type="button"
-            >
-              Entrar
-            </S.TabButton>
-            <S.TabButton
-              active={!isLogin}
-              onClick={() => {
-                setIsLogin(false);
-                setErro(null);
-              }}
-              type="button"
-            >
-              Cadastrar
-            </S.TabButton>
-          </S.TabSelector>
-        )}
-
-        {/* 🎯 COMPORTAMENTO CONDICIONAL: Mostra Sucesso OU mostra o Formulário */}
-        {sucessoCadastro ? (
-          <S.SuccessMessage>
-            <div className="icon-box">✓</div>
-            <h4>Conta criada com sucesso!</h4>
-            <p>
-              Sua conta foi registrada no PayFlow. Redirecionando você para a
-              tela de acesso...
-            </p>
-          </S.SuccessMessage>
-        ) : (
+        {/* 1️⃣ TELA A: Fluxo de Esqueci Minha Senha */}
+        {isForgotPassword ? (
           <>
-            <p
-              style={{
-                color: "#64748b",
-                fontSize: "0.9rem",
-                marginBottom: "20px",
-              }}
-            >
-              {isLogin ? "Acesse sua conta para continuar" : "Crie sua conta "}
+            <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "20px" }}>
+              Recuperação de Senha
             </p>
 
-            <S.Form onSubmit={handleSubmit}>
-              {erro && <S.ErrorMessage>{erro}</S.ErrorMessage>}
+            {sucessoResetEmail ? (
+              <S.SuccessMessage>
+                <div className="icon-box">✓</div>
+                <h4>E-mail enviado!</h4>
+                <p>Verifique sua caixa de entrada para obter o link de redefinição de senha.</p>
+                <S.ActionButton 
+                  type="button" 
+                  style={{ marginTop: "20px" }}
+                  onClick={() => {
+                    setIsForgotPassword(false);
+                    setSucessoResetEmail(false);
+                  }}
+                >
+                  Voltar para o Login
+                </S.ActionButton>
+              </S.SuccessMessage>
+            ) : (
+              <S.Form onSubmit={handleForgotPassword}>
+                {erro && <S.ErrorMessage>{erro}</S.ErrorMessage>}
+                
+                <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "10px", textAlign: "center" }}>
+                  Insira o e-mail da sua conta para receber o link de redefinição.
+                </p>
 
-              {/* Campo de Nome aparece apenas no cadastro */}
-              {!isLogin && (
-                <>
-                  <label htmlFor="nome">Nome completo</label>
+                <label htmlFor="reset-email">Seu e-mail</label>
+                <S.Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="exemplo@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+
+                <S.ActionButton type="submit" disabled={carregando}>
+                  {carregando ? "Enviando..." : "Enviar Link de Recuperação"}
+                </S.ActionButton>
+
+                <S.BackToLoginButton
+                  type="button"
+                  onClick={() => {
+                    setIsForgotPassword(false);
+                    setErro(null);
+                  }}
+                >
+                  Voltar para o Login
+                </S.BackToLoginButton>
+              </S.Form>
+            )}
+          </>
+        ) : (
+          /* 2️⃣ TELA B: Fluxo Normal de Login / Cadastro */
+          <>
+            {!sucessoCadastro && (
+              <S.TabSelector>
+                <S.TabButton
+                  active={isLogin}
+                  onClick={() => {
+                    setIsLogin(true);
+                    setErro(null);
+                  }}
+                  type="button"
+                >
+                  Entrar
+                </S.TabButton>
+                <S.TabButton
+                  active={!isLogin}
+                  onClick={() => {
+                    setIsLogin(false);
+                    setErro(null);
+                  }}
+                  type="button"
+                >
+                  Cadastrar
+                </S.TabButton>
+              </S.TabSelector>
+            )}
+
+            {sucessoCadastro ? (
+              <S.SuccessMessage>
+                <div className="icon-box">✓</div>
+                <h4>Conta criada com sucesso!</h4>
+                <p>Sua conta foi registrada no PayFlow. Redirecionando você para a tela de acesso...</p>
+              </S.SuccessMessage>
+            ) : (
+              <>
+                <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "20px" }}>
+                  {isLogin ? "Acesse sua conta para continuar" : "Crie sua conta "}
+                </p>
+
+                <S.Form onSubmit={handleSubmit}>
+                  {erro && <S.ErrorMessage>{erro}</S.ErrorMessage>}
+
+                  {!isLogin && (
+                    <>
+                      <label htmlFor="nome">Nome completo</label>
+                      <S.Input
+                        id="nome"
+                        type="text"
+                        placeholder="Seu nome"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                        required
+                      />
+                    </>
+                  )}
+
+                  <label htmlFor="email">Seu e-mail</label>
                   <S.Input
-                    id="nome"
-                    type="text"
-                    placeholder="Seu nome"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="exemplo@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
-                </>
-              )}
 
-              <label htmlFor="email">Seu e-mail</label>
-              <S.Input
-                id="email"
-                type="email"
-                placeholder="exemplo@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+                  <label htmlFor="password">Sua senha</label>
+                  <S.Input
+                    id="password"
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    required
+                  />
 
-              <label htmlFor="password">Sua senha</label>
-              <S.Input
-                id="password"
-                type="password"
-                placeholder="Digite sua senha"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                required
-              />
+                  {isLogin && (
+                    <S.ForgotPasswordLink
+                      type="button"
+                      onClick={() => {
+                        setIsForgotPassword(true);
+                        setErro(null);
+                        setEmail("");
+                      }}
+                    >
+                      Esqueceu sua senha?
+                    </S.ForgotPasswordLink>
+                  )}
 
-              <S.ActionButton type="submit" disabled={carregando}>
-                {carregando
-                  ? "Aguarde..."
-                  : isLogin
-                    ? "Acessar Plataforma"
-                    : "Criar Conta"}
-              </S.ActionButton>
-            </S.Form>
+                  <S.ActionButton type="submit" disabled={carregando}>
+                    {carregando
+                      ? "Aguarde..."
+                      : isLogin
+                        ? "Acessar Plataforma"
+                        : "Criar Conta"}
+                  </S.ActionButton>
+                </S.Form>
+              </>
+            )}
           </>
         )}
 

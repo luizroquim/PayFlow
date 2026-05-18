@@ -5,9 +5,13 @@ export const Container = styled.div`
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  width:100vw;
+  width: 100vw;
   background-color: #e9eff5; // Fundo azulado bem claro da imagem
   font-family: 'Inter', sans-serif;
+
+  /* 🎯 AJUSTE PARA MONITOR PORTÁTIL: Evita que o card corte no topo/base */
+  padding: 40px 0; 
+  overflow-y: auto; 
 `;
 
 export const LoginCard = styled.div`
@@ -18,6 +22,9 @@ export const LoginCard = styled.div`
   width: 90%;
   max-width: 400px;
   text-align: center;
+
+  /* 🎯 AJUSTE PARA MONITOR PORTÁTIL: Centraliza dinamicamente sem quebrar */
+  margin: auto; 
 
   h3 {
     margin-top: 0.9rem;
@@ -117,13 +124,51 @@ export const ActionButton = styled.button`
   font-size: 14px;
   cursor: pointer;
   margin-top: 4px;
+  width: 100%; /* Garante preenchimento total do espaço disponível */
 
   &:hover {
     background-color: #0582b7;
   }
 `;
 
-// 🎯 COMPONENTE ADICIONADO: Caixa de erro customizada para o Login/Cadastro
+/* 🎯 NOVO: Botão de "Esqueceu sua senha?" (Alinhado à direita e azul) */
+export const ForgotPasswordLink = styled.button`
+  background: none;
+  border: none;
+  color: #475569;
+  font-size: 0.7rem;
+  text-align: right;
+  cursor: pointer;
+  margin-top: -8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #079cdc;
+  }
+`;
+
+/* 🎯 NOVO: Botão de "Voltar para o Login" (Centralizado e cinza com sublinhado) */
+export const BackToLoginButton = styled.button`
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: 500;
+  
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #079cdc;
+  }
+`;
+
 export const ErrorMessage = styled.div`
   background-color: #fef2f2; /* Fundo vermelho bem suave */
   border: 1px solid #fee2e2;
@@ -136,8 +181,6 @@ export const ErrorMessage = styled.div`
   text-align: center;
   width: 100%;
   box-sizing: border-box;
-
-  /* Animação suave para o erro não surgir travado na tela */
   animation: fadeIn 0.2s ease-in-out;
 
   @keyframes fadeIn {
@@ -152,7 +195,6 @@ export const ErrorMessage = styled.div`
   }
 `;
 
-// 🎯 COMPONENTE ADICIONADO: Caixa de sucesso para quando a conta for criada
 export const SuccessMessage = styled.div`
   display: flex;
   flex-direction: column;
@@ -165,6 +207,8 @@ export const SuccessMessage = styled.div`
   color: #166534;
   margin: 20px 0;
   animation: scaleUp 0.3s ease-in-out;
+  width: 100%;
+  box-sizing: border-box;
 
   .icon-box {
     background-color: #dcfce7;
