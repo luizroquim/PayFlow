@@ -18,7 +18,7 @@ export default defineConfig({
         short_name: "PayFlow",
         description:
           "Sistema inteligente para gestão de solicitações de compras e pagamentos",
-        theme_color: "#074966", // Cor da barra do sistema no celular (Azul escuro)
+        theme_color: "#0284c7", // Cor da barra do sistema no celular (Azul escuro)
         background_color: "#ffffff", // Cor de fundo da tela de splash
         display: "standalone", // Roda em tela cheia, sem barra de navegador
         orientation: "portrait",
