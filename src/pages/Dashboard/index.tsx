@@ -28,6 +28,11 @@ export function Dashboard() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [abaAtiva, setAbaAtiva] = useState<"pendente" | "comprado">("pendente");
   const [filtro, setFiltro] = useState("");
+  
+  // 🚀 CRIAÇÃO DOS ESTADOS DE FILTRAGEM POR DATA (Resolve o erro do compilador)
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
+
   const [mostrarModal, setMostrarModal] = useState(false);
   const [solicitacaoParaEditar, setSolicitacaoParaEditar] =
     useState<Solicitacao | null>(null);
@@ -125,27 +130,23 @@ export function Dashboard() {
       }
     }
 
-    // Executa a carga inicial de dados
     carregarDadosDoBanco();
 
-    // 🚀 Escuta em tempo real ativada para essa aba
     const canalRealtime = supabase
       .channel("mudancas-solicitacoes")
       .on(
         "postgres_changes",
         {
-          event: "*", // Intercepta INSERT, UPDATE e DELETE globalmente
+          event: "*",
           schema: "public",
           table: "solicitacoes",
         },
         () => {
-          // Se houver qualquer toque na tabela, atualiza a lista em segundo plano de forma transparente
           carregarDadosDoBanco();
         },
       )
       .subscribe();
 
-    // 🧹 Limpeza cirúrgica de memória ao desmontar ou trocar de aba
     return () => {
       ativo = false;
       supabase.removeChannel(canalRealtime);
@@ -163,7 +164,7 @@ export function Dashboard() {
     setPaginaAtual(1);
   };
 
-  // 🎯 4. FUNÇÃO AUXILIAR PARA ATUALIZAÇÕES MANUAIS (Mantida como fallback de segurança das modais locais)
+  // 🎯 4. FUNÇÃO AUXILIAR PARA ATUALIZAÇÕES MANUAIS
   async function forcarAtualizacaoManual() {
     if (!currentUserId) return;
     setCarregando(true);
@@ -186,12 +187,25 @@ export function Dashboard() {
     }
   }
 
+  // 🎯 5. FILTRAGEM INTELIGENTE E DE ALTA PERFORMANCE (TEXTO + DATAS EM MEMÓRIA)
   const solicitacoesFiltradas = solicitacoes.filter((item) => {
+    // A) Filtro de Texto (Título ou Nome)
     const termo = filtro.toLowerCase();
-    return (
-      item.titulo.toLowerCase().includes(termo) ||
-      (item.perfis?.nome_completo || "").toLowerCase().includes(termo)
-    );
+    const bateTexto = item.titulo.toLowerCase().includes(termo) ||
+                      (item.perfis?.nome_completo || "").toLowerCase().includes(termo);
+
+    // B) Filtro por Data de Criação (Garante que está dentro do intervalo se preenchido)
+    const dataItem = new Date(item.created_at).setHours(0, 0, 0, 0);
+    
+    const bateDataInicio = dataInicio 
+      ? dataItem >= new Date(dataInicio + "T00:00:00").setHours(0, 0, 0, 0) 
+      : true;
+      
+    const bateDataFim = dataFim 
+      ? dataItem <= new Date(dataFim + "T00:00:00").setHours(0, 0, 0, 0) 
+      : true;
+
+    return bateTexto && bateDataInicio && bateDataFim;
   });
 
   const totalPaginas = Math.ceil(solicitacoesFiltradas.length / itensPorPagina);
@@ -301,7 +315,15 @@ export function Dashboard() {
       </S.Header>
 
       <S.MainContent>
-        <Filtros valor={filtro} setValor={setFiltro} />
+        {/* 🎯 CONEXÃO COMPLETA DOS FILTROS EXPANSÍVEIS COM O COMPONENTE */}
+        <Filtros
+          valor={filtro}
+          setValor={setFiltro}
+          dataInicio={dataInicio}
+          setDataInicio={setDataInicio}
+          dataFim={dataFim}
+          setDataFim={setDataFim}
+        />
 
         <S.TabContainer>
           <S.TabButton
