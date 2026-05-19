@@ -13,7 +13,7 @@ export default defineConfig({
         "maskable-icon.png",
       ],
       manifest: {
-        id: "/", // 🎯 FIX: Define o ID único do aplicativo requisitado pelo navegador
+        id: "/", // 🎯 Define o ID único do aplicativo requisitado pelo navegador
         name: "PayFlow - Gestão de Pagamentos",
         short_name: "PayFlow",
         description:
@@ -42,30 +42,13 @@ export default defineConfig({
             purpose: "maskable", // Garante que o ícone fique bonito em qualquer formato de botão no Android
           },
           {
-            // 🎯 FIX: Adicionado o favicon existente como fallback caso os PNGs falhem ou não existam na public
             src: "favicon.ico",
-            sizes: "64x64 32x32 24x24 16x16 144x144 512x512",
+            sizes: "32x32 16x16", // Definido nos tamanhos reais do arquivo .ico
             type: "image/x-icon",
             purpose: "any",
           },
         ],
-        // 🎯 FIX: Adicionadas as screenshots exigidas para habilitar a interface de instalação (Richer PWA Install UI)
-        screenshots: [
-          {
-            src: "favicon.ico", // Provisório: Depois substitua por um print real da sua Dashboard em formato PC
-            sizes: "512x512",
-            type: "image/x-icon",
-            form_factor: "wide", // 🖥️ Versão Desktop
-            label: "Painel Principal do PayFlow",
-          },
-          {
-            src: "favicon.ico", // Provisório: Depois substitua por um print da tela em formato Celular
-            sizes: "512x512",
-            type: "image/x-icon",
-            form_factor: "narrow", // 📱 Versão Mobile
-            label: "Acesse suas solicitações de qualquer lugar",
-          },
-        ],
+        /* 🎯 screenshots removidas para evitar imagens distorcidas na instalação */
       },
     }),
   ],
