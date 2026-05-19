@@ -8,19 +8,19 @@ export const Container = styled.div`
   flex-direction: column;
 `;
 
-// --- HEADER RESPONSIVO ---
+// --- HEADER RESPONSIVO COM INVERSÃO NO MOBILE ---
 export const Header = styled.header`
   background-color: #ffffff;
   padding: 15px 20px;
   display: flex;
-  flex-direction: column; /* Empilha no mobile por padrão */
-  gap: 10px;
+  flex-direction: column; /* Empilha a logo e os controles no mobile */
+  gap: 16px;
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
 
   @media (min-width: 768px) {
-    flex-direction: row; /* Alinha lado a lado no Tablet/PC */
+    flex-direction: row; /* Alinha logo e controles lado a lado no PC */
     justify-content: space-between;
     padding: 15px 40px;
   }
@@ -40,10 +40,9 @@ export const Header = styled.header`
       align-items: center;
       justify-content: center;
 
-      img{
-        width:2rem;
-        height:2rem;
-
+      img {
+        width: 2rem;
+        height: 2rem;
       }
     }
 
@@ -57,11 +56,10 @@ export const Header = styled.header`
 
   .user-controls {
     display: flex;
-    
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     width: 100%;
-    justify-content: space-between;
+    justify-content: space-between; /* Garante o espaçamento total entre as pontas no mobile */
 
     @media (min-width: 768px) {
       width: auto;
@@ -76,15 +74,23 @@ export const Header = styled.header`
       overflow: hidden;
       text-overflow: ellipsis;
 
+      /* 📱 No Mobile: assume a segunda posição na ordem (fica entre o botão de criar e o de sair) */
+      @media (max-width: 600px) {
+        order: 2;
+        max-width: 110px; /* Evita que e-mails muito longos empurrem o botão de sair */
+        text-align: right;
+        margin-left: auto; /* Empurra ele e o botão de sair o máximo possível para a direita */
+      }
+
       @media (min-width: 480px) {
         max-width: none;
       }
     }
 
     .btn-new-request {
-      display:flex;
-      align-items:center;
-      gap:4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
       background-color: #0284c7;
       color: #fff;
       border: none;
@@ -94,6 +100,12 @@ export const Header = styled.header`
       font-size: 0.8rem;
       cursor: pointer;
       transition: background-color 0.2s;
+
+      /* 📱 No Mobile: assume a primeira posição na ordem (vai direto para a extrema esquerda) */
+      @media (max-width: 600px) {
+        order: 1;
+        padding: 10px 12px; /* Ligeiramente mais compacto para caber perfeitamente */
+      }
 
       &:hover {
         background-color: #079cdc;
@@ -109,9 +121,14 @@ export const Header = styled.header`
       align-items: center;
       transition: transform 0.2s;
 
+      /* 📱 No Mobile: assume a terceira posição (extrema direita, colado no e-mail) */
+      @media (max-width: 600px) {
+        order: 3;
+      }
+
       &:hover {
         transform: scale(1.1);
-        color:#079cdc;
+        color: #079cdc;
       }
     }
   }
@@ -186,9 +203,9 @@ export const ModalOverlay = styled.div`
 `;
 
 export const ModalContent = styled.div<{ maxWidth: string }>`
-  display:flex;
-  flex-direction:column;
-  gap:1px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   width: 100%;
   max-width: ${props => props.maxWidth};
   background-color: #fff;
@@ -203,7 +220,7 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
   }
 
   h3 {
-    margin-bottom:10px;
+    margin-bottom: 10px;
     color: #0f172a;
     font-size: 1.25rem;
   }
@@ -218,7 +235,7 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
     margin-bottom: 25px;
     width: 100%;
     font-size: 0.9rem;
-    color:black;
+    color: black;
   }
 
   .modal-actions {
@@ -286,7 +303,7 @@ export const PaginationContainer = styled.div`
   gap: 8px;
   margin-top: 30px;
   width: 100%;
-  flex-wrap: wrap; /* Permite que os botões quebrem de linha se a tela for muito pequena */
+  flex-wrap: wrap;
 `;
 
 export const PaginationButton = styled.button<{ isActive?: boolean }>`
@@ -317,13 +334,11 @@ export const PaginationButton = styled.button<{ isActive?: boolean }>`
     border-color: #e2e8f0;
   }
 
-  /* No mobile, aumenta um pouco o espaçamento do botão para facilitar o clique com o dedão */
   @media (max-width: 480px) {
     padding: 10px 16px;
     font-size: 0.85rem;
   }
 `;
-
 
 // --- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ---
 export const ConfirmModalContent = styled.div`
@@ -374,7 +389,7 @@ export const ConfirmModalContent = styled.div`
     }
 
     .btn-delete {
-      background-color: #ef4444; /* Vermelho do Tailwind */
+      background-color: #ef4444;
       color: #ffffff;
 
       &:hover {
