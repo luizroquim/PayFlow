@@ -4,8 +4,8 @@ import { NovaSolicitacao } from "../../components/NovaSolicitacao";
 import { useNavigate } from "react-router-dom";
 import { Filtros } from "../../components/Filtros";
 import { CardSolicitacao } from "../../components/CardSolicitacao";
-import { LogOut, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import icon from "../../assets/icon.ico"
+import { LogOut, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import icon from "../../assets/icon.ico";
 import * as S from "./styles";
 
 interface Solicitacao {
@@ -29,16 +29,21 @@ export function Dashboard() {
   const [abaAtiva, setAbaAtiva] = useState<"pendente" | "comprado">("pendente");
   const [filtro, setFiltro] = useState("");
   const [mostrarModal, setMostrarModal] = useState(false);
-  const [solicitacaoParaEditar, setSolicitacaoParaEditar] = useState<Solicitacao | null>(null);
+  const [solicitacaoParaEditar, setSolicitacaoParaEditar] =
+    useState<Solicitacao | null>(null);
 
   const [mostrarModalPagamento, setMostrarModalPagamento] = useState(false);
-  const [itemEmPagamento, setItemEmPagamento] = useState<Solicitacao | null>(null);
+  const [itemEmPagamento, setItemEmPagamento] = useState<Solicitacao | null>(
+    null,
+  );
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [carregando, setCarregando] = useState(true);
 
   const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false);
-  const [idItemParaExcluir, setIdItemParaExcluir] = useState<string | null>(null);
+  const [idItemParaExcluir, setIdItemParaExcluir] = useState<string | null>(
+    null,
+  );
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | undefined>("");
@@ -51,8 +56,10 @@ export function Dashboard() {
   // 🎯 1. ESCUDO DE AUTENTICAÇÃO
   useEffect(() => {
     async function inicializarUsuario() {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.user) {
         navigate("/");
         return;
@@ -66,13 +73,15 @@ export function Dashboard() {
         .select("funcao")
         .eq("id", session.user.id)
         .single();
-      
+
       setIsPagador(perfil?.funcao === "pagador");
     }
 
     inicializarUsuario();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || (!session && event !== "INITIAL_SESSION")) {
         navigate("/");
       }
@@ -83,7 +92,7 @@ export function Dashboard() {
     };
   }, [navigate]);
 
-  // 🎯 2. EFFECT DE DISPARO REESTRUTURADO (Padrão Oficial Recomendado pelo React)
+  // 🎯 2. EFFECT DE DISPARO REESTRUTURADO COM SUPABASE REALTIME (Tempo Real)
   useEffect(() => {
     let ativo = true;
 
@@ -100,9 +109,10 @@ export function Dashboard() {
           query = query.eq("user_id", currentUserId);
         }
 
-        const { data, error } = await query.order("created_at", { ascending: false });
-        
-        // 🏁 Só altera os estados locais se o componente continuar ativo na tela
+        const { data, error } = await query.order("created_at", {
+          ascending: false,
+        });
+
         if (ativo && !error && data) {
           setSolicitacoes(data as Solicitacao[]);
         }
@@ -115,15 +125,45 @@ export function Dashboard() {
       }
     }
 
+    // Executa a carga inicial de dados
     carregarDadosDoBanco();
 
+    // 🚀 Escuta em tempo real ativada para essa aba
+    const canalRealtime = supabase
+      .channel("mudancas-solicitacoes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // Intercepta INSERT, UPDATE e DELETE globalmente
+          schema: "public",
+          table: "solicitacoes",
+        },
+        () => {
+          // Se houver qualquer toque na tabela, atualiza a lista em segundo plano de forma transparente
+          carregarDadosDoBanco();
+        },
+      )
+      .subscribe();
+
+    // 🧹 Limpeza cirúrgica de memória ao desmontar ou trocar de aba
     return () => {
       ativo = false;
+      supabase.removeChannel(canalRealtime);
     };
-  }, [abaAtiva, currentUserId, isPagador]); // Executa de forma limpa a cada mudança de estado chave
+  }, [abaAtiva, currentUserId, isPagador]);
 
-  // 🎯 3. FUNÇÃO AUXILIAR PARA ATUALIZAÇÕES MANUAIS (Gatilhos de Modais de Ações)
-  // Criada para disparar apenas quando um item for pago, excluído ou editado
+  // 🎯 3. CONTROLE ANTIBOMBARDEIO DE TROCA DE ABAS
+  const handleTrocaAba = (novaAba: "pendente" | "comprado") => {
+    if (abaAtiva === novaAba || carregando) {
+      return;
+    }
+
+    setCarregando(true);
+    setAbaAtiva(novaAba);
+    setPaginaAtual(1);
+  };
+
+  // 🎯 4. FUNÇÃO AUXILIAR PARA ATUALIZAÇÕES MANUAIS (Mantida como fallback de segurança das modais locais)
   async function forcarAtualizacaoManual() {
     if (!currentUserId) return;
     setCarregando(true);
@@ -135,7 +175,9 @@ export function Dashboard() {
 
       if (!isPagador) query = query.eq("user_id", currentUserId);
 
-      const { data, error } = await query.order("created_at", { ascending: false });
+      const { data, error } = await query.order("created_at", {
+        ascending: false,
+      });
       if (!error && data) setSolicitacoes(data as Solicitacao[]);
     } catch (e) {
       console.error(e);
@@ -157,7 +199,10 @@ export function Dashboard() {
 
   const indiceUltimoItem = paginaSegura * itensPorPagina;
   const indicePrimeiroItem = indiceUltimoItem - itensPorPagina;
-  const cardsDaPaginaAtual = solicitacoesFiltradas.slice(indicePrimeiroItem, indiceUltimoItem);
+  const cardsDaPaginaAtual = solicitacoesFiltradas.slice(
+    indicePrimeiroItem,
+    indiceUltimoItem,
+  );
 
   async function confirmarPagamento() {
     if (!itemEmPagamento) return;
@@ -194,7 +239,7 @@ export function Dashboard() {
 
       setMostrarModalPagamento(false);
       setArquivo(null);
-      
+
       await forcarAtualizacaoManual();
     } catch (err: unknown) {
       alert("Erro ao processar pagamento: " + (err as Error).message);
@@ -225,10 +270,13 @@ export function Dashboard() {
     <S.Container>
       <S.Header>
         <div className="brand-wrapper">
-          <div className="logo-box"> <img src={icon} alt="" /></div>
+          <div className="logo-box">
+            {" "}
+            <img src={icon} alt="" />
+          </div>
           <h2>Gestão de Pagamentos</h2>
         </div>
-        
+
         <div className="user-controls">
           <span className="user-email">{userEmail}</span>
           <button
@@ -238,7 +286,7 @@ export function Dashboard() {
               setMostrarModal(true);
             }}
           >
-             + Nova Solicitação
+            + Nova Solicitação
           </button>
           <button
             className="btn-logout"
@@ -247,7 +295,7 @@ export function Dashboard() {
               navigate("/");
             }}
           >
-             <LogOut size={19} />
+            <LogOut size={19} />
           </button>
         </div>
       </S.Header>
@@ -258,22 +306,16 @@ export function Dashboard() {
         <S.TabContainer>
           <S.TabButton
             isActive={abaAtiva === "pendente"}
-            onClick={() => {
-              setCarregando(true); 
-              setAbaAtiva("pendente");
-              setPaginaAtual(1);
-            }}
+            disabled={carregando}
+            onClick={() => handleTrocaAba("pendente")}
             tabType="pendente"
           >
             Pendentes
           </S.TabButton>
           <S.TabButton
             isActive={abaAtiva === "comprado"}
-            onClick={() => {
-              setCarregando(true);
-              setAbaAtiva("comprado");
-              setPaginaAtual(1);
-            }}
+            disabled={carregando}
+            onClick={() => handleTrocaAba("comprado")}
             tabType="comprado"
           >
             Concluídas
@@ -282,7 +324,14 @@ export function Dashboard() {
 
         <S.CardsStack>
           {carregando ? (
-            <S.EmptyState style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+            <S.EmptyState
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                alignItems: "center",
+              }}
+            >
               <Loader2 className="animate-spin" size={28} color="#079cdc" />
               Buscando solicitações atualizadas...
             </S.EmptyState>
@@ -316,8 +365,8 @@ export function Dashboard() {
 
         {totalPaginas > 1 && !carregando && (
           <S.PaginationContainer>
-            <S.PaginationButton 
-              onClick={() => setPaginaAtual(prev => Math.max(prev - 1, 1))}
+            <S.PaginationButton
+              onClick={() => setPaginaAtual((prev) => Math.max(prev - 1, 1))}
               disabled={paginaSegura === 1}
             >
               <ChevronLeft size={16} /> Anterior
@@ -334,7 +383,9 @@ export function Dashboard() {
             ))}
 
             <S.PaginationButton
-              onClick={() => setPaginaAtual(prev => Math.min(prev + 1, totalPaginas))}
+              onClick={() =>
+                setPaginaAtual((prev) => Math.min(prev + 1, totalPaginas))
+              }
               disabled={paginaSegura === totalPaginas}
             >
               Próximo <ChevronRight size={16} />
@@ -354,7 +405,10 @@ export function Dashboard() {
               }}
               dadosParaEditar={solicitacaoParaEditar}
             />
-            <button className="btn-close-modal" onClick={() => setMostrarModal(false)}>
+            <button
+              className="btn-close-modal"
+              onClick={() => setMostrarModal(false)}
+            >
               Voltar para a lista
             </button>
           </S.ModalContent>
@@ -372,11 +426,17 @@ export function Dashboard() {
             <input
               type="file"
               className="file-input"
-              onChange={(e) => setArquivo(e.target.files ? e.target.files[0] : null)}
+              onChange={(e) =>
+                setArquivo(e.target.files ? e.target.files[0] : null)
+              }
             />
 
             <div className="modal-actions">
-              <button className="btn-submit-payment" onClick={confirmarPagamento} disabled={enviando}>
+              <button
+                className="btn-submit-payment"
+                onClick={confirmarPagamento}
+                disabled={enviando}
+              >
                 {enviando ? "A processar..." : "Confirmar"}
               </button>
               <button
@@ -397,12 +457,15 @@ export function Dashboard() {
         <S.ModalOverlay>
           <S.ConfirmModalContent>
             <h3>Excluir Solicitação?</h3>
-            <p>Esta ação não poderá ser desfeita. O item será removido permanentemente do fluxo de pagamentos.</p>
-            
+            <p>
+              Esta ação não poderá ser desfeita. O item será removido
+              permanentemente do fluxo de pagamentos.
+            </p>
+
             <div className="actions">
-              <button 
-                type="button" 
-                className="btn-cancel" 
+              <button
+                type="button"
+                className="btn-cancel"
                 onClick={() => {
                   setMostrarModalExcluir(false);
                   setIdItemParaExcluir(null);
@@ -410,9 +473,9 @@ export function Dashboard() {
               >
                 Cancelar
               </button>
-              <button 
-                type="button" 
-                className="btn-delete" 
+              <button
+                type="button"
+                className="btn-delete"
                 onClick={executarExclusao}
               >
                 Sim, excluir
