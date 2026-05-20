@@ -142,30 +142,30 @@ export const AreaDatas = styled.div`
     background: transparent;
     border: none;
     
-    background-color: #ef4444; 
+    background-color: #0284c7; 
     color: #ffffff;
 
         
     font-size: 0.88rem;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: bold;
     padding: 6px 10px;
     border-radius: 6px;
     transition: background-color 0.15s;
     
     &:hover { 
-      background-color: #dc2626;
+      background-color: #0369a1;
       
     }
 
     @media (max-width: 600px) {
       margin-top: 4px;
       height: 38px;
-      background-color: #ef4444; 
+      background-color: #0284c7; 
       
 
       &:hover{
-        background-color: #dc2626; 
+        background-color: #0369a1; 
       }
       
     }
