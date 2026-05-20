@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const Container = styled.div`
   background-color: #e9eff5;
@@ -160,7 +160,10 @@ export const TabContainer = styled.div`
   }
 `;
 
-export const TabButton = styled.button<{ isActive: boolean; tabType: 'pendente' | 'comprado' }>`
+export const TabButton = styled.button<{
+  isActive: boolean;
+  tabType: "pendente" | "comprado";
+}>`
   flex: 1;
   padding: 10px 20px;
   border-radius: 10px;
@@ -169,12 +172,13 @@ export const TabButton = styled.button<{ isActive: boolean; tabType: 'pendente' 
   font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.2s;
-  background-color: ${props => props.isActive ? "#ffffff" : "transparent"};
-  box-shadow: ${props => props.isActive ? "0 2px 4px rgba(0, 0, 0, 0.05)" : "none"};
-  
-  color: ${props => {
+  background-color: ${(props) => (props.isActive ? "#ffffff" : "transparent")};
+  box-shadow: ${(props) =>
+    props.isActive ? "0 2px 4px rgba(0, 0, 0, 0.05)" : "none"};
+
+  color: ${(props) => {
     if (!props.isActive) return "#64748b";
-    return props.tabType === 'pendente' ? "#0284c7" : "#10b981";
+    return props.tabType === "pendente" ? "#0284c7" : "#10b981";
   }};
 
   @media (min-width: 480px) {
@@ -207,16 +211,22 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
   flex-direction: column;
   gap: 1px;
   width: 100%;
-  max-width: ${props => props.maxWidth};
+  max-width: ${(props) => props.maxWidth};
   background-color: #fff;
   border-radius: 20px;
   padding: 25px;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: modalSwoosh 0.2s ease-out;
 
   @keyframes modalSwoosh {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 
   h3 {
@@ -260,28 +270,136 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
     .btn-submit-payment {
       background-color: #10b981;
       color: #fff;
-      &:disabled { background-color: #94a3b8; }
+      transition: all 0.2s ease-in-out;
+
+      &:disabled {
+        background-color: #a7f3d0; /* Verde claro pastel quando enviando */
+        color: #065f46;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      &:hover:not(:disabled) {
+        background-color: #059669;
+      }
     }
 
     .btn-cancel-payment {
-      background-color: #f1f5f9;
-      color: #64748b;
+      background-color: #fdfdfd;
+      color: #4d4c4c;
+      border: 1px solid #c5c5c5;
+
+      &:hover {
+        color: black;
+        border: #4d4c4c 1px solid;
+        background-color: white;
+      }
     }
   }
 
   .btn-close-modal {
     width: 100%;
     margin-top: 15px;
-    background: none;
-    border: none;
-    color: #94a3b8;
+    background-color: #fdfdfd;
+    border: 1px solid #c5c5c5;
+    color: #4d4c4c;
+    padding: 13px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.95rem;
     cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 500;
-    
+    transition: background-color 0.2s;
+
     &:hover {
-      color: #64748b;
+      color: black;
+      border: #4d4c4c 1px solid;
+      background-color: white;
     }
+  }
+`;
+
+// --- COMPONENTES DO GERENCIADOR DE ANEXO DA DASHBOARD ---
+export const AnexoNovoContainer = styled.div`
+  width: 100%;
+  position: relative;
+`;
+
+export const TextoPlaceholder = styled.span`
+  color: #1e293b;
+  font-size: 0.95rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+`;
+
+export const NomeArquivoNovo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #1e293b;
+  font-weight: 500;
+  font-size: 0.95rem;
+  overflow: hidden;
+  max-width: 100%;
+`;
+
+export const TextoNomeFiltrado = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const BtnTextoAzulNativo = styled.span`
+  color: #0284c7;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    color: #079cdc;
+  }
+`;
+
+export const LabelAnexoCustomizado = styled.label`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:hover ${BtnTextoAzulNativo} {
+    color: #079cdc;
+  }
+
+  &:hover {
+    border-color: #0284c7;
+  }
+`;
+
+export const InputFileInvisivel = styled.input`
+  display: none;
+`;
+
+export const BtnLimparArquivoNovo = styled.button`
+  background: none;
+  border: none;
+  color: #0284c7;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #079cdc;
   }
 `;
 
@@ -293,6 +411,19 @@ export const EmptyState = styled.div`
   border-radius: 16px;
   border: 1px solid #e2e8f0;
   font-size: 0.95rem;
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
 `;
 
 // --- LINKS DE PAGINAÇÃO RESPONSIVA ---
@@ -313,18 +444,18 @@ export const PaginationButton = styled.button<{ isActive?: boolean }>`
   gap: 4px;
   padding: 8px 14px;
   border-radius: 8px;
-  border: 1px solid ${props => props.isActive ? "#0284c7" : "#cbd5e1"};
-  background-color: ${props => props.isActive ? "#0284c7" : "#ffffff"};
-  color: ${props => props.isActive ? "#ffffff" : "#64748b"};
+  border: 1px solid ${(props) => (props.isActive ? "#0284c7" : "#cbd5e1")};
+  background-color: ${(props) => (props.isActive ? "#0284c7" : "#ffffff")};
+  color: ${(props) => (props.isActive ? "#ffffff" : "#64748b")};
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: ${props => props.isActive ? "#079cdc" : "#f8fafc"};
-    border-color: ${props => props.isActive ? "#079cdc" : "#94a3b8"};
-    color: ${props => props.isActive ? "#ffffff" : "#334155"};
+    background-color: ${(props) => (props.isActive ? "#079cdc" : "#f8fafc")};
+    border-color: ${(props) => (props.isActive ? "#079cdc" : "#94a3b8")};
+    color: ${(props) => (props.isActive ? "#ffffff" : "#334155")};
   }
 
   &:disabled {
@@ -380,11 +511,14 @@ export const ConfirmModalContent = styled.div`
     }
 
     .btn-cancel {
-      background-color: #f1f5f9;
-      color: #475569;
+      background-color: #fdfdfd;
+      color: #4d4c4c;
+      border: 1px solid #c5c5c5;
 
       &:hover {
-        background-color: #e2e8f0;
+        color: black;
+        border: #4d4c4c 1px solid;
+        background-color: white;
       }
     }
 

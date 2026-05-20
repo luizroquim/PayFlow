@@ -4,7 +4,13 @@ import { NovaSolicitacao } from "../../components/NovaSolicitacao";
 import { useNavigate } from "react-router-dom";
 import { Filtros } from "../../components/Filtros";
 import { CardSolicitacao } from "../../components/CardSolicitacao";
-import { LogOut, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import {
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  FileText,
+} from "lucide-react";
 import icon from "../../assets/icon.ico";
 import * as S from "./styles";
 
@@ -28,8 +34,7 @@ export function Dashboard() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [abaAtiva, setAbaAtiva] = useState<"pendente" | "comprado">("pendente");
   const [filtro, setFiltro] = useState("");
-  
-  // 🚀 CRIAÇÃO DOS ESTADOS DE FILTRAGEM POR DATA (Resolve o erro do compilador)
+
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
@@ -43,6 +48,7 @@ export function Dashboard() {
   );
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
   const [carregando, setCarregando] = useState(true);
 
   const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false);
@@ -58,7 +64,6 @@ export function Dashboard() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 6;
 
-  // 🎯 1. ESCUDO DE AUTENTICAÇÃO
   useEffect(() => {
     async function inicializarUsuario() {
       const {
@@ -97,7 +102,6 @@ export function Dashboard() {
     };
   }, [navigate]);
 
-  // 🎯 2. EFFECT DE DISPARO REESTRUTURADO COM SUPABASE REALTIME (Tempo Real)
   useEffect(() => {
     let ativo = true;
 
@@ -153,7 +157,6 @@ export function Dashboard() {
     };
   }, [abaAtiva, currentUserId, isPagador]);
 
-  // 🎯 3. CONTROLE ANTIBOMBARDEIO DE TROCA DE ABAS
   const handleTrocaAba = (novaAba: "pendente" | "comprado") => {
     if (abaAtiva === novaAba || carregando) {
       return;
@@ -164,7 +167,6 @@ export function Dashboard() {
     setPaginaAtual(1);
   };
 
-  // 🎯 4. FUNÇÃO AUXILIAR PARA ATUALIZAÇÕES MANUAIS
   async function forcarAtualizacaoManual() {
     if (!currentUserId) return;
     setCarregando(true);
@@ -187,22 +189,20 @@ export function Dashboard() {
     }
   }
 
-  // 🎯 5. FILTRAGEM INTELIGENTE E DE ALTA PERFORMANCE (TEXTO + DATAS EM MEMÓRIA)
   const solicitacoesFiltradas = solicitacoes.filter((item) => {
-    // A) Filtro de Texto (Título ou Nome)
     const termo = filtro.toLowerCase();
-    const bateTexto = item.titulo.toLowerCase().includes(termo) ||
-                      (item.perfis?.nome_completo || "").toLowerCase().includes(termo);
+    const bateTexto =
+      item.titulo.toLowerCase().includes(termo) ||
+      (item.perfis?.nome_completo || "").toLowerCase().includes(termo);
 
-    // B) Filtro por Data de Criação (Garante que está dentro do intervalo se preenchido)
     const dataItem = new Date(item.created_at).setHours(0, 0, 0, 0);
-    
-    const bateDataInicio = dataInicio 
-      ? dataItem >= new Date(dataInicio + "T00:00:00").setHours(0, 0, 0, 0) 
+
+    const bateDataInicio = dataInicio
+      ? dataItem >= new Date(dataInicio + "T00:00:00").setHours(0, 0, 0, 0)
       : true;
-      
-    const bateDataFim = dataFim 
-      ? dataItem <= new Date(dataFim + "T00:00:00").setHours(0, 0, 0, 0) 
+
+    const bateDataFim = dataFim
+      ? dataItem <= new Date(dataFim + "T00:00:00").setHours(0, 0, 0, 0)
       : true;
 
     return bateTexto && bateDataInicio && bateDataFim;
@@ -226,7 +226,12 @@ export function Dashboard() {
       let urlComprovante = "";
       if (arquivo) {
         const fileExt = arquivo.name.split(".").pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+        const nomeOriginalLimpo = arquivo.name
+          .replace(`.${fileExt}`, "")
+          .replace(/\s+/g, "_");
+
+        const fileName = `${crypto.randomUUID()}-${nomeOriginalLimpo}.${fileExt}`;
 
         const { error: upErr } = await supabase.storage
           .from("documentos-solicitacao")
@@ -264,6 +269,7 @@ export function Dashboard() {
 
   async function executarExclusao() {
     if (!idItemParaExcluir) return;
+    setExcluindo(true); // 🎯 LIGA O CARREGAMENTO DA EXCLUSÃO
 
     const { error } = await supabase
       .from("solicitacoes")
@@ -278,6 +284,7 @@ export function Dashboard() {
 
     setMostrarModalExcluir(false);
     setIdItemParaExcluir(null);
+    setExcluindo(false); // 🎯 DESLIGA O CARREGAMENTO
   }
 
   return (
@@ -285,7 +292,6 @@ export function Dashboard() {
       <S.Header>
         <div className="brand-wrapper">
           <div className="logo-box">
-            {" "}
             <img src={icon} alt="" />
           </div>
           <h2>Gestão de Pagamentos</h2>
@@ -315,7 +321,6 @@ export function Dashboard() {
       </S.Header>
 
       <S.MainContent>
-        {/* 🎯 CONEXÃO COMPLETA DOS FILTROS EXPANSÍVEIS COM O COMPONENTE */}
         <Filtros
           valor={filtro}
           setValor={setFiltro}
@@ -427,6 +432,7 @@ export function Dashboard() {
               }}
               dadosParaEditar={solicitacaoParaEditar}
             />
+            {/* 🎯 SEU BOTÃO RESTAURADO: */}
             <button
               className="btn-close-modal"
               onClick={() => setMostrarModal(false)}
@@ -445,19 +451,67 @@ export function Dashboard() {
               Carregue o comprovante de transferência ou pagamento bancário.
             </p>
 
-            <input
-              type="file"
-              className="file-input"
-              onChange={(e) =>
-                setArquivo(e.target.files ? e.target.files[0] : null)
-              }
-            />
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+                margin: "16px 0",
+              }}
+            >
+              <S.AnexoNovoContainer>
+                <S.LabelAnexoCustomizado htmlFor="upload-comprovante-dashboard">
+                  <S.TextoPlaceholder>
+                    {arquivo ? (
+                      <S.NomeArquivoNovo>
+                        <FileText
+                          size={18}
+                          color="#1e293b"
+                          style={{ flexShrink: 0 }}
+                        />
+                        <S.TextoNomeFiltrado>
+                          {arquivo.name}
+                        </S.TextoNomeFiltrado>
+                      </S.NomeArquivoNovo>
+                    ) : (
+                      "Nenhum comprovante anexado..."
+                    )}
+                  </S.TextoPlaceholder>
+
+                  {arquivo ? (
+                    <S.BtnLimparArquivoNovo
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setArquivo(null);
+                      }}
+                    >
+                      Remover
+                    </S.BtnLimparArquivoNovo>
+                  ) : (
+                    <S.BtnTextoAzulNativo>Anexar Arquivo</S.BtnTextoAzulNativo>
+                  )}
+                </S.LabelAnexoCustomizado>
+
+                <S.InputFileInvisivel
+                  id="upload-comprovante-dashboard"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setArquivo(e.target.files[0]);
+                    }
+                  }}
+                />
+              </S.AnexoNovoContainer>
+            </div>
 
             <div className="modal-actions">
               <button
                 className="btn-submit-payment"
                 onClick={confirmarPagamento}
-                disabled={enviando}
+                disabled={enviando} // 🎯 CORRIGIDO: Anexo opcional (bloqueia apenas no envio)
               >
                 {enviando ? "A processar..." : "Confirmar"}
               </button>
@@ -499,8 +553,9 @@ export function Dashboard() {
                 type="button"
                 className="btn-delete"
                 onClick={executarExclusao}
+                disabled={excluindo} // 🎯 BLOQUEIA O BOTÃO ENQUANTO EXCLUI
               >
-                Sim, excluir
+                {excluindo ? "Excluindo..." : "Sim, excluir"}
               </button>
             </div>
           </S.ConfirmModalContent>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
-import emailjs from "@emailjs/browser"; // 🎯 Importa a biblioteca do EmailJS
+import emailjs from "@emailjs/browser";
+import { FileText } from "lucide-react";
 
 import * as S from "./styles";
 
@@ -20,7 +21,6 @@ interface NovaSolicitacaoProps {
   dadosParaEditar: Solicitacao | null;
 }
 
-// 🎯 Definimos a interface para o TypeScript do VS Code entender o formato do Pagador
 interface PagadorPerfil {
   id: string;
   nome_completo: string | null;
@@ -37,7 +37,12 @@ export function NovaSolicitacao({
     dadosParaEditar?.link_compra || "",
   );
 
+  // Estados para gerenciar o arquivo físico e a URL armazenada no banco
   const [arquivoBoleto, setArquivoBoleto] = useState<File | null>(null);
+  const [anexoExistenteUrl, setAnexoExistenteUrl] = useState<string>(
+    dadosParaEditar?.boleto_url || "",
+  );
+
   const [enviando, setEnviando] = useState(false);
 
   function toTitleCase(str: string) {
@@ -49,12 +54,36 @@ export function NovaSolicitacao({
       .join(" ");
   }
 
+  function obterNomeDoAnexo(url: string) {
+    try {
+      if (!url) return "Visualizar documento atual";
+
+      const urlSemQuery = url.split("?")[0];
+      const partes = urlSemQuery.split("/");
+      const nomeCompleto = decodeURIComponent(partes[partes.length - 1]);
+
+      if (
+        nomeCompleto.charAt(8) === "-" &&
+        nomeCompleto.charAt(13) === "-" &&
+        nomeCompleto.charAt(18) === "-"
+      ) {
+        const nomeReal = nomeCompleto.slice(37);
+        return nomeReal || "Documento Anexado";
+      }
+
+      return nomeCompleto;
+    } catch (error) {
+      console.error("❌ Erro ao tratar nome do anexo:", error);
+      return "Visualizar documento atual";
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setEnviando(true);
 
     console.log(
-      "打 Botão salvar clicado! Estado atual de dadosParaEditar:",
+      "Botão salvar clicado! Estado atual de dadosParaEditar:",
       dadosParaEditar,
     );
 
@@ -68,11 +97,16 @@ export function NovaSolicitacao({
       const descricaoLimpa = descricao.trim();
       const linkCompraLimpo = linkCompra.trim();
 
-      let urlBoleto = dadosParaEditar?.boleto_url || "";
+      let urlBoleto = anexoExistenteUrl;
 
       if (arquivoBoleto) {
         const fileExt = arquivoBoleto.name.split(".").pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+        const nomeOriginalLimpo = arquivoBoleto.name
+          .replace(`.${fileExt}`, "")
+          .replace(/\s+/g, "_");
+
+        const fileName = `${crypto.randomUUID()}-${nomeOriginalLimpo}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("documentos-solicitacao")
@@ -88,7 +122,6 @@ export function NovaSolicitacao({
       }
 
       if (dadosParaEditar) {
-        // Fluxo de Edição
         console.log("📝 Atualizando solicitação existente...");
         const { error } = await supabase
           .from("solicitacoes")
@@ -102,7 +135,6 @@ export function NovaSolicitacao({
 
         if (error) throw error;
       } else {
-        // Fluxo de Criação
         console.log("💾 Salvando nova solicitação no Supabase...");
         const { error: insertError } = await supabase
           .from("solicitacoes")
@@ -120,11 +152,9 @@ export function NovaSolicitacao({
         if (insertError) throw insertError;
         console.log("✅ Solicitação salva no banco com sucesso!");
 
-        // 🎯 BLOCO DO EMAILJS SEGURO E TIPADO
         try {
           console.log("=== 🚀 INICIANDO DISPARO DE NOTIFICAÇÃO ===");
 
-          // Buscamos direto da tabela perfis apontando a interface PagadorPerfil[]
           const { data: pagadores, error: perfisError } = await supabase
             .from("perfis")
             .select("id, nome_completo, email")
@@ -140,7 +170,6 @@ export function NovaSolicitacao({
           console.log("🔍 Lista de pagadores retornada do Banco:", pagadores);
 
           if (pagadores && pagadores.length > 0) {
-            // Convertemos explicitamente para o tipo correto para o VS Code parar de reclamar
             const listaPagadores = pagadores as PagadorPerfil[];
 
             const envios = listaPagadores.map(async (pagador) => {
@@ -190,16 +219,9 @@ export function NovaSolicitacao({
 
   return (
     <S.Form onSubmit={handleSubmit}>
-      <h2
-        style={{
-          fontSize: "1.3rem",
-          fontWeight: 700,
-          marginBottom: "8px",
-          color: "#0f172a",
-        }}
-      >
+      <S.TituloModal>
         {dadosParaEditar ? "Editar Solicitação" : "Nova Solicitação"}
-      </h2>
+      </S.TituloModal>
 
       <S.InputGroup>
         <label>Título do Item</label>
@@ -234,13 +256,78 @@ export function NovaSolicitacao({
 
       <S.InputGroup>
         <label>Anexar Boleto ou Orçamento (PDF/Imagem)</label>
-        <input
-          type="file"
-          accept="image/*,application/pdf"
-          onChange={(e) =>
-            setArquivoBoleto(e.target.files ? e.target.files[0] : null)
-          }
-        />
+
+        {anexoExistenteUrl ? (
+          /* Modo Edição (Banco de dados) */
+          <S.AnexoEditContainer>
+            <S.NomeArquivo
+              onClick={() => window.open(anexoExistenteUrl, "_blank")}
+            >
+              <FileText size={18} color="#64748b" style={{ flexShrink: 0 }} />
+              <span>{obterNomeDoAnexo(anexoExistenteUrl)}</span>
+            </S.NomeArquivo>
+
+            <S.BtnTextoRemover
+              type="button"
+              onClick={() => {
+                setAnexoExistenteUrl("");
+                setArquivoBoleto(null);
+              }}
+            >
+              Remover
+            </S.BtnTextoRemover>
+          </S.AnexoEditContainer>
+        ) : (
+          /* Modo Upload Novo */
+          <S.AnexoNovoContainer>
+            {/* 🎯 CONECTADO: htmlFor sincronizado com o ID do input estável abaixo */}
+            <S.LabelAnexoCustomizado htmlFor="upload-boleto-nova-solicitacao">
+              <S.TextoPlaceholder>
+                {arquivoBoleto ? (
+                  <S.NomeArquivoNovo>
+                    <FileText
+                      size={18}
+                      color="#1e293b"
+                      style={{ flexShrink: 0 }}
+                    />
+                    <S.TextoNomeFiltrado>
+                      {arquivoBoleto.name}
+                    </S.TextoNomeFiltrado>
+                  </S.NomeArquivoNovo>
+                ) : (
+                  "Nenhum arquivo anexado..."
+                )}
+              </S.TextoPlaceholder>
+
+              {arquivoBoleto ? (
+                <S.BtnLimparArquivoNovo
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Previne que a janela de upload reabra ao limpar
+                    setArquivoBoleto(null);
+                  }}
+                >
+                  Remover
+                </S.BtnLimparArquivoNovo>
+              ) : (
+                <S.BtnTextoAzulNativo>Anexar Arquivo</S.BtnTextoAzulNativo>
+              )}
+            </S.LabelAnexoCustomizado>
+
+            {/* 🎯 SEGURO E FIXO: Input mantido fora de condicionais e indexado por ID */}
+            <S.InputFileInvisivel
+              id="upload-boleto-nova-solicitacao"
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  setArquivoBoleto(e.target.files[0]);
+                }
+              }}
+            />
+          </S.AnexoNovoContainer>
+        )}
       </S.InputGroup>
 
       <S.ButtonContainer>

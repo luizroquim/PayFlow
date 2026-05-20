@@ -56,7 +56,6 @@ export function Filtros({
           title="Filtrar por data de criação"
         >
           <Calendar size={18} />
-          
         </S.BotaoCalendario>
       </S.LinhaPrincipal>
 
@@ -69,6 +68,7 @@ export function Filtros({
               type="date"
               value={dataInicio}
               onChange={(e) => setDataInicio(e.target.value)}
+              max={dataFim || undefined}
             />
           </div>
 
@@ -78,6 +78,7 @@ export function Filtros({
               type="date"
               value={dataFim}
               onChange={(e) => setDataFim(e.target.value)}
+              min={dataInicio || undefined}
             />
           </div>
 
