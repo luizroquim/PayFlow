@@ -1,3 +1,4 @@
+import { AlertCircle } from "lucide-react"; // 🎯 IMPORTAÇÃO DO ÍCONE ADICIONADA
 import * as S from "./styles";
 
 interface CamposPagamentoProps {
@@ -5,12 +6,20 @@ interface CamposPagamentoProps {
   setFormaPagamento: (valor: string) => void;
   valor: string;
   setValor: (valor: string) => void;
-  
+
   // Estados do PIX / Link de Pagamento
   tipoChavePix: string;
   setTipoChavePix: (valor: string) => void;
   chavePix: string;
   setChavePix: (valor: string) => void;
+
+  // 🎯 ERROS CONTROLADOS
+  erroPix: string;
+  setErroPix: (valor: string) => void;
+  erroTed: string;
+  setErroTed: (valor: string) => void;
+  erroFavorecido: string;
+  setErroFavorecido: (valor: string) => void;
 
   // Estados da Transferência (TED/DOC)
   bancoTed: string;
@@ -25,6 +34,11 @@ interface CamposPagamentoProps {
   setNomeFavorecido: (valor: string) => void;
 }
 
+const REGEX_CPF = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+const REGEX_CNPJ = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
+const REGEX_TELEFONE = /^\(\d{2}\)\s\d{5}-\d{4}$/;
+const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function CamposPagamentoDinamicos({
   formaPagamento,
   setFormaPagamento,
@@ -34,6 +48,12 @@ export function CamposPagamentoDinamicos({
   setTipoChavePix,
   chavePix,
   setChavePix,
+  erroPix,
+  setErroPix,
+  erroTed,
+  setErroTed,
+  erroFavorecido,
+  setErroFavorecido,
   bancoTed,
   setBancoTed,
   agenciaTed,
@@ -45,8 +65,6 @@ export function CamposPagamentoDinamicos({
   nomeFavorecido,
   setNomeFavorecido,
 }: CamposPagamentoProps) {
-
-  // 🪙 MÁSCARA DE MOEDA
   function handleValorChange(e: React.ChangeEvent<HTMLInputElement>) {
     const numStr = e.target.value.replace(/\D/g, "");
     if (!numStr) {
@@ -59,7 +77,6 @@ export function CamposPagamentoDinamicos({
     setValor("R$ " + formatado);
   }
 
-  // 🛡️ MÁSCARA DINÂMICA CPF / CNPJ
   function aplicarCpfCnpj(v: string) {
     let valorLimpo = v.replace(/\D/g, "");
     if (valorLimpo.length <= 11) {
@@ -76,9 +93,10 @@ export function CamposPagamentoDinamicos({
     return valorLimpo;
   }
 
-  // MÁSCARA ESPECÍFICA DA CHAVE PIX
   function handleChavePixChange(e: React.ChangeEvent<HTMLInputElement>) {
     let inputVal = e.target.value;
+    setErroPix("");
+
     if (tipoChavePix === "cnpj_cpf") {
       inputVal = aplicarCpfCnpj(inputVal);
     } else if (tipoChavePix === "celular") {
@@ -86,19 +104,81 @@ export function CamposPagamentoDinamicos({
       digitos = digitos.replace(/^(\d{2})(\d)/g, "($1) $2");
       digitos = digitos.replace(/(\d{5})(\d)/, "$1-$2");
       inputVal = digitos;
+    } else if (tipoChavePix === "email") {
+      inputVal = inputVal.toLowerCase().trim();
     }
     setChavePix(inputVal);
   }
 
-  // PLACEHOLDER DINÂMICO PIX
+  // 🎯 VALIDAÇÕES ONBLUR COM TEXTOS CURTOS
+  function validarChavePixAoSair() {
+    if (!chavePix) {
+      setErroPix("");
+      return;
+    }
+
+    if (tipoChavePix === "cnpj_cpf") {
+      if (!(REGEX_CPF.test(chavePix) || REGEX_CNPJ.test(chavePix))) {
+        setErroPix("CPF ou CNPJ incompleto.");
+        return;
+      }
+    }
+    if (tipoChavePix === "celular" && !REGEX_TELEFONE.test(chavePix)) {
+      setErroPix("Telefone incompleto.");
+      return;
+    }
+    if (tipoChavePix === "email" && !REGEX_EMAIL.test(chavePix)) {
+      setErroPix("E-mail inválido.");
+      return;
+    }
+    setErroPix("");
+  }
+
+  function validarDadosTedAoSair() {
+    if (!agenciaTed && !contaTed) {
+      setErroTed("");
+      return;
+    }
+
+    if (agenciaTed && agenciaTed.length < 4) {
+      setErroTed("Agência inválida (mínimo 4 dígitos).");
+      return;
+    }
+    if (contaTed && contaTed.replace("-", "").length < 5) {
+      setErroTed("Conta corrente incompleta.");
+      return;
+    }
+    setErroTed("");
+  }
+
+  function validarFavorecidoTedAoSair() {
+    if (!cpfCnpjFavorecido) {
+      setErroFavorecido("");
+      return;
+    }
+    if (
+      !(REGEX_CPF.test(cpfCnpjFavorecido) || REGEX_CNPJ.test(cpfCnpjFavorecido))
+    ) {
+      setErroFavorecido("CPF ou CNPJ incompleto.");
+      return;
+    }
+    setErroFavorecido("");
+  }
+
   function obterPlaceholderPix() {
     switch (tipoChavePix) {
-      case "cnpj_cpf": return "CPF ou CNPJ";
-      case "celular": return "(00) 90000-0000";
-      case "email": return "nome@empresa.com";
-      case "aleatoria": return "Chave EVP de 36 caracteres";
-      case "copia_cola": return "Cole o código BR.GOV.PIX...";
-      default: return "Digite a chave...";
+      case "cnpj_cpf":
+        return "CPF ou CNPJ";
+      case "celular":
+        return "(00) 90000-0000";
+      case "email":
+        return "nome@empresa.com";
+      case "aleatoria":
+        return "Chave EVP de 36 caracteres";
+      case "copia_cola":
+        return "Cole o código BR.GOV.PIX...";
+      default:
+        return "Digite a chave...";
     }
   }
 
@@ -112,7 +192,10 @@ export function CamposPagamentoDinamicos({
             value={formaPagamento}
             onChange={(e) => {
               setFormaPagamento(e.target.value);
-              setChavePix(""); // Limpa os campos secundários para evitar lixo eletrônico
+              setChavePix("");
+              setErroPix("");
+              setErroTed("");
+              setErroFavorecido("");
             }}
           >
             <option value="">Selecione</option>
@@ -136,15 +219,16 @@ export function CamposPagamentoDinamicos({
         </S.GrupoInput>
       </S.GridDuplo>
 
-      {/* CAMPO DINÂMICO PARA LINK DE PAGAMENTO */}
       {formaPagamento === "link_pagamento" && (
         <S.BlocoDinamicoAnimado>
           <S.GrupoInput>
-            <label htmlFor="input-link-pagamento">URL do Link de Pagamento</label>
+            <label htmlFor="input-link-pagamento">
+              URL do Link de Pagamento
+            </label>
             <input
               id="input-link-pagamento"
               type="url"
-              placeholder="https://link.mercadopago.com.br/..."
+              placeholder="https://link.operadora.com.br/sua-cobranca/..."
               value={chavePix}
               onChange={(e) => setChavePix(e.target.value)}
               required
@@ -156,7 +240,6 @@ export function CamposPagamentoDinamicos({
       {formaPagamento === "pix" && (
         <S.BlocoDinamicoAnimado>
           <S.GridPix>
-            {/* 🎯 ADICIONADO: Input do Nome do Favorecido no topo do bloco PIX */}
             <div style={{ gridColumn: "1 / -1" }}>
               <S.GrupoInput>
                 <label htmlFor="pix-nome-favorecido">Nome do Favorecido</label>
@@ -179,6 +262,7 @@ export function CamposPagamentoDinamicos({
                 onChange={(e) => {
                   setTipoChavePix(e.target.value);
                   setChavePix("");
+                  setErroPix("");
                 }}
               >
                 <option value="cnpj_cpf">CPF / CNPJ</option>
@@ -191,7 +275,9 @@ export function CamposPagamentoDinamicos({
 
             <S.GrupoInput>
               <label htmlFor="input-chave-pix">
-                {tipoChavePix === "copia_cola" ? "Código Copia e Cola" : "Chave PIX"}
+                {tipoChavePix === "copia_cola"
+                  ? "Código Copia e Cola"
+                  : "Chave PIX"}
               </label>
               <input
                 id="input-chave-pix"
@@ -199,7 +285,25 @@ export function CamposPagamentoDinamicos({
                 placeholder={obterPlaceholderPix()}
                 value={chavePix}
                 onChange={handleChavePixChange}
+                onBlur={validarChavePixAoSair}
+                required
               />
+              {/* 🎯 ALTERADO: ÍCONE DO LUCIDE INJETADO COM ALINHAMENTO FLEX */}
+              {erroPix && (
+                <span
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#0284c7",
+                    fontWeight: 600,
+                    marginTop: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px"
+                  }}
+                >
+                  <AlertCircle size={14} style={{ flexShrink: 0 }} /> {erroPix}
+                </span>
+              )}
             </S.GrupoInput>
           </S.GridPix>
         </S.BlocoDinamicoAnimado>
@@ -226,7 +330,13 @@ export function CamposPagamentoDinamicos({
                 type="text"
                 placeholder="0001"
                 value={agenciaTed}
-                onChange={(e) => setAgenciaTed(e.target.value.replace(/\D/g, "").substring(0, 4))}
+                onBlur={validarDadosTedAoSair}
+                onChange={(e) => {
+                  setErroTed("");
+                  setAgenciaTed(
+                    e.target.value.replace(/\D/g, "").substring(0, 4),
+                  );
+                }}
               />
             </S.GrupoInput>
 
@@ -237,7 +347,9 @@ export function CamposPagamentoDinamicos({
                 type="text"
                 placeholder="12345-6"
                 value={contaTed}
+                onBlur={validarDadosTedAoSair}
                 onChange={(e) => {
+                  setErroTed("");
                   let v = e.target.value.replace(/\D/g, "");
                   if (v.length > 1) v = v.replace(/(\d+)(\d{1})$/, "$1-$2");
                   setContaTed(v);
@@ -246,20 +358,60 @@ export function CamposPagamentoDinamicos({
             </S.GrupoInput>
           </S.GridTedLinhaUm>
 
+          {/* 🎯 ALTERADO: ÍCONE DO LUCIDE NO AVISO DE CONTA/AGÊNCIA */}
+          {erroTed && (
+            <span
+              style={{
+                fontSize: "0.8rem",
+                color: "#0284c7",
+                fontWeight: 600,
+                marginTop: "-8px",
+                marginBottom: "8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px"
+              }}
+            >
+              <AlertCircle size={14} style={{ flexShrink: 0 }} /> {erroTed}
+            </span>
+          )}
+
           <S.GridTedLinhaDois>
             <S.GrupoInput>
               <label htmlFor="ted-favorecido-doc">CPF/CNPJ Favorecido</label>
               <input
                 id="ted-favorecido-doc"
                 type="text"
-                placeholder="000.000.000-00"
+                placeholder="000.000.000-00 ou 00.000.000/0000-00"
                 value={cpfCnpjFavorecido}
-                onChange={(e) => setCpfCnpjFavorecido(aplicarCpfCnpj(e.target.value))}
+                onBlur={validarFavorecidoTedAoSair}
+                onChange={(e) => {
+                  setErroFavorecido("");
+                  setCpfCnpjFavorecido(aplicarCpfCnpj(e.target.value));
+                }}
               />
+              {/* 🎯 ALTERADO: ÍCONE DO LUCIDE NO FAVORECIDO TED */}
+              {erroFavorecido && (
+                <span
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#0284c7",
+                    fontWeight: 600,
+                    marginTop: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px"
+                  }}
+                >
+                  <AlertCircle size={14} style={{ flexShrink: 0 }} /> {erroFavorecido}
+                </span>
+              )}
             </S.GrupoInput>
 
             <S.GrupoInput>
-              <label htmlFor="ted-nome-titular">Nome do Favorecido / Titular</label>
+              <label htmlFor="ted-nome-titular">
+                Nome do Favorecido / Titular
+              </label>
               <input
                 id="ted-nome-titular"
                 type="text"

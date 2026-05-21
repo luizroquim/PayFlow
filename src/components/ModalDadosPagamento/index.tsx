@@ -20,6 +20,38 @@ interface ModalDadosPagamentoProps {
   };
 }
 
+// 🎯 DICIONÁRIO DE MAPEAMENTO: Converte as chaves brutas do banco para formatos amigáveis
+const MAPA_TIPO_CHAVE: Record<string, string> = {
+  cnpj_cpf: "CPF / CNPJ",
+  celular: "Celular",
+  email: "E-mail",
+  aleatoria: "Aleatória",
+  copia_cola: "Copia e Cola",
+};
+
+// 🎯 FUNÇÃO HELPER: Converte os textos informativos para Title Case
+function aplicarTitleCase(str: string | null | undefined): string {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .split(" ")
+    .filter((word) => word.trim() !== "")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+// 🎯 COMPONENTE: Apenas para leitura visual de textos informativos (Sem Lucide, Sem Cópia, Sem Efeito)
+function CampoApenasLeitura({ label, valor }: { label: string; valor: string }) {
+  return (
+    <S.LinhaCopiavel $apenasLeitura>
+      <label>{label}</label>
+      <div className="wrapper-input">
+        <input type="text" value={valor} readOnly />
+      </div>
+    </S.LinhaCopiavel>
+  );
+}
+
 function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
   const [copiado, setCopiado] = useState(false);
 
@@ -51,7 +83,10 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
       <label>{label}</label>
       <div className="wrapper-input">
         <input type="text" value={valor} readOnly onClick={handleCopy} />
+        
+        {/* 🎯 ATUALIZADO: Alerta posicionado dentro do wrapper. Flutua à direita indicando o campo exato */}
         {copiado && <S.AlertaCopiado>Copiado!</S.AlertaCopiado>}
+        
         <button
           type="button"
           className="btn-copy"
@@ -103,9 +138,7 @@ export function ModalDadosPagamento({ solicitacao }: ModalDadosPagamentoProps) {
 
         {/* MÓDULO: LINK DE PAGAMENTO */}
         {forma_pagamento === "link_pagamento" && pix_chave && (
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-          >
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <CampoCopiavel label="Link para copiar" valor={pix_chave} />
             <a
               href={pix_chave}
@@ -130,28 +163,18 @@ export function ModalDadosPagamento({ solicitacao }: ModalDadosPagamentoProps) {
         {/* MÓDULO: PIX */}
         {forma_pagamento === "pix" && (
           <S.GridPix>
-            {/* 🎯 ADICIONADO: Nome do Favorecido ocupando toda a largura da linha no Grid */}
             <div style={{ gridColumn: "1 / -1" }}>
-              <CampoCopiavel
+              <CampoApenasLeitura
                 label="Nome do Favorecido"
-                valor={ted_favorecido || "Não informado"}
+                valor={ted_favorecido ? aplicarTitleCase(ted_favorecido) : "Não informado"}
               />
             </div>
 
-            <S.LinhaCopiavel>
-              <label>Tipo de Chave</label>
-              <input
-                type="text"
-                value={
-                  pix_tipo === "cnpj_cpf"
-                    ? "CPF / CNPJ"
-                    : pix_tipo === "copia_cola"
-                      ? "Copia e Cola"
-                      : pix_tipo || ""
-                }
-                readOnly
-              />
-            </S.LinhaCopiavel>
+            <CampoApenasLeitura
+              label="Tipo de Chave"
+              valor={pix_tipo ? (MAPA_TIPO_CHAVE[pix_tipo] || aplicarTitleCase(pix_tipo)) : "Não informado"}
+            />
+
             <CampoCopiavel
               label={pix_tipo === "copia_cola" ? "Código Pix" : "Chave PIX"}
               valor={pix_chave || ""}
@@ -162,9 +185,9 @@ export function ModalDadosPagamento({ solicitacao }: ModalDadosPagamentoProps) {
         {/* MÓDULO: TED / DOC */}
         {forma_pagamento === "transferencia" && (
           <>
-            <CampoCopiavel
+            <CampoApenasLeitura
               label="Nome do Favorecido"
-              valor={ted_favorecido || ""}
+              valor={ted_favorecido ? aplicarTitleCase(ted_favorecido) : "Não informado"}
             />
             <CampoCopiavel
               label="CPF / CNPJ do Favorecido"
@@ -172,7 +195,10 @@ export function ModalDadosPagamento({ solicitacao }: ModalDadosPagamentoProps) {
             />
 
             <S.GridTedLinhaUm>
-              <CampoCopiavel label="Banco" valor={ted_banco || ""} />
+              <CampoApenasLeitura 
+                label="Banco" 
+                valor={ted_banco ? aplicarTitleCase(ted_banco) : "Não informado"} 
+              />
               <CampoCopiavel label="Agência" valor={ted_agencia || ""} />
               <CampoCopiavel label="Conta" valor={ted_conta || ""} />
             </S.GridTedLinhaUm>

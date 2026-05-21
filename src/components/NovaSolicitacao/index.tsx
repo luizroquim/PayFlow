@@ -28,7 +28,7 @@ interface Solicitacao {
 interface NovaSolicitacaoProps {
   onSucesso: () => void;
   dadosParaEditar: Solicitacao | null;
-  onClose: () => void; // 🎯 ADICIONADO: Prop para lidar com o fechamento vindo da Dashboard
+  onClose: () => void; 
 }
 
 interface PagadorPerfil {
@@ -40,7 +40,7 @@ interface PagadorPerfil {
 export function NovaSolicitacao({
   onSucesso,
   dadosParaEditar,
-  onClose, // 🎯 ADICIONADO: Recebendo a função de fechar
+  onClose, 
 }: NovaSolicitacaoProps) {
   const [titulo, setTitulo] = useState(dadosParaEditar?.titulo || "");
   const [descricao, setDescricao] = useState(dadosParaEditar?.descricao || "");
@@ -55,6 +55,11 @@ export function NovaSolicitacao({
   const [contaTed, setContaTed] = useState(dadosParaEditar?.ted_conta || "");
   const [cpfCnpjFavorecido, setCpfCnpjFavorecido] = useState(dadosParaEditar?.ted_cpf_cnpj || "");
   const [nomeFavorecido, setNomeFavorecido] = useState(dadosParaEditar?.ted_favorecido || "");
+
+  // 🎯 TRÊS ESTADOS DE ERROS VISUAIS ISOLADOS
+  const [erroPix, setErroPix] = useState("");
+  const [erroTed, setErroTed] = useState("");
+  const [erroFavorecido, setErroFavorecido] = useState("");
 
   const [arquivoBoleto, setArquivoBoleto] = useState<File | null>(null);
   const [anexoExistenteUrl, setAnexoExistenteUrl] = useState<string>(dadosParaEditar?.boleto_url || "");
@@ -93,6 +98,43 @@ export function NovaSolicitacao({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // 🎯 SE HOUVER QUALQUER ERRO ATIVO NA TELA, TRAVA O SUBMIT SILENCIOSAMENTE
+    if (formaPagamento === "pix" && erroPix) return;
+    if (formaPagamento === "transferencia" && (erroTed || erroFavorecido)) return;
+
+    const regexCPF = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+    const regexCNPJ = /^\d{2}\.\d{2}\.\d{3}\/\d{4}-\d{2}$/;
+
+    // DOUBLE-CHECK SILENCIOSO PARA O PIX
+    if (formaPagamento === "pix") {
+      const regexTelefone = /^\(\d{2}\)\s\d{5}-\d{4}$/;
+      const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (tipoChavePix === "cnpj_cpf" && !(regexCPF.test(chavePix) || regexCNPJ.test(chavePix))) {
+        setErroPix("CPF ou CNPJ incompleto."); return;
+      }
+      if (tipoChavePix === "celular" && !regexTelefone.test(chavePix)) {
+        setErroPix("Telefone incompleto."); return;
+      }
+      if (tipoChavePix === "email" && !regexEmail.test(chavePix)) {
+        setErroPix("E-mail inválido."); return;
+      }
+    }
+
+    // 🎯 DOUBLE-CHECK SILENCIOSO PARA TED/DOC
+    if (formaPagamento === "transferencia") {
+      if (agenciaTed && agenciaTed.length < 4) {
+        setErroTed("Agência inválida (mínimo 4 dígitos)."); return;
+      }
+      if (contaTed && contaTed.replace("-", "").length < 5) {
+        setErroTed("Conta corrente incompleta."); return;
+      }
+      if (cpfCnpjFavorecido && !(regexCPF.test(cpfCnpjFavorecido) || regexCNPJ.test(cpfCnpjFavorecido))) {
+        setErroFavorecido("CPF ou CNPJ incompleto."); return;
+      }
+    }
+
     setEnviando(true);
 
     try {
@@ -136,7 +178,6 @@ export function NovaSolicitacao({
         ted_agencia: formaPagamento === "transferencia" ? agenciaTed : null,
         ted_conta: formaPagamento === "transferencia" ? contaTed : null,
         ted_cpf_cnpj: formaPagamento === "transferencia" ? cpfCnpjFavorecido : null,
-        // 🎯 ATUALIZADO: Agora salva o nome do favorecido se for TED OU se for PIX
         ted_favorecido: (formaPagamento === "transferencia" || formaPagamento === "pix") ? nomeFavorecido : null,
       };
 
@@ -198,7 +239,6 @@ export function NovaSolicitacao({
         {dadosParaEditar ? "Editar Solicitação" : "Nova Solicitação"}
       </S.TituloModal>
 
-      {/* 👈 COLUNA DA ESQUERDA: Dados do Item */}
       <S.ColunaEsquerda>
         <S.InputGroup>
           <label>Título do Item</label>
@@ -232,7 +272,6 @@ export function NovaSolicitacao({
         </S.InputGroup>
       </S.ColunaEsquerda>
 
-      {/* 👉 COLUNA DA DIREITA: Dados Financeiros e de Pagamento */}
       <S.ColunaDireita>
         <CamposPagamentoDinamicos
           formaPagamento={formaPagamento}
@@ -243,6 +282,13 @@ export function NovaSolicitacao({
           setTipoChavePix={setTipoChavePix}
           chavePix={chavePix}
           setChavePix={setChavePix}
+          /* 🎯 PASSANDO TODOS OS ERROS */
+          erroPix={erroPix}
+          setErroPix={setErroPix}
+          erroTed={erroTed}
+          setErroTed={setErroTed}
+          erroFavorecido={erroFavorecido}
+          setErroFavorecido={setErroFavorecido}
           bancoTed={bancoTed}
           setBancoTed={setBancoTed}
           agenciaTed={agenciaTed}
@@ -319,7 +365,6 @@ export function NovaSolicitacao({
         </S.InputGroup>
       </S.ColunaDireita>
 
-      {/* 🎯 RODAPÉ ATUALIZADO: Botões posicionados lado a lado de forma limpa */}
       <S.ButtonContainer>
         <button 
           type="button" 

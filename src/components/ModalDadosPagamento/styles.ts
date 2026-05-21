@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-/* 🎯 NOVO CONTAINER SOBERANO QUE BLINDA O COMPONENTE INTERNO */
+/* Container soberano que blinda o componente interno */
 export const WrapperModalPagamento = styled.div`
   width: 100%;
   display: flex;
@@ -29,7 +29,7 @@ export const ContainerDados = styled.div`
   margin-top: 10px;
 `;
 
-export const LinhaCopiavel = styled.div`
+export const LinhaCopiavel = styled.div<{ $apenasLeitura?: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -52,7 +52,7 @@ export const LinhaCopiavel = styled.div`
 
   input {
     width: 100%;
-    padding: 10px 42px 10px 12px;
+    padding: ${(props) => (props.$apenasLeitura ? "10px 12px" : "10px 42px 10px 12px")};
     border-radius: 8px;
     border: 1px solid #cbd5e1;
     background-color: #f8fafc;
@@ -60,7 +60,11 @@ export const LinhaCopiavel = styled.div`
     color: #1e293b;
     font-weight: 500;
     outline: none;
-    cursor: default;
+    cursor: ${(props) => (props.$apenasLeitura ? "default" : "pointer")};
+    
+    &:hover {
+      border-color: ${(props) => (props.$apenasLeitura ? "#cbd5e1" : "#0284c7")};
+    }
   }
 
   .btn-copy {
@@ -112,16 +116,37 @@ export const GridTedLinhaUm = styled.div`
 
 export const AlertaCopiado = styled.span`
   font-size: 0.75rem;
-  color: #10b981;
+  color: #ffffff;
+  background-color: #10b981;
   font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  
+  /* 🎯 NOVO POSICIONAMENTO: Fixado no canto direito, logo acima do ícone de cópia */
   position: absolute;
-  right: 44px;
+  top: -32px;
+  right: 12px;
+  z-index: 10;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  /* Pequena seta apontando para o ícone correspondente */
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    right: 12px; /* Alinha a seta com o canto direito do balão */
+    border-width: 4px 4px 0;
+    border-style: solid;
+    border-color: #10b981 transparent transparent;
+  }
+
   animation: fadeInOut 1.5s ease-in-out forwards;
 
   @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(2px); }
+    0% { opacity: 0; transform: translateY(4px); }
     15% { opacity: 1; transform: translateY(0); }
     85% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-2px); }
+    100% { opacity: 0; transform: translateY(-4px); }
   }
 `;
