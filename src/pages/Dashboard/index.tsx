@@ -4,17 +4,21 @@ import { NovaSolicitacao } from "../../components/NovaSolicitacao";
 import { useNavigate } from "react-router-dom";
 import { Filtros } from "../../components/Filtros";
 import { CardSolicitacao } from "../../components/CardSolicitacao";
+
+// 🎯 OTIMIZADO: Importações limpas e organizadas
+import { ModalFinalizarProcesso } from "../../components/ModalFinalizarProcesso";
+import { ModalExcluirSolicitacao } from "../../components/ModalExcluirSolicitacao";
+
 import {
   LogOut,
   ChevronLeft,
   ChevronRight,
   Loader2,
-  FileText,
 } from "lucide-react";
 import icon from "../../assets/icon.ico";
 import * as S from "./styles";
 
-interface Solicitacao {
+export interface Solicitacao {
   id: string;
   titulo: string;
   descricao: string;
@@ -38,24 +42,17 @@ export function Dashboard() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
+  // Controla a modal de Criar/Editar solicitação
   const [mostrarModal, setMostrarModal] = useState(false);
-  const [solicitacaoParaEditar, setSolicitacaoParaEditar] =
-    useState<Solicitacao | null>(null);
+  const [solicitacaoParaEditar, setSolicitacaoParaEditar] = useState<Solicitacao | null>(null);
 
   const [mostrarModalPagamento, setMostrarModalPagamento] = useState(false);
-  const [itemEmPagamento, setItemEmPagamento] = useState<Solicitacao | null>(
-    null,
-  );
-  const [arquivo, setArquivo] = useState<File | null>(null);
-  const [enviando, setEnviando] = useState(false);
-  const [excluindo, setExcluindo] = useState(false);
-  const [carregando, setCarregando] = useState(true);
+  const [itemEmPagamento, setItemEmPagamento] = useState<Solicitacao | null>(null);
 
   const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false);
-  const [idItemParaExcluir, setIdItemParaExcluir] = useState<string | null>(
-    null,
-  );
+  const [idItemParaExcluir, setIdItemParaExcluir] = useState<string | null>(null);
 
+  const [carregando, setCarregando] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | undefined>("");
   const [isPagador, setIsPagador] = useState(false);
@@ -118,7 +115,7 @@ export function Dashboard() {
           query = query.eq("user_id", currentUserId);
         }
 
-        const { data, error } = await query.order("created_at", {
+        const { data, error = null } = await query.order("created_at", {
           ascending: false,
         });
 
@@ -218,75 +215,6 @@ export function Dashboard() {
     indiceUltimoItem,
   );
 
-  async function confirmarPagamento() {
-    if (!itemEmPagamento) return;
-    setEnviando(true);
-
-    try {
-      let urlComprovante = "";
-      if (arquivo) {
-        const fileExt = arquivo.name.split(".").pop();
-
-        const nomeOriginalLimpo = arquivo.name
-          .replace(`.${fileExt}`, "")
-          .replace(/\s+/g, "_");
-
-        const fileName = `${crypto.randomUUID()}-${nomeOriginalLimpo}.${fileExt}`;
-
-        const { error: upErr } = await supabase.storage
-          .from("documentos-solicitacao")
-          .upload(fileName, arquivo);
-
-        if (upErr) throw upErr;
-
-        const { data: urlData } = supabase.storage
-          .from("documentos-solicitacao")
-          .getPublicUrl(fileName);
-        urlComprovante = urlData.publicUrl;
-      }
-
-      const { error: updateError } = await supabase
-        .from("solicitacoes")
-        .update({
-          status: "comprado",
-          comprovante_url: urlComprovante,
-          data_pagamento: new Date().toISOString(),
-        })
-        .eq("id", itemEmPagamento.id);
-
-      if (updateError) throw updateError;
-
-      setMostrarModalPagamento(false);
-      setArquivo(null);
-
-      await forcarAtualizacaoManual();
-    } catch (err: unknown) {
-      alert("Erro ao processar pagamento: " + (err as Error).message);
-    } finally {
-      setEnviando(false);
-    }
-  }
-
-  async function executarExclusao() {
-    if (!idItemParaExcluir) return;
-    setExcluindo(true); // 🎯 LIGA O CARREGAMENTO DA EXCLUSÃO
-
-    const { error } = await supabase
-      .from("solicitacoes")
-      .delete()
-      .eq("id", idItemParaExcluir);
-
-    if (error) {
-      alert("Erro ao excluir");
-    } else {
-      await forcarAtualizacaoManual();
-    }
-
-    setMostrarModalExcluir(false);
-    setIdItemParaExcluir(null);
-    setExcluindo(false); // 🎯 DESLIGA O CARREGAMENTO
-  }
-
   return (
     <S.Container>
       <S.Header>
@@ -337,7 +265,7 @@ export function Dashboard() {
             onClick={() => handleTrocaAba("pendente")}
             tabType="pendente"
           >
-            Pendentes
+            Pedentes
           </S.TabButton>
           <S.TabButton
             isActive={abaAtiva === "comprado"}
@@ -421,9 +349,10 @@ export function Dashboard() {
         )}
       </S.MainContent>
 
+      {/* 1. MODAL: NOVA / EDITAR SOLICITAÇÃO */}
       {mostrarModal && (
         <S.ModalOverlay>
-          <S.ModalContent maxWidth="480px">
+          <S.ModalContent maxWidth="950px">
             <NovaSolicitacao
               key={solicitacaoParaEditar?.id || "nova-solicitacao"}
               onSucesso={async () => {
@@ -431,134 +360,45 @@ export function Dashboard() {
                 await forcarAtualizacaoManual();
               }}
               dadosParaEditar={solicitacaoParaEditar}
+              onClose={() => setMostrarModal(false)} // 🎯 ENVIADO: Botão removido do HTML e passado via Prop
             />
-            {/* 🎯 SEU BOTÃO RESTAURADO: */}
-            <button
-              className="btn-close-modal"
-              onClick={() => setMostrarModal(false)}
-            >
-              Voltar para a lista
-            </button>
           </S.ModalContent>
         </S.ModalOverlay>
       )}
 
-      {mostrarModalPagamento && (
+      {/* 2. MODAL ISOLADA: FINALIZAR PROCESSO (ANEXAR COMPROVANTE) */}
+      {mostrarModalPagamento && itemEmPagamento && (
         <S.ModalOverlay>
-          <S.ModalContent maxWidth="400px">
-            <h3>Finalizar Processo</h3>
-            <p className="modal-description">
-              Carregue o comprovante de transferência ou pagamento bancário.
-            </p>
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "6px",
-                margin: "16px 0",
-              }}
-            >
-              <S.AnexoNovoContainer>
-                <S.LabelAnexoCustomizado htmlFor="upload-comprovante-dashboard">
-                  <S.TextoPlaceholder>
-                    {arquivo ? (
-                      <S.NomeArquivoNovo>
-                        <FileText
-                          size={18}
-                          color="#1e293b"
-                          style={{ flexShrink: 0 }}
-                        />
-                        <S.TextoNomeFiltrado>
-                          {arquivo.name}
-                        </S.TextoNomeFiltrado>
-                      </S.NomeArquivoNovo>
-                    ) : (
-                      "Nenhum comprovante anexado..."
-                    )}
-                  </S.TextoPlaceholder>
-
-                  {arquivo ? (
-                    <S.BtnLimparArquivoNovo
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setArquivo(null);
-                      }}
-                    >
-                      Remover
-                    </S.BtnLimparArquivoNovo>
-                  ) : (
-                    <S.BtnTextoAzulNativo>Anexar Arquivo</S.BtnTextoAzulNativo>
-                  )}
-                </S.LabelAnexoCustomizado>
-
-                <S.InputFileInvisivel
-                  id="upload-comprovante-dashboard"
-                  type="file"
-                  accept="image/*,application/pdf"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      setArquivo(e.target.files[0]);
-                    }
-                  }}
-                />
-              </S.AnexoNovoContainer>
-            </div>
-
-            <div className="modal-actions">
-              <button
-                className="btn-submit-payment"
-                onClick={confirmarPagamento}
-                disabled={enviando} // 🎯 CORRIGIDO: Anexo opcional (bloqueia apenas no envio)
-              >
-                {enviando ? "A processar..." : "Confirmar"}
-              </button>
-              <button
-                className="btn-cancel-payment"
-                onClick={() => {
-                  setMostrarModalPagamento(false);
-                  setArquivo(null);
-                }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </S.ModalContent>
+          <ModalFinalizarProcesso
+            itemEmPagamento={itemEmPagamento}
+            onClose={() => {
+              setMostrarModalPagamento(false);
+              setItemEmPagamento(null);
+            }}
+            onSucesso={async () => {
+              setMostrarModalPagamento(false);
+              setItemEmPagamento(null);
+              await forcarAtualizacaoManual();
+            }}
+          />
         </S.ModalOverlay>
       )}
 
-      {mostrarModalExcluir && (
+      {/* 3. MODAL ISOLADA: CONFIRMAR EXCLUSÃO */}
+      {mostrarModalExcluir && idItemParaExcluir && (
         <S.ModalOverlay>
-          <S.ConfirmModalContent>
-            <h3>Excluir Solicitação?</h3>
-            <p>
-              Esta ação não poderá ser desfeita. O item será removido
-              permanentemente do fluxo de pagamentos.
-            </p>
-
-            <div className="actions">
-              <button
-                type="button"
-                className="btn-cancel"
-                onClick={() => {
-                  setMostrarModalExcluir(false);
-                  setIdItemParaExcluir(null);
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="btn-delete"
-                onClick={executarExclusao}
-                disabled={excluindo} // 🎯 BLOQUEIA O BOTÃO ENQUANTO EXCLUI
-              >
-                {excluindo ? "Excluindo..." : "Sim, excluir"}
-              </button>
-            </div>
-          </S.ConfirmModalContent>
+          <ModalExcluirSolicitacao
+            idItemParaExcluir={idItemParaExcluir}
+            onClose={() => {
+              setMostrarModalExcluir(false);
+              setIdItemParaExcluir(null);
+            }}
+            onSucesso={async () => {
+              setMostrarModalExcluir(false);
+              setIdItemParaExcluir(null);
+              await forcarAtualizacaoManual();
+            }}
+          />
         </S.ModalOverlay>
       )}
     </S.Container>

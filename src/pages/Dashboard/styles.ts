@@ -193,7 +193,7 @@ export const CardsStack = styled.div`
   gap: 20px;
 `;
 
-// --- MODAIS ---
+// --- MODAIS COM ROLAGEM NATURAL NO CELULAR ---
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
@@ -201,15 +201,22 @@ export const ModalOverlay = styled.div`
   backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: center; 
   z-index: 1000;
   padding: 20px;
+
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    overflow-y: auto;        
+    padding: 16px 12px;
+    -webkit-overflow-scrolling: touch; 
+  }
 `;
 
 export const ModalContent = styled.div<{ maxWidth: string }>`
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px; 
   width: 100%;
   max-width: ${(props) => props.maxWidth};
   background-color: #fff;
@@ -217,6 +224,16 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
   padding: 25px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: modalSwoosh 0.2s ease-out;
+  box-sizing: border-box;
+
+  /* 🎯 CORRIGIDO: Corta a herança global clara, forçando os textos internos soltos a ficarem escuros */
+  color: #1e293b;
+
+  @media (max-width: 768px) {
+    margin-top: 10px;
+    margin-bottom: 30px; 
+    padding: 20px 16px;
+  }
 
   @keyframes modalSwoosh {
     from {
@@ -229,16 +246,20 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
     }
   }
 
-  h3 {
-    margin-bottom: 10px;
-    color: #0f172a;
+  /* 🎯 CORRIGIDO: Garante contraste máximo com a cor grafite escura nos títulos das modais */
+  h3, h2, h4 {
+    margin: 0 0 4px 0;
+    color: #0f172a !important; 
     font-size: 1.25rem;
+    font-weight: 700;
   }
 
+  /* 🎯 CORRIGIDO: Garante a legibilidade padrão na descrição de texto das modais */
   .modal-description {
     font-size: 0.9rem;
-    color: #64748b;
-    margin-bottom: 20px;
+    color: #64748b !important; 
+    margin: 0 0 10px 0;
+    line-height: 1.5;
   }
 
   .file-input {
@@ -248,12 +269,15 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
     color: black;
   }
 
-  .modal-actions {
+  /* 🎯 MODAL FINALIZAR PROCESSO: Configuração ajustada com as classes exatas do seu index.tsx */
+  .finalizar-acoes-container {
     display: flex;
     gap: 12px;
+    width: 100%;
+    margin-top: 20px;
 
     button {
-      flex: 1;
+      flex: 1; 
       padding: 12px;
       border: none;
       border-radius: 10px;
@@ -267,24 +291,21 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
       }
     }
 
-    .btn-submit-payment {
+    /* 🟢 Sincronizado com a class do botão de Confirmar */
+    .btn-confirmar-final {
       background-color: #10b981;
       color: #fff;
-      transition: all 0.2s ease-in-out;
 
       &:disabled {
-        background-color: #a7f3d0; /* Verde claro pastel quando enviando */
+        background-color: #a7f3d0;
         color: #065f46;
         cursor: not-allowed;
         opacity: 0.7;
       }
-
-      &:hover:not(:disabled) {
-        background-color: #059669;
-      }
     }
 
-    .btn-cancel-payment {
+    /* ⚪ Sincronizado com a class do botão de Cancelar */
+    .btn-cancelar-final {
       background-color: #fdfdfd;
       color: #4d4c4c;
       border: 1px solid #c5c5c5;
@@ -297,6 +318,7 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
     }
   }
 
+  /* 🎯 BOTÃO VOLTAR PARA A LISTA PADRÃO: Com a proporção de 50% centralizada no PC */
   .btn-close-modal {
     width: 100%;
     margin-top: 15px;
@@ -314,6 +336,13 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
       color: black;
       border: #4d4c4c 1px solid;
       background-color: white;
+    }
+
+    @media (min-width: 768px) {
+      width: 50%;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
     }
   }
 `;

@@ -1,23 +1,56 @@
 import styled from "styled-components";
 
+// 🎯 FORMULÁRIO PRINCIPAL: Sem travas de altura para não quebrar botões no mobile
 export const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+
+  /* 🖥️ ALINHAMENTO DO GRID EM COMPUTADORES (Telas maiores) */
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Duas colunas idênticas lado a lado */
+    column-gap: 32px; /* Espaço generoso entre as duas colunas */
+    row-gap: 16px;
+  }
+`;
+
+// 🎯 TÍTULO: Cruza o topo da modal de ponta a ponta no computador
+export const TituloModal = styled.h2`
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #0f172a;
+
+  @media (min-width: 768px) {
+    grid-column: span 2;
+  }
+`;
+
+// 🎯 BLOCOS QUE FILTRAN A DISPOSIÇÃO LOGICA DOS INPUTS
+export const ColunaEsquerda = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 100%;
 `;
 
-export const TituloModal = styled.h2`
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #0f172a;
+export const ColunaDireita = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 `;
 
+// 🎯 GRUPO DE INPUTS: Padronizado com as cores originais (#cbd5e1 e #0284c7)
 export const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
 
   label {
     font-size: 0.85rem;
@@ -34,6 +67,7 @@ export const InputGroup = styled.div`
     color: #1e293b;
     outline: none;
     transition: all 0.2s;
+    box-sizing: border-box;
 
     &:focus {
       border-color: #0284c7;
@@ -42,10 +76,11 @@ export const InputGroup = styled.div`
   }
 `;
 
+// 🎯 TEXTAREA: Travada verticalmente para manter o alinhamento visual com a outra coluna
 export const TextArea = styled.textarea`
   width: 100%;
   min-height: 120px;
-  max-height: 220px;
+  max-height: 120px;
   padding: 12px 14px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
@@ -53,9 +88,10 @@ export const TextArea = styled.textarea`
   font-family: inherit;
   color: #1e293b;
   outline: none;
-  resize: vertical;
+  resize: none;
   line-height: 1.5;
   transition: all 0.2s;
+  box-sizing: border-box;
 
   &:focus {
     border-color: #0284c7;
@@ -63,17 +99,37 @@ export const TextArea = styled.textarea`
   }
 `;
 
+// 🎯 CONTAINER DE BOTÕES: Configurado com inversão mobile automatizada
 export const ButtonContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse; /* 🎯 CORRIGIDO: No celular, força o submit a ir para cima e o fechar para baixo */
   gap: 10px;
   margin-top: 10px;
+  width: 100%;
 
-  @media (min-width: 480px) {
-    flex-direction: row-reverse;
+  button, a {
+    width: 100%; /* No mobile, ocupam o bloco completo de lado a lado */
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+  }
 
-    button {
-      flex: 1;
+  /* 🖥️ ALINHAMENTO PARA COMPUTADORES (Telas maiores) */
+  @media (min-width: 768px) {
+    grid-column: span 2;
+    flex-direction: row;        /* Restaura um do lado do outro no computador */
+    justify-content: center;    /* Centraliza os dois botões no rodapé */
+    width: 50%;                 /* O bloco combinado ocupa exatamente 50% da largura do formulário */
+    margin-left: auto;          /* Truque clássico para alinhar o bloco de 50% no centro horizontal */
+    margin-right: auto;
+    gap: 16px;                  /* Espaçamento ligeiramente maior entre eles */
+
+    button, a {
+      flex: 1;                  /* Divide o espaço de 50% de maneira idêntica entre os dois botões */
     }
   }
 
@@ -81,12 +137,6 @@ export const ButtonContainer = styled.div`
     background-color: #0284c7;
     color: #fff;
     border: none;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
 
     &:hover {
       background-color: #079cdc;
@@ -97,11 +147,27 @@ export const ButtonContainer = styled.div`
       cursor: not-allowed;
     }
   }
+
+  /* Estilização base para o botão de "Voltar" */
+  button:not(.btn-submit), a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fdfdfd;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    text-decoration: none;
+
+    &:hover {
+      background-color: #f8fafc;
+      color: #1e293b;
+      border-color: #94a3b8;
+    }
+  }
 `;
 
 // --- COMPONENTES DO GERENCIADOR DE ANEXO ---
 
-// Modo de Edição (Anexo vindo do banco de dados)
 export const AnexoEditContainer = styled.div`
   width: 100%;
   display: flex;
@@ -111,6 +177,7 @@ export const AnexoEditContainer = styled.div`
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   background-color: #fff;
+  box-sizing: border-box;
 `;
 
 export const NomeArquivo = styled.div`
@@ -131,7 +198,6 @@ export const NomeArquivo = styled.div`
 
   &:hover {
     color: #0284c7;
-  
   }
 `;
 
@@ -150,7 +216,6 @@ export const BtnTextoRemover = styled.button`
   }
 `;
 
-// Modo de Criação / Upload de Novo Arquivo
 export const AnexoNovoContainer = styled.div`
   width: 100%;
   position: relative;
@@ -183,7 +248,6 @@ export const TextoNomeFiltrado = styled.span`
   white-space: nowrap;
 `;
 
-// 🎯 DECLARADO ANTES: Texto azul criado primeiro para o label conseguir referenciá-lo abaixo
 export const BtnTextoAzulNativo = styled.span`
   color: #0284c7;
   font-size: 0.85rem;
@@ -193,7 +257,6 @@ export const BtnTextoAzulNativo = styled.span`
 
   &:hover {
     color: #079cdc;
-    
   }
 `;
 
@@ -208,14 +271,12 @@ export const LabelAnexoCustomizado = styled.label`
   background-color: #fff;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
 
-  /* 🎯 HOVER EM SINCRONIA: Ativa o sublinhado do texto quando o mouse entra na caixinha */
   &:hover ${BtnTextoAzulNativo} {
     color: #079cdc;
-    
   }
 
-  /* 🎯 HOVER DA BORDA TOTAL: Destaca o contorno completo do botão e ativa um fundo sutil */
   &:hover {
     border-color: #0284c7;
     background-color: #f8fafc;
@@ -238,6 +299,5 @@ export const BtnLimparArquivoNovo = styled.button`
 
   &:hover {
     color: #079cdc;
-   
   }
 `;

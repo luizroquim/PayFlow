@@ -47,7 +47,7 @@ export const Card = styled.div`
     gap: 10px;
     flex-wrap: wrap;
 
-    a {
+    a, button {
       display: flex;
       align-items: center;
       gap: 4px;
@@ -56,10 +56,21 @@ export const Card = styled.div`
       font-size: 0.8rem;
       text-decoration: none;
       font-weight: 600;
-      transition: opacity 0.2s;
+      transition: all 0.2s ease-in-out;
+      cursor: pointer;
 
       &:hover {
         opacity: 0.8;
+      }
+    }
+
+    .link-payment-info {
+      background-color: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+
+      &:hover {
+        background-color: #dcfce7;
       }
     }
 
@@ -200,4 +211,70 @@ export const Badge = styled.span<{ status: string }>`
   background-color: ${(props) =>
     props.status === "pendente" ? "#f0f0f0" : "#1aac7c"};
   color: ${(props) => (props.status === "pendente" ? "#3b3b3b" : "white")};
+`;
+
+export const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 16px 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+`;
+
+export const ModalContent = styled.div<{ maxWidth: string }>`
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  max-width: ${(props) => props.maxWidth};
+  background-color: #fff;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    margin-top: 10px;
+    margin-bottom: 30px;
+    padding: 20px 16px;
+  }
+`;
+
+/* 🎯 BOTÃO FECHAR LOCAL DA MODAL DE DADOS PAGTO: 50% de largura no computador */
+export const ButtonFecharDados = styled.button`
+  width: 100%;
+  margin-top: 15px;
+  background-color: #fdfdfd;
+  border: 1px solid #c5c5c5;
+  color: #4d4c4c;
+  padding: 13px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: black;
+    border: #4d4c4c 1px solid;
+    background-color: white;
+  }
+
+  @media (min-width: 768px) {
+    width: 50%;                 /* Ocupa metade da modal */
+    margin-left: auto;          /* Centraliza o botão horizontalmente */
+    margin-right: auto;
+    font-size: 0.9rem;
+  }
 `;
