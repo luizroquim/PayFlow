@@ -160,10 +160,12 @@ export const TabContainer = styled.div`
   }
 `;
 
-export const TabButton = styled.button<{
-  isActive: boolean;
-  tabType: "pendente" | "comprado";
-}>`
+interface TabButtonProps {
+  $isActive: boolean;
+  $tabType: "pendente" | "comprado";
+}
+
+export const TabButton = styled.button<TabButtonProps>`
   flex: 1;
   padding: 10px 20px;
   border-radius: 10px;
@@ -172,13 +174,13 @@ export const TabButton = styled.button<{
   font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.2s;
-  background-color: ${(props) => (props.isActive ? "#ffffff" : "transparent")};
+  background-color: ${(props) => (props.$isActive ? "#ffffff" : "transparent")};
   box-shadow: ${(props) =>
-    props.isActive ? "0 2px 4px rgba(0, 0, 0, 0.05)" : "none"};
+    props.$isActive ? "0 2px 4px rgba(0, 0, 0, 0.05)" : "none"};
 
   color: ${(props) => {
-    if (!props.isActive) return "#64748b";
-    return props.tabType === "pendente" ? "#0284c7" : "#10b981";
+    if (!props.$isActive) return "#64748b";
+    return props.$tabType === "pendente" ? "#0284c7" : "#10b981";
   }};
 
   @media (min-width: 480px) {
@@ -213,12 +215,13 @@ export const ModalOverlay = styled.div`
   }
 `;
 
-export const ModalContent = styled.div<{ maxWidth: string }>`
+// 🎯 CORRIGIDO: Utilizando propriedade transiente ($maxWidth) para limpar de vez o DOM
+export const ModalContent = styled.div<{ $maxWidth: string }>`
   display: flex;
   flex-direction: column;
   gap: 2px; 
   width: 100%;
-  max-width: ${(props) => props.maxWidth};
+  max-width: ${(props) => props.$maxWidth};
   background-color: #fff;
   border-radius: 20px;
   padding: 25px;
@@ -226,7 +229,6 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
   animation: modalSwoosh 0.2s ease-out;
   box-sizing: border-box;
 
-  /* 🎯 CORRIGIDO: Corta a herança global clara, forçando os textos internos soltos a ficarem escuros */
   color: #1e293b;
 
   @media (max-width: 768px) {
@@ -246,7 +248,6 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
     }
   }
 
-  /* 🎯 CORRIGIDO: Garante contraste máximo com a cor grafite escura nos títulos das modais */
   h3, h2, h4 {
     margin: 0 0 4px 0;
     color: #0f172a !important; 
@@ -254,7 +255,6 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
     font-weight: 700;
   }
 
-  /* 🎯 CORRIGIDO: Garante a legibilidade padrão na descrição de texto das modais */
   .modal-description {
     font-size: 0.9rem;
     color: #64748b !important; 
@@ -269,7 +269,6 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
     color: black;
   }
 
-  /* 🎯 MODAL FINALIZAR PROCESSO: Configuração ajustada com as classes exatas do seu index.tsx */
   .finalizar-acoes-container {
     display: flex;
     gap: 12px;
@@ -291,7 +290,6 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
       }
     }
 
-    /* 🟢 Sincronizado com a class do botão de Confirmar */
     .btn-confirmar-final {
       background-color: #10b981;
       color: #fff;
@@ -304,7 +302,6 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
       }
     }
 
-    /* ⚪ Sincronizado com a class do botão de Cancelar */
     .btn-cancelar-final {
       background-color: #fdfdfd;
       color: #4d4c4c;
@@ -318,7 +315,6 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
     }
   }
 
-  /* 🎯 BOTÃO VOLTAR PARA A LISTA PADRÃO: Com a proporção de 50% centralizada no PC */
   .btn-close-modal {
     width: 100%;
     margin-top: 15px;
@@ -466,25 +462,25 @@ export const PaginationContainer = styled.div`
   flex-wrap: wrap;
 `;
 
-export const PaginationButton = styled.button<{ isActive?: boolean }>`
+export const PaginationButton = styled.button<{ $isActive?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   padding: 8px 14px;
   border-radius: 8px;
-  border: 1px solid ${(props) => (props.isActive ? "#0284c7" : "#cbd5e1")};
-  background-color: ${(props) => (props.isActive ? "#0284c7" : "#ffffff")};
-  color: ${(props) => (props.isActive ? "#ffffff" : "#64748b")};
+  border: 1px solid ${(props) => (props.$isActive ? "#0284c7" : "#cbd5e1")};
+  background-color: ${(props) => (props.$isActive ? "#0284c7" : "#ffffff")};
+  color: ${(props) => (props.$isActive ? "#ffffff" : "#64748b")};
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: ${(props) => (props.isActive ? "#079cdc" : "#f8fafc")};
-    border-color: ${(props) => (props.isActive ? "#079cdc" : "#94a3b8")};
-    color: ${(props) => (props.isActive ? "#ffffff" : "#334155")};
+    background-color: ${(props) => (props.$isActive ? "#079cdc" : "#f8fafc")};
+    border-color: ${(props) => (props.$isActive ? "#079cdc" : "#94a3b8")};
+    color: ${(props) => (props.$isActive ? "#ffffff" : "#334155")};
   }
 
   &:disabled {

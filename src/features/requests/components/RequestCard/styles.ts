@@ -1,6 +1,7 @@
 import styled from "styled-components";
 
-export const Card = styled.div`
+// 🎯 OTIMIZADO: Removido o generic antigo para evitar vazamento no DOM. Ele lê via classe CSS
+export const CardContainer = styled.div`
   background-color: #ffffff;
   padding: 20px;
   border-radius: 16px;
@@ -12,6 +13,15 @@ export const Card = styled.div`
 
   @media (min-width: 768px) {
     padding: 24px;
+  }
+
+  /* 🎯 Caso queira adicionar alguma estilização baseada no status no futuro, use as classes abaixo: */
+  &.card-status-pendente {
+    /* Ex: border-left: 4px solid #f0f0f0; */
+  }
+
+  &.card-status-comprado {
+    /* Ex: border-left: 4px solid #1aac7c; */
   }
 
   .card-header {
@@ -200,7 +210,8 @@ export const Card = styled.div`
   }
 `;
 
-export const Badge = styled.span<{ status: string }>`
+// 🎯 BLINDADO: Utilizando propriedade transiente ($status) para o Badge não vazar no DOM nativo
+export const Badge = styled.span<{ $status: string }>`
   display: flex;
   padding: 4px 12px;
   border-radius: 20px;
@@ -209,8 +220,8 @@ export const Badge = styled.span<{ status: string }>`
   gap: 4px;
   white-space: nowrap;
   background-color: ${(props) =>
-    props.status === "pendente" ? "#f0f0f0" : "#1aac7c"};
-  color: ${(props) => (props.status === "pendente" ? "#3b3b3b" : "white")};
+    props.$status === "pendente" ? "#f0f0f0" : "#1aac7c"};
+  color: ${(props) => (props.$status === "pendente" ? "#3b3b3b" : "white")};
 `;
 
 export const ModalOverlay = styled.div`
@@ -232,12 +243,13 @@ export const ModalOverlay = styled.div`
   }
 `;
 
-export const ModalContent = styled.div<{ maxWidth: string }>`
+// 🎯 CORRIGIDO: Propriedade transformada em transiente ($maxWidth) para limpar os alertas do React
+export const ModalContent = styled.div<{ $maxWidth: string }>`
   display: flex;
   flex-direction: column;
   gap: 1px;
   width: 100%;
-  max-width: ${(props) => props.maxWidth};
+  max-width: ${(props) => props.$maxWidth};
   background-color: #fff;
   border-radius: 20px;
   padding: 25px;
@@ -251,7 +263,6 @@ export const ModalContent = styled.div<{ maxWidth: string }>`
   }
 `;
 
-/* 🎯 BOTÃO FECHAR LOCAL DA MODAL DE DADOS PAGTO: 50% de largura no computador */
 export const ButtonFecharDados = styled.button`
   width: 100%;
   margin-top: 15px;
@@ -272,8 +283,8 @@ export const ButtonFecharDados = styled.button`
   }
 
   @media (min-width: 768px) {
-    width: 50%;                 /* Ocupa metade da modal */
-    margin-left: auto;          /* Centraliza o botão horizontalmente */
+    width: 50%;
+    margin-left: auto;
     margin-right: auto;
     font-size: 0.9rem;
   }

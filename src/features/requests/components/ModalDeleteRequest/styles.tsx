@@ -5,14 +5,16 @@ export const ConfirmModalContent = styled.div`
   padding: 24px;
   border-radius: 16px;
   width: 100%;
-  max-width: 400px; /* 🎯 CORRIGIDO: Limita o tamanho máximo para não esticar na tela toda */
-  margin: auto;      /* 🎯 CORRIGIDO: Centraliza a caixinha branca no meio do overlay escuro */
+  max-width: 400px; /* 🎯 FIXADO: Limita o tamanho máximo para não esticar na tela toda */
+  margin: auto; /* 🎯 CENTRALIZADO: Encaixa perfeitamente no meio do overlay escuro */
   display: flex;
   flex-direction: column;
   text-align: center;
   box-sizing: border-box;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  animation: modalSwoosh 0.2s ease-out; /* 🎯 CORRIGIDO: Adiciona o efeito suave ao abrir */
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: modalSwoosh 0.2s ease-out; /* 🎯 ANIMAÇÃO: Adiciona o efeito suave ao abrir */
 
   h3 {
     font-size: 1.2rem;

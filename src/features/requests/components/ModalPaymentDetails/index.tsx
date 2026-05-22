@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import * as S from "./styles";
 
 // 🎯 IMPORTANDO O TIPO EXATO DO DASHBOARD PARA ACABAR COM O CONFLITO
-import type { Solicitacao } from "../../pages/Dashboard";
+import type { Solicitacao } from "../../../../pages/Dashboard";
 
-interface ModalDadosPagamentoProps {
-  // O Partial faz com que a modal aceite o objeto completo da Dashboard com segurança
+interface ModalPaymentDetailsProps {
   solicitacao: Partial<Solicitacao> & {
     forma_pagamento?: string | null;
     valor?: string | null;
@@ -20,7 +19,6 @@ interface ModalDadosPagamentoProps {
   };
 }
 
-// 🎯 DICIONÁRIO DE MAPEAMENTO: Converte as chaves brutas do banco para formatos amigáveis
 const MAPA_TIPO_CHAVE: Record<string, string> = {
   cnpj_cpf: "CPF / CNPJ",
   celular: "Celular",
@@ -29,7 +27,6 @@ const MAPA_TIPO_CHAVE: Record<string, string> = {
   copia_cola: "Copia e Cola",
 };
 
-// 🎯 FUNÇÃO HELPER: Converte os textos informativos para Title Case
 function aplicarTitleCase(str: string | null | undefined): string {
   if (!str) return "";
   return str
@@ -40,7 +37,6 @@ function aplicarTitleCase(str: string | null | undefined): string {
     .join(" ");
 }
 
-// 🎯 COMPONENTE: Apenas para leitura visual de textos informativos (Sem Lucide, Sem Cópia, Sem Efeito)
 function CampoApenasLeitura({ label, valor }: { label: string; valor: string }) {
   return (
     <S.LinhaCopiavel $apenasLeitura>
@@ -84,7 +80,6 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
       <div className="wrapper-input">
         <input type="text" value={valor} readOnly onClick={handleCopy} />
         
-        {/* 🎯 ATUALIZADO: Alerta posicionado dentro do wrapper. Flutua à direita indicando o campo exato */}
         {copiado && <S.AlertaCopiado>Copiado!</S.AlertaCopiado>}
         
         <button
@@ -100,7 +95,9 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
   );
 }
 
-export function ModalDadosPagamento({ solicitacao }: ModalDadosPagamentoProps) {
+export const ModalPaymentDetails = memo(function ModalPaymentDetails({ 
+  solicitacao 
+}: ModalPaymentDetailsProps) {
   const forma_pagamento = solicitacao.forma_pagamento ?? undefined;
   const pix_chave = solicitacao.pix_chave ?? undefined;
   const pix_tipo = solicitacao.pix_tipo ?? undefined;
@@ -207,4 +204,4 @@ export function ModalDadosPagamento({ solicitacao }: ModalDadosPagamentoProps) {
       </S.ContainerDados>
     </S.WrapperModalPagamento>
   );
-}
+});

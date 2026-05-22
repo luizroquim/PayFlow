@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-// 🎯 FORMULÁRIO PRINCIPAL: Sem travas de altura para não quebrar botões no mobile
+// 🎯 FORMULÁRIO PRINCIPAL: Grid responsivo sem travas para garantir fluidez
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -29,7 +29,7 @@ export const TituloModal = styled.h2`
   }
 `;
 
-// 🎯 BLOCOS QUE FILTRAN A DISPOSIÇÃO LOGICA DOS INPUTS
+// 🎯 BLOCOS QUE FILTRAN A DISPOSIÇÃO LÓGICA DOS INPUTS
 export const ColunaEsquerda = styled.div`
   display: flex;
   flex-direction: column;
@@ -44,7 +44,7 @@ export const ColunaDireita = styled.div`
   width: 100%;
 `;
 
-// 🎯 GRUPO DE INPUTS: Padronizado com as cores originais (#cbd5e1 e #0284c7)
+// 🎯 GRUPO DE INPUTS: Padronizado com focos suaves e transições limpas
 export const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
@@ -76,7 +76,7 @@ export const InputGroup = styled.div`
   }
 `;
 
-// 🎯 TEXTAREA: Travada verticalmente para manter o alinhamento visual com a outra coluna
+// 🎯 TEXTAREA: Travada verticalmente para manter simetria entre as colunas
 export const TextArea = styled.textarea`
   width: 100%;
   min-height: 120px;
@@ -102,13 +102,13 @@ export const TextArea = styled.textarea`
 // 🎯 CONTAINER DE BOTÕES: Configurado com inversão mobile automatizada
 export const ButtonContainer = styled.div`
   display: flex;
-  flex-direction: column-reverse; /* 🎯 CORRIGIDO: No celular, força o submit a ir para cima e o fechar para baixo */
+  flex-direction: column-reverse; /* No celular, força o submit para cima e o fechar para baixo */
   gap: 10px;
   margin-top: 10px;
   width: 100%;
 
   button, a {
-    width: 100%; /* No mobile, ocupam o bloco completo de lado a lado */
+    width: 100%;
     padding: 12px;
     border-radius: 8px;
     font-weight: bold;
@@ -121,15 +121,15 @@ export const ButtonContainer = styled.div`
   /* 🖥️ ALINHAMENTO PARA COMPUTADORES (Telas maiores) */
   @media (min-width: 768px) {
     grid-column: span 2;
-    flex-direction: row;        /* Restaura um do lado do outro no computador */
-    justify-content: center;    /* Centraliza os dois botões no rodapé */
-    width: 50%;                 /* O bloco combinado ocupa exatamente 50% da largura do formulário */
-    margin-left: auto;          /* Truque clássico para alinhar o bloco de 50% no centro horizontal */
+    flex-direction: row;        /* Restaura lado a lado */
+    justify-content: center;    /* Centraliza no rodapé */
+    width: 50%;                 /* Ocupa exatamente 50% da largura total */
+    margin-left: auto;          /* Centralização horizontal automática do bloco */
     margin-right: auto;
-    gap: 16px;                  /* Espaçamento ligeiramente maior entre eles */
+    gap: 16px;
 
     button, a {
-      flex: 1;                  /* Divide o espaço de 50% de maneira idêntica entre os dois botões */
+      flex: 1;                  /* Divide o espaço igualmente entre os botões */
     }
   }
 
@@ -299,5 +299,24 @@ export const BtnLimparArquivoNovo = styled.button`
 
   &:hover {
     color: #079cdc;
+  }
+`;
+
+export const BlocoDinamicoAnimado = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  animation: fadeIn 0.2s ease-in-out;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 `;

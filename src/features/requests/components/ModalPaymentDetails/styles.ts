@@ -29,6 +29,7 @@ export const ContainerDados = styled.div`
   margin-top: 10px;
 `;
 
+// 🎯 BLINDADO: Propriedade transiente $apenasLeitura evita qualquer warning no DOM
 export const LinhaCopiavel = styled.div<{ $apenasLeitura?: boolean }>`
   display: flex;
   flex-direction: column;
@@ -110,7 +111,7 @@ export const GridTedLinhaUm = styled.div`
   width: 100%;
 
   @media (min-width: 480px) {
-    grid-template-columns: 2fr 1fr 2fr;
+    grid-template-columns: 1fr 1fr 1fr;
   }
 `;
 
@@ -122,7 +123,7 @@ export const AlertaCopiado = styled.span`
   padding: 4px 8px;
   border-radius: 4px;
   
-  /* 🎯 NOVO POSICIONAMENTO: Fixado no canto direito, logo acima do ícone de cópia */
+  /* 🎯 POSICIONAMENTO: Balão flutuando logo acima do botão de cópia */
   position: absolute;
   top: -32px;
   right: 12px;
@@ -130,12 +131,11 @@ export const AlertaCopiado = styled.span`
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   
-  /* Pequena seta apontando para o ícone correspondente */
   &::after {
     content: "";
     position: absolute;
     bottom: -4px;
-    right: 12px; /* Alinha a seta com o canto direito do balão */
+    right: 12px;
     border-width: 4px 4px 0;
     border-style: solid;
     border-color: #10b981 transparent transparent;
