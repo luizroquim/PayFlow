@@ -2,7 +2,7 @@ import { useState, memo } from "react";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import * as S from "./styles";
 
-// 🎯 IMPORTANDO OS FORMATADORES CENTRALIZADOS (Removida a função local duplicada)
+// 🎯 IMPORTANDO OS FORMATADORES CENTRALIZADOS
 import {
   aplicarTitleCase,
   aplicarMascaraMoeda,
@@ -60,9 +60,8 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
     const ehLinkOrUrl =
       valor.startsWith("http://") || valor.startsWith("https://");
     const ehChaveAleatoria = valor.length === 36 && valor.includes("-");
-    const ehValorPagamento = label.toLowerCase().includes("valor"); // 🎯 Identifica se é o campo de dinheiro
+    const ehValorPagamento = label.toLowerCase().includes("valor");
 
-    // 🎯 AJUSTADO: Se for o valor do pagamento, não remove pontos e vírgulas para não estragar os centavos
     if (
       !ehEmail &&
       !ehLinkOrUrl &&
@@ -71,8 +70,11 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
     ) {
       valorParaCopiar = valor.replace(/\D/g, "");
     } else if (ehValorPagamento) {
-      // Remove o "R$ " e espaços, mantendo a pontuação correta (ex: 1.500,50) para o banco aceitar
-      valorParaCopiar = valor.replace(/[^0-9,]/g, "").trim();
+      // 🎯 1. Limpa o "R$" e espaços, mantendo a estrutura padrão temporariamente
+      const apenasNumerosPontosEVirgula = valor.replace(/[^0-9.,]/g, "").trim();
+      
+      // 🎯 2. Deleta estritamente os pontos de milhar, mantendo apenas a vírgula para os bancos
+      valorParaCopiar = apenasNumerosPontosEVirgula.split(".").join("");
     }
 
     navigator.clipboard.writeText(valorParaCopiar);
@@ -84,6 +86,7 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
     <S.LinhaCopiavel>
       <label>{label}</label>
       <div className="wrapper-input">
+        {/* 🎯 O input renderiza a prop intacta, mantendo o ponto visível na tela de pagamento */}
         <input type="text" value={valor} readOnly onClick={handleCopy} />
 
         {copiado && <S.AlertaCopiado>Copiado!</S.AlertaCopiado>}
@@ -135,7 +138,6 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
       </p>
 
       <S.ContainerDados>
-        {/* 🎯 ALTERADO: Agora aplica a máscara direto do seu utilitário na exibição */}
         {solicitacao.valor && (
           <CampoCopiavel
             label="Valor do Pagamento"
@@ -145,9 +147,7 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
 
         {/* MÓDULO: LINK DE PAGAMENTO */}
         {forma_pagamento === "link_pagamento" && pix_chave && (
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-          >
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <CampoCopiavel label="Link para copiar" valor={pix_chave} />
             <a
               href={pix_chave}
@@ -189,7 +189,7 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
                 pix_tipo
                   ? MAPA_TIPO_CHAVE[pix_tipo] || aplicarTitleCase(pix_tipo)
                   : "Não informado"
-              }
+                }
             />
 
             <CampoCopiavel
