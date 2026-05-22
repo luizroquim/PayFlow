@@ -203,15 +203,15 @@ export const ModalOverlay = styled.div`
   backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
-  align-items: center; 
+  align-items: center;
   z-index: 1000;
   padding: 20px;
 
   @media (max-width: 768px) {
     align-items: flex-start;
-    overflow-y: auto;        
+    overflow-y: auto;
     padding: 16px 12px;
-    -webkit-overflow-scrolling: touch; 
+    -webkit-overflow-scrolling: touch;
   }
 `;
 
@@ -219,7 +219,7 @@ export const ModalOverlay = styled.div`
 export const ModalContent = styled.div<{ $maxWidth: string }>`
   display: flex;
   flex-direction: column;
-  gap: 2px; 
+  gap: 2px;
   width: 100%;
   max-width: ${(props) => props.$maxWidth};
   background-color: #fff;
@@ -233,7 +233,7 @@ export const ModalContent = styled.div<{ $maxWidth: string }>`
 
   @media (max-width: 768px) {
     margin-top: 10px;
-    margin-bottom: 30px; 
+    margin-bottom: 30px;
     padding: 20px 16px;
   }
 
@@ -248,16 +248,18 @@ export const ModalContent = styled.div<{ $maxWidth: string }>`
     }
   }
 
-  h3, h2, h4 {
+  h3,
+  h2,
+  h4 {
     margin: 0 0 4px 0;
-    color: #0f172a !important; 
+    color: #0f172a !important;
     font-size: 1.25rem;
     font-weight: 700;
   }
 
   .modal-description {
     font-size: 0.9rem;
-    color: #64748b !important; 
+    color: #64748b !important;
     margin: 0 0 10px 0;
     line-height: 1.5;
   }
@@ -276,7 +278,7 @@ export const ModalContent = styled.div<{ $maxWidth: string }>`
     margin-top: 20px;
 
     button {
-      flex: 1; 
+      flex: 1;
       padding: 12px;
       border: none;
       border-radius: 10px;
@@ -478,8 +480,8 @@ export const PaginationButton = styled.button<{ $isActive?: boolean }>`
   transition: all 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: ${(props) => (props.$isActive ? "#079cdc" : "#f8fafc")};
-    border-color: ${(props) => (props.$isActive ? "#079cdc" : "#94a3b8")};
+    background-color: ${(props) => (props.$isActive ? "#0284c7" : "#f8fafc")};
+    border-color: ${(props) => (props.$isActive ? "#0284c7" : "#94a3b8")};
     color: ${(props) => (props.$isActive ? "#ffffff" : "#334155")};
   }
 

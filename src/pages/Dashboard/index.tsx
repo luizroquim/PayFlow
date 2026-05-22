@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
 
-// 🎯 IMPORTAÇÕES DA FEATURE: Alinhadas em inglês e apontando para a estrutura unificada
+// IMPORTAÇÕES DA FEATURE: Alinhadas em inglês e apontando para a estrutura unificada
 import {
   RequestFilters,
   RequestList,
@@ -71,6 +71,17 @@ export function Dashboard() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 6;
 
+  const secaoSolicitacoesRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (secaoSolicitacoesRef.current) {
+      secaoSolicitacoesRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [paginaAtual]);
+
   // 1. Inicializa a sessão do usuário e define funções/permissões
   useEffect(() => {
     async function inicializarUsuario() {
@@ -110,7 +121,7 @@ export function Dashboard() {
     };
   }, [navigate]);
 
-  // 2. Carrega dados e escuta o canal Realtime do Supabase de forma otimizada
+  // 2. ALTERADO: Carrega TODOS os dados (sem filtrar abaAtiva no banco) e escuta Realtime
   useEffect(() => {
     let ativo = true;
 
@@ -118,10 +129,10 @@ export function Dashboard() {
       if (!currentUserId) return;
 
       try {
+        // 🎯 REMOVIDO o .eq("status", abaAtiva) para trazer pendentes e concluídos juntos
         let query = supabase
           .from("solicitacoes")
-          .select(`*, perfis (nome_completo)`)
-          .eq("status", abaAtiva);
+          .select(`*, perfis (nome_completo)`);
 
         if (!isPagador) {
           query = query.eq("user_id", currentUserId);
@@ -155,6 +166,7 @@ export function Dashboard() {
           table: "solicitacoes",
         },
         () => {
+          // O Realtime atualiza o lote completo em background se algo mudar na nuvem
           carregarDadosDoBanco();
         },
       )
@@ -164,17 +176,17 @@ export function Dashboard() {
       ativo = false;
       supabase.removeChannel(canalRealtime);
     };
-  }, [abaAtiva, currentUserId, isPagador]);
+    // 🎯 REMOVIDO abaAtiva das dependências. Mudar de aba NÃO vai disparar requisição HTTP!
+  }, [currentUserId, isPagador]);
 
-  // 3. Atualização manual isolada na memória ram para evitar recriação de escopo
+  // 3. ALTERADO: Atualização manual sem filtro de banco para bater com a nova lógica
   const forcarAtualizacaoManual = useCallback(async () => {
     if (!currentUserId) return;
     setCarregando(true);
     try {
       let query = supabase
         .from("solicitacoes")
-        .select(`*, perfis (nome_completo)`)
-        .eq("status", abaAtiva);
+        .select(`*, perfis (nome_completo)`);
 
       if (!isPagador) query = query.eq("user_id", currentUserId);
 
@@ -187,23 +199,25 @@ export function Dashboard() {
     } finally {
       setCarregando(false);
     }
-  }, [abaAtiva, currentUserId, isPagador]);
+    // 🎯 REMOVIDO abaAtiva daqui também
+  }, [currentUserId, isPagador]);
 
+  // 4. ALTERADO: A troca de abas agora é instantânea. Não ativa o esqueleto de "carregando"
   const handleTrocaAba = (novaAba: "pendente" | "comprado") => {
-    if (abaAtiva === novaAba || carregando) {
-      return;
-    }
+    if (abaAtiva === novaAba) return;
 
-    setCarregando(true);
     setAbaAtiva(novaAba);
-    setPaginaAtual(1);
+    setPaginaAtual(1); // Reseta para a primeira página da nova aba
   };
 
-  // Filtra os dados na memória cache sem re-renderizar o componente Pai à toa
+  // 5. ALTERADO: Filtra os dados na memória cache (incluindo o status da aba)
   const solicitacoesFiltradas = useMemo(() => {
     const termo = filtro.toLowerCase().trim();
 
     return solicitacoes.filter((item) => {
+      // 🎯 NOVO: Filtra pelo status da aba ativa direto na memória RAM
+      const bateAba = item.status === abaAtiva;
+
       const bateTexto =
         item.titulo.toLowerCase().includes(termo) ||
         (item.perfis?.nome_completo || "").toLowerCase().includes(termo);
@@ -218,9 +232,10 @@ export function Dashboard() {
         ? dataItem <= new Date(dataFim + "T00:00:00").setHours(0, 0, 0, 0)
         : true;
 
-      return bateTexto && bateDataInicio && bateDataFim;
+      return bateAba && bateTexto && bateDataInicio && bateDataFim;
     });
-  }, [solicitacoes, filtro, dataInicio, dataFim]);
+    // 🎯 ADICIONADO abaAtiva aqui, pois o useMemo precisa re-filtrar quando você clica no botão
+  }, [solicitacoes, abaAtiva, filtro, dataInicio, dataFim]);
 
   // Separação de fatias de paginação em cache síncrono
   const calculoPaginacao = useMemo(() => {
@@ -278,7 +293,10 @@ export function Dashboard() {
         </div>
       </S.Header>
 
-      <S.MainContent>
+      <S.MainContent
+        ref={secaoSolicitacoesRef}
+        style={{ scrollMarginTop: "24px" }}
+      >
         <RequestFilters
           valor={filtro}
           setValor={setFiltro}
@@ -289,10 +307,8 @@ export function Dashboard() {
         />
 
         <S.TabContainer>
-          {/* 🎯 CORRIGIDO: Propriedades transientes com o prefixo $ injetadas com sucesso */}
           <S.TabButton
             $isActive={abaAtiva === "pendente"}
-            disabled={carregando}
             onClick={() => handleTrocaAba("pendente")}
             $tabType="pendente"
           >
@@ -300,7 +316,6 @@ export function Dashboard() {
           </S.TabButton>
           <S.TabButton
             $isActive={abaAtiva === "comprado"}
-            disabled={carregando}
             onClick={() => handleTrocaAba("comprado")}
             $tabType="comprado"
           >
@@ -369,7 +384,7 @@ export function Dashboard() {
         </S.ModalOverlay>
       )}
 
-      {/* 2. MODAL: FINALIZAR PROCESSO (Nome atualizado em inglês) */}
+      {/* 2. MODAL: FINALIZAR PROCESSO */}
       {mostrarModalPagamento && itemEmPagamento && (
         <S.ModalOverlay>
           <ModalCompleteProcess
@@ -387,7 +402,7 @@ export function Dashboard() {
         </S.ModalOverlay>
       )}
 
-      {/* 3. MODAL: CONFIRMAR EXCLUSÃO (Nome atualizado em inglês) */}
+      {/* 3. MODAL: CONFIRMAR EXCLUSÃO */}
       {mostrarModalExcluir && idItemParaExcluir && (
         <S.ModalOverlay>
           <ModalDeleteRequest

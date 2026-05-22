@@ -2,7 +2,11 @@ import { useState, memo } from "react";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import * as S from "./styles";
 
-// 🎯 IMPORTANDO O TIPO EXATO DO DASHBOARD PARA ACABAR COM O CONFLITO
+// 🎯 IMPORTANDO OS FORMATADORES CENTRALIZADOS (Removida a função local duplicada)
+import {
+  aplicarTitleCase,
+  aplicarMascaraMoeda,
+} from "../../../../utils/formatters";
 import type { Solicitacao } from "../../../../pages/Dashboard";
 
 interface ModalPaymentDetailsProps {
@@ -27,17 +31,13 @@ const MAPA_TIPO_CHAVE: Record<string, string> = {
   copia_cola: "Copia e Cola",
 };
 
-function aplicarTitleCase(str: string | null | undefined): string {
-  if (!str) return "";
-  return str
-    .toLowerCase()
-    .split(" ")
-    .filter((word) => word.trim() !== "")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function CampoApenasLeitura({ label, valor }: { label: string; valor: string }) {
+function CampoApenasLeitura({
+  label,
+  valor,
+}: {
+  label: string;
+  valor: string;
+}) {
   return (
     <S.LinhaCopiavel $apenasLeitura>
       <label>{label}</label>
@@ -60,13 +60,19 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
     const ehLinkOrUrl =
       valor.startsWith("http://") || valor.startsWith("https://");
     const ehChaveAleatoria = valor.length === 36 && valor.includes("-");
+    const ehValorPagamento = label.toLowerCase().includes("valor"); // 🎯 Identifica se é o campo de dinheiro
 
+    // 🎯 AJUSTADO: Se for o valor do pagamento, não remove pontos e vírgulas para não estragar os centavos
     if (
       !ehEmail &&
       !ehLinkOrUrl &&
+      !ehValorPagamento &&
       (!ehChaveAleatoria || label !== "Chave PIX")
     ) {
       valorParaCopiar = valor.replace(/\D/g, "");
+    } else if (ehValorPagamento) {
+      // Remove o "R$ " e espaços, mantendo a pontuação correta (ex: 1.500,50) para o banco aceitar
+      valorParaCopiar = valor.replace(/[^0-9,]/g, "").trim();
     }
 
     navigator.clipboard.writeText(valorParaCopiar);
@@ -79,9 +85,9 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
       <label>{label}</label>
       <div className="wrapper-input">
         <input type="text" value={valor} readOnly onClick={handleCopy} />
-        
+
         {copiado && <S.AlertaCopiado>Copiado!</S.AlertaCopiado>}
-        
+
         <button
           type="button"
           className="btn-copy"
@@ -95,8 +101,8 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
   );
 }
 
-export const ModalPaymentDetails = memo(function ModalPaymentDetails({ 
-  solicitacao 
+export const ModalPaymentDetails = memo(function ModalPaymentDetails({
+  solicitacao,
 }: ModalPaymentDetailsProps) {
   const forma_pagamento = solicitacao.forma_pagamento ?? undefined;
   const pix_chave = solicitacao.pix_chave ?? undefined;
@@ -129,13 +135,19 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
       </p>
 
       <S.ContainerDados>
+        {/* 🎯 ALTERADO: Agora aplica a máscara direto do seu utilitário na exibição */}
         {solicitacao.valor && (
-          <CampoCopiavel label="Valor do Pagamento" valor={solicitacao.valor} />
+          <CampoCopiavel
+            label="Valor do Pagamento"
+            valor={aplicarMascaraMoeda(solicitacao.valor)}
+          />
         )}
 
         {/* MÓDULO: LINK DE PAGAMENTO */}
         {forma_pagamento === "link_pagamento" && pix_chave && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
             <CampoCopiavel label="Link para copiar" valor={pix_chave} />
             <a
               href={pix_chave}
@@ -163,13 +175,21 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
             <div style={{ gridColumn: "1 / -1" }}>
               <CampoApenasLeitura
                 label="Nome do Favorecido"
-                valor={ted_favorecido ? aplicarTitleCase(ted_favorecido) : "Não informado"}
+                valor={
+                  ted_favorecido
+                    ? aplicarTitleCase(ted_favorecido)
+                    : "Não informado"
+                }
               />
             </div>
 
             <CampoApenasLeitura
               label="Tipo de Chave"
-              valor={pix_tipo ? (MAPA_TIPO_CHAVE[pix_tipo] || aplicarTitleCase(pix_tipo)) : "Não informado"}
+              valor={
+                pix_tipo
+                  ? MAPA_TIPO_CHAVE[pix_tipo] || aplicarTitleCase(pix_tipo)
+                  : "Não informado"
+              }
             />
 
             <CampoCopiavel
@@ -184,7 +204,11 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
           <>
             <CampoApenasLeitura
               label="Nome do Favorecido"
-              valor={ted_favorecido ? aplicarTitleCase(ted_favorecido) : "Não informado"}
+              valor={
+                ted_favorecido
+                  ? aplicarTitleCase(ted_favorecido)
+                  : "Não informado"
+              }
             />
             <CampoCopiavel
               label="CPF / CNPJ do Favorecido"
@@ -192,9 +216,11 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
             />
 
             <S.GridTedLinhaUm>
-              <CampoApenasLeitura 
-                label="Banco" 
-                valor={ted_banco ? aplicarTitleCase(ted_banco) : "Não informado"} 
+              <CampoApenasLeitura
+                label="Banco"
+                valor={
+                  ted_banco ? aplicarTitleCase(ted_banco) : "Não informado"
+                }
               />
               <CampoCopiavel label="Agência" valor={ted_agencia || ""} />
               <CampoCopiavel label="Conta" valor={ted_conta || ""} />

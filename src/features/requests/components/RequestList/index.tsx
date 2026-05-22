@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo } from "react"; // 🎯 Removeu o useEffect e useRef daqui
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { RequestCard } from "../RequestCard";
 import type { Solicitacao } from "../../../../pages/Dashboard";
@@ -16,7 +16,6 @@ interface RequestListProps {
   onPay: (item: Solicitacao) => void;
 }
 
-// 🎯 PERFORMANCE & CORREÇÃO: Adicionado memo() e corrigido o vazamento de prop com o prefixo "$"
 export const RequestList = memo(function RequestList({
   cardsDaPaginaAtual,
   currentUserId,
@@ -56,7 +55,7 @@ export const RequestList = memo(function RequestList({
           {Array.from({ length: totalPaginas }, (_, index) => (
             <S.PaginationButton
               key={index + 1}
-              $isActive={paginaSegura === index + 1} // 🎯 
+              $isActive={paginaSegura === index + 1}
               onClick={() => setPaginaAtual(index + 1)}
             >
               {index + 1}
@@ -64,7 +63,9 @@ export const RequestList = memo(function RequestList({
           ))}
 
           <S.PaginationButton
-            onClick={() => setPaginaAtual((prev) => Math.min(prev + 1, totalPaginas))}
+            onClick={() =>
+              setPaginaAtual((prev) => Math.min(prev + 1, totalPaginas))
+            }
             disabled={paginaSegura === totalPaginas}
           >
             Próximo <ChevronRight size={16} />
