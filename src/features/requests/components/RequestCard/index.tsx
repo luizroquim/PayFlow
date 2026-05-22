@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import * as S from "./styles";
 import {
   SquarePen,
@@ -11,7 +11,7 @@ import {
   Clock,
   Coins,
 } from "lucide-react";
-import { ModalDadosPagamento } from "../ModalDadosPagamento";
+import { ModalPaymentDetails } from "../ModalPaymentDetails";
 
 interface Solicitacao {
   id: string;
@@ -24,7 +24,6 @@ interface Solicitacao {
   boleto_url: string;
   comprovante_url: string;
   user_id: string;
-
   forma_pagamento?: string;
   valor?: string;
   pix_tipo?: string;
@@ -34,13 +33,12 @@ interface Solicitacao {
   ted_conta?: string;
   ted_cpf_cnpj?: string;
   ted_favorecido?: string;
-
   perfis?: {
     nome_completo: string;
   };
 }
 
-interface CardSolicitacaoProps {
+interface RequestCardProps {
   item: Solicitacao;
   currentUserId: string | null;
   isPagador: boolean;
@@ -49,14 +47,14 @@ interface CardSolicitacaoProps {
   onPay: (item: Solicitacao) => void;
 }
 
-export function CardSolicitacao({
+function RequestCardComponent({
   item,
   currentUserId,
   isPagador,
   onEdit,
   onDelete,
   onPay,
-}: CardSolicitacaoProps) {
+}: RequestCardProps) {
   const [mostrarModalPagamento, setMostrarModalPagamento] = useState(false);
 
   const temDadosPagamento =
@@ -67,7 +65,7 @@ export function CardSolicitacao({
 
   return (
     <>
-      <S.Card>
+      <S.CardContainer className={`card-status-${item.status}`}>
         <div className="card-header">
           <div>
             <h3>{item.titulo}</h3>
@@ -76,7 +74,7 @@ export function CardSolicitacao({
             </p>
           </div>
 
-          <S.Badge status={item.status}>
+          <S.Badge $status={item.status}>
             {item.status === "pendente" ? (
               <Clock size={13} />
             ) : (
@@ -169,13 +167,13 @@ export function CardSolicitacao({
             </button>
           )}
         </div>
-      </S.Card>
+      </S.CardContainer>
 
-      {/* 🎯 MODAL DE COPIAR DADOS LOCAL E COMPLETAMENTE ISOLADA */}
       {mostrarModalPagamento && (
         <S.ModalOverlay onClick={() => setMostrarModalPagamento(false)}>
-          <S.ModalContent maxWidth="480px" onClick={(e) => e.stopPropagation()}>
-            <ModalDadosPagamento solicitacao={item} />
+          {/* 🎯 CORRIGIDO: Adicionado o prefixo "$" para barrar o vazamento no DOM */}
+          <S.ModalContent $maxWidth="480px" onClick={(e) => e.stopPropagation()}>
+            <ModalPaymentDetails solicitacao={item} />
 
             <S.ButtonFecharDados
               type="button"
@@ -189,3 +187,16 @@ export function CardSolicitacao({
     </>
   );
 }
+
+export const RequestCard = memo(RequestCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.item.status === nextProps.item.status &&
+    prevProps.item.titulo === nextProps.item.titulo &&
+    prevProps.item.descricao === nextProps.item.descricao &&
+    prevProps.item.boleto_url === nextProps.item.boleto_url &&
+    prevProps.item.comprovante_url === nextProps.item.comprovante_url &&
+    prevProps.currentUserId === nextProps.currentUserId &&
+    prevProps.isPagador === nextProps.isPagador
+  );
+});

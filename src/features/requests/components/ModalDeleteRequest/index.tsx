@@ -1,18 +1,19 @@
-import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { useState, memo } from "react";
+import { supabase } from "../../../../lib/supabase";
 import * as S from "./styles";
 
-interface ModalExcluirSolicitacaoProps {
-  onClose: () => void;              // Fecha a modal se o usuário cancelar
-  idItemParaExcluir: string;        // ID único do item que será deletado
-  onSucesso: () => void;            // Recarrega a lista da Dashboard após excluir
+interface ModalDeleteRequestProps {
+  onClose: () => void; // Fecha a modal se o usuário cancelar
+  idItemParaExcluir: string; // ID único do item que será deletado
+  onSucesso: () => void; // Recarrega a lista da Dashboard após excluir
 }
 
-export function ModalExcluirSolicitacao({
+// 🎯 BLINDADO: memo() garante que alterações na Dashboard não fiquem travando ou re-renderizando a modal à toa
+export const ModalDeleteRequest = memo(function ModalDeleteRequest({
   onClose,
   idItemParaExcluir,
   onSucesso,
-}: ModalExcluirSolicitacaoProps) {
+}: ModalDeleteRequestProps) {
   const [excluindo, setExcluindo] = useState(false);
 
   async function handleExecutarExclusao() {
@@ -42,7 +43,8 @@ export function ModalExcluirSolicitacao({
     <S.ConfirmModalContent>
       <h3>Excluir Solicitação?</h3>
       <p>
-        Esta ação não poderá ser desfeita. O item será removido permanentemente do fluxo de pagamentos.
+        Esta ação não poderá ser desfeita. O item será removido permanentemente
+        do fluxo de pagamentos.
       </p>
 
       <div className="actions">
@@ -65,4 +67,4 @@ export function ModalExcluirSolicitacao({
       </div>
     </S.ConfirmModalContent>
   );
-}
+});

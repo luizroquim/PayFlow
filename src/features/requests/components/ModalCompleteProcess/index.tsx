@@ -1,23 +1,24 @@
 import { useState } from "react";
 import { FileText } from "lucide-react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../../../lib/supabase";
 import * as S from "./styles";
 
-/* 🎯 CORRIGIDO: Tipagem inline e simplificada nas Props para eliminar o conflito do TypeScript */
-interface ModalFinalizarProcessoProps {
-  onClose: () => void;              // Função para fechar a modal
-  itemEmPagamento: {                // Recebe o formato direto do objeto vindo da Dashboard
+/* 🎯 NOMES ATUALIZADOS: Interface agora segue o padrão em inglês */
+interface ModalCompleteProcessProps {
+  onClose: () => void; // Função para fechar a modal
+  itemEmPagamento: {
     id: string;
     titulo: string;
-  };     
-  onSucesso: () => void;            // Atualiza a lista da Dashboard após o upload
+  };
+  onSucesso: () => void; // Atualiza a lista da Dashboard após o upload
 }
 
-export function ModalFinalizarProcesso({ 
-  onClose, 
-  itemEmPagamento, 
-  onSucesso 
-}: ModalFinalizarProcessoProps) {
+/* 🎯 EXPORTAÇÃO DEFINITIVA: Nome da função atualizado para casar com a pasta */
+export function ModalCompleteProcess({
+  onClose,
+  itemEmPagamento,
+  onSucesso,
+}: ModalCompleteProcessProps) {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -60,8 +61,9 @@ export function ModalFinalizarProcesso({
 
       setArquivo(null);
       onSucesso(); // Avisa a Dashboard para recarregar a lista e fechar
-    } catch (err: unknown) {
-      alert("Erro ao processar pagamento: " + (err as Error).message);
+    } catch (err) {
+      const error = err as Error;
+      alert("Erro ao processar pagamento: " + error.message);
     } finally {
       setEnviando(false);
     }
@@ -71,7 +73,7 @@ export function ModalFinalizarProcesso({
     <S.WrapperModalFinalizar>
       <h3 className="titulo-finalizar">Finalizar Processo</h3>
       <p className="descricao-finalizar">
-        Carregue o comprovante de transferência ou pagamento bancário.
+        Carregue o comprovante de transferência ou pagamento bancário para a solicitação: <strong>{itemEmPagamento.titulo}</strong>
       </p>
 
       <div className="container-upload-file">
@@ -80,7 +82,11 @@ export function ModalFinalizarProcesso({
             <S.TextoPlaceholder>
               {arquivo ? (
                 <S.NomeArquivoNovo>
-                  <FileText size={18} color="#1e293b" style={{ flexShrink: 0 }} />
+                  <FileText
+                    size={18}
+                    color="#1e293b"
+                    style={{ flexShrink: 0 }}
+                  />
                   <S.TextoNomeFiltrado>{arquivo.name}</S.TextoNomeFiltrado>
                 </S.NomeArquivoNovo>
               ) : (
@@ -123,7 +129,7 @@ export function ModalFinalizarProcesso({
           onClick={handleConfirmarPagamento}
           disabled={enviando}
         >
-          {enviando ? "A processar..." : "Confirmar"}
+          {enviando ? "Processando..." : "Confirmar"}
         </button>
         <button
           className="btn-cancelar-final"

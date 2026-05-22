@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Search, Calendar } from "lucide-react";
 import * as S from "./styles";
 
-interface FiltrosProps {
+interface RequestFiltersProps {
   valor: string;
   setValor: (valor: string) => void;
   placeholder?: string;
@@ -12,7 +12,7 @@ interface FiltrosProps {
   setDataFim: (data: string) => void;
 }
 
-export function Filtros({
+function RequestFiltersComponent({
   valor,
   setValor,
   placeholder,
@@ -20,8 +20,7 @@ export function Filtros({
   setDataInicio,
   dataFim,
   setDataFim,
-}: FiltrosProps) {
-  // Estado para controlar se a gaveta de datas está aberta ou fechada
+}: RequestFiltersProps) {
   const [mostrarDatas, setMostrarDatas] = useState(false);
 
   const limparFiltrosData = () => {
@@ -31,9 +30,24 @@ export function Filtros({
 
   const temDataAtiva = !!(dataInicio || dataFim);
 
+  const handleDataInicioChange = (novaData: string) => {
+    if (dataFim && novaData > dataFim) {
+      setDataInicio(dataFim);
+    } else {
+      setDataInicio(novaData);
+    }
+  };
+
+  const handleDataFimChange = (novaData: string) => {
+    if (dataInicio && novaData < dataInicio) {
+      setDataFim(dataInicio);
+    } else {
+      setDataFim(novaData);
+    }
+  };
+
   return (
     <S.ContainerFiltros>
-      {/* Linha de cima: Input de busca + Botão de abrir calendário */}
       <S.LinhaPrincipal>
         <S.InputWrapper>
           <div className="icon-search">
@@ -41,25 +55,23 @@ export function Filtros({
           </div>
           <input
             type="text"
-            placeholder={
-              placeholder || "Pesquisar por título ou solicitante..."
-            }
+            placeholder={placeholder || "Pesquisar por título ou solicitante..."}
             value={valor}
             onChange={(e) => setValor(e.target.value)}
           />
         </S.InputWrapper>
 
+        
         <S.BotaoCalendario
           type="button"
           onClick={() => setMostrarDatas(!mostrarDatas)}
-          ativo={temDataAtiva}
+          $ativo={temDataAtiva}
           title="Filtrar por data de criação"
         >
           <Calendar size={18} />
         </S.BotaoCalendario>
       </S.LinhaPrincipal>
 
-      {/* Linha de baixo expandida: Inputs de Data Inicial e Final */}
       {mostrarDatas && (
         <S.AreaDatas>
           <div className="campo-data">
@@ -67,7 +79,7 @@ export function Filtros({
             <input
               type="date"
               value={dataInicio}
-              onChange={(e) => setDataInicio(e.target.value)}
+              onChange={(e) => handleDataInicioChange(e.target.value)}
               max={dataFim || undefined}
             />
           </div>
@@ -77,7 +89,7 @@ export function Filtros({
             <input
               type="date"
               value={dataFim}
-              onChange={(e) => setDataFim(e.target.value)}
+              onChange={(e) => handleDataFimChange(e.target.value)}
               min={dataInicio || undefined}
             />
           </div>
@@ -96,3 +108,13 @@ export function Filtros({
     </S.ContainerFiltros>
   );
 }
+
+// 🎯 EXPORTAÇÃO NOMEADA CORRETA: Vincula o memo diretamente à constante que a Dashboard importa
+export const RequestFilters = memo(RequestFiltersComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.valor === nextProps.valor &&
+    prevProps.dataInicio === nextProps.dataInicio &&
+    prevProps.dataFim === nextProps.dataFim &&
+    prevProps.placeholder === nextProps.placeholder
+  );
+});

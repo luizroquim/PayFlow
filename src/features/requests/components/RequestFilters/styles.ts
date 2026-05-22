@@ -53,16 +53,16 @@ export const InputWrapper = styled.div`
   }
 `;
 
-export const BotaoCalendario = styled.button<{ ativo: boolean }>`
+export const BotaoCalendario = styled.button<{ $ativo: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 0 16px;
   height: 46px; /* Alinhado perfeitamente com a altura do input */
-  background-color: ${props => props.ativo ? '#0284c7' : '#fff'};
-  color: ${props => props.ativo ? '#fff' : '#0284c7'};
-  border: 1px solid ${props => props.ativo ? '#0284c7' : '#e2e8f0'};
+  background-color: ${props => props.$ativo ? '#0284c7' : '#fff'};
+  color: ${props => props.$ativo ? '#fff' : '#0284c7'};
+  border: 1px solid ${props => props.$ativo ? '#0284c7' : '#e2e8f0'};
   border-radius: 12px;
   cursor: pointer;
   font-weight: 500;
@@ -72,14 +72,13 @@ export const BotaoCalendario = styled.button<{ ativo: boolean }>`
   flex-shrink: 0;
 
   &:hover {
-    background-color: ${props => props.ativo ? '#0369a1' : '#f8fafc'};
-    border-color: ${props => props.ativo ? '#0369a1' : '#cbd5e1'};
+    background-color: ${props => props.$ativo ? '#0369a1' : '#f8fafc'};
+    border-color: ${props => props.$ativo ? '#0369a1' : '#cbd5e1'};
   }
 
   @media (max-width: 480px) {
     padding: 0 14px;
     
-    /* 📱 Estratégia Responsiva: Esconde a palavra "Filtrar" no celular para não estourar a tela */
     .texto-botao { 
       display: none; 
     } 
