@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
 
-// IMPORTAÇÕES DA FEATURE: Alinhadas em inglês e apontando para a estrutura unificada
+// IMPORTAÇÕES DA FEATURE: Alinhadas in inglês e apontando para a estrutura unificada
 import {
   RequestFilters,
   RequestList,
@@ -121,7 +121,7 @@ export function Dashboard() {
     };
   }, [navigate]);
 
-  // 2. ALTERADO: Carrega TODOS os dados (sem filtrar abaAtiva no banco) e escuta Realtime
+  // 2. Carrega TODOS os dados (sem filtrar abaAtiva no banco) e escuta Realtime
   useEffect(() => {
     let ativo = true;
 
@@ -129,7 +129,6 @@ export function Dashboard() {
       if (!currentUserId) return;
 
       try {
-        // 🎯 REMOVIDO o .eq("status", abaAtiva) para trazer pendentes e concluídos juntos
         let query = supabase
           .from("solicitacoes")
           .select(`*, perfis (nome_completo)`);
@@ -166,7 +165,6 @@ export function Dashboard() {
           table: "solicitacoes",
         },
         () => {
-          // O Realtime atualiza o lote completo em background se algo mudar na nuvem
           carregarDadosDoBanco();
         },
       )
@@ -176,10 +174,9 @@ export function Dashboard() {
       ativo = false;
       supabase.removeChannel(canalRealtime);
     };
-    // 🎯 REMOVIDO abaAtiva das dependências. Mudar de aba NÃO vai disparar requisição HTTP!
   }, [currentUserId, isPagador]);
 
-  // 3. ALTERADO: Atualização manual sem filtro de banco para bater com a nova lógica
+  // 3. Atualização manual sem filtro de banco para bater com a nova lógica
   const forcarAtualizacaoManual = useCallback(async () => {
     if (!currentUserId) return;
     setCarregando(true);
@@ -199,23 +196,21 @@ export function Dashboard() {
     } finally {
       setCarregando(false);
     }
-    // 🎯 REMOVIDO abaAtiva daqui também
   }, [currentUserId, isPagador]);
 
-  // 4. ALTERADO: A troca de abas agora é instantânea. Não ativa o esqueleto de "carregando"
+  // 4. A troca de abas agora é instantânea. Não ativa o esqueleto de "carregando"
   const handleTrocaAba = (novaAba: "pendente" | "comprado") => {
     if (abaAtiva === novaAba) return;
 
     setAbaAtiva(novaAba);
-    setPaginaAtual(1); // Reseta para a primeira página da nova aba
+    setPaginaAtual(1);
   };
 
-  // 5. ALTERADO: Filtra os dados na memória cache (incluindo o status da aba)
+  // 5. Filtra os dados na memória cache (incluindo o status da aba)
   const solicitacoesFiltradas = useMemo(() => {
     const termo = filtro.toLowerCase().trim();
 
     return solicitacoes.filter((item) => {
-      // 🎯 NOVO: Filtra pelo status da aba ativa direto na memória RAM
       const bateAba = item.status === abaAtiva;
 
       const bateTexto =
@@ -234,7 +229,6 @@ export function Dashboard() {
 
       return bateAba && bateTexto && bateDataInicio && bateDataFim;
     });
-    // 🎯 ADICIONADO abaAtiva aqui, pois o useMemo precisa re-filtrar quando você clica no botão
   }, [solicitacoes, abaAtiva, filtro, dataInicio, dataFim]);
 
   // Separação de fatias de paginação em cache síncrono
@@ -367,7 +361,7 @@ export function Dashboard() {
         )}
       </S.MainContent>
 
-      {/* 1. MODAL: NOVA / EDITAR SOLICITAÇÃO */}
+      {/* 1. MODAL: NOVA / EDITAR SOLICITAÇÃO (Mantido rígido - fecha apenas no botão) */}
       {mostrarModal && (
         <S.ModalOverlay>
           <S.ModalContent $maxWidth="950px">
@@ -384,9 +378,16 @@ export function Dashboard() {
         </S.ModalOverlay>
       )}
 
-      {/* 2. MODAL: FINALIZAR PROCESSO */}
+      {/* 2. MODAL: FINALIZAR PROCESSO (Fecha ao clicar fora) */}
       {mostrarModalPagamento && itemEmPagamento && (
-        <S.ModalOverlay>
+        <S.ModalOverlay
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setMostrarModalPagamento(false);
+              setItemEmPagamento(null);
+            }
+          }}
+        >
           <ModalCompleteProcess
             itemEmPagamento={itemEmPagamento}
             onClose={() => {
@@ -402,9 +403,16 @@ export function Dashboard() {
         </S.ModalOverlay>
       )}
 
-      {/* 3. MODAL: CONFIRMAR EXCLUSÃO */}
+      {/* 3. MODAL: CONFIRMAR EXCLUSÃO (Fecha ao clicar fora) */}
       {mostrarModalExcluir && idItemParaExcluir && (
-        <S.ModalOverlay>
+        <S.ModalOverlay
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setMostrarModalExcluir(false);
+              setIdItemParaExcluir(null);
+            }
+          }}
+        >
           <ModalDeleteRequest
             idItemParaExcluir={idItemParaExcluir}
             onClose={() => {

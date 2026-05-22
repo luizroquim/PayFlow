@@ -73,7 +73,8 @@ export function ModalCompleteProcess({
     <S.WrapperModalFinalizar>
       <h3 className="titulo-finalizar">Finalizar Processo</h3>
       <p className="descricao-finalizar">
-        Carregue o comprovante de transferência ou pagamento bancário para a solicitação: <strong>{itemEmPagamento.titulo}</strong>
+        Carregue o comprovante de transferência ou pagamento bancário para a
+        solicitação: <strong>{itemEmPagamento.titulo}</strong>
       </p>
 
       <div className="container-upload-file">
@@ -125,19 +126,20 @@ export function ModalCompleteProcess({
 
       <div className="finalizar-acoes-container">
         <button
-          className="btn-confirmar-final"
-          onClick={handleConfirmarPagamento}
-          disabled={enviando}
-        >
-          {enviando ? "Processando..." : "Confirmar"}
-        </button>
-        <button
           className="btn-cancelar-final"
           type="button"
           onClick={onClose}
           disabled={enviando}
         >
           Cancelar
+        </button>
+
+        <button
+          className="btn-confirmar-final"
+          onClick={handleConfirmarPagamento}
+          disabled={enviando}
+        >
+          {enviando ? "Processando..." : "Confirmar"}
         </button>
       </div>
     </S.WrapperModalFinalizar>
