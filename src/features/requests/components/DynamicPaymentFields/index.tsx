@@ -8,6 +8,9 @@ import {
 } from "../../../../utils/formatters";
 import type { FormInputs } from "../NewRequest/types";
 
+// 🎯 IMPORTAÇÃO DO NOSSO DESIGN SYSTEM CENTRALIZADO
+import { Input, Select } from "../UI/index";
+
 interface DynamicPaymentFieldsProps {
   control: Control<FormInputs>;
 }
@@ -17,7 +20,6 @@ const REGEX_CNPJ = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
 const REGEX_TELEFONE = /^\(\d{2}\)\s\d{5}-\d{4}$/;
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// 🎯 PERFORMANCE: Componente envelopado com memo() para evitar re-renderizações desnecessárias
 export const DynamicPaymentFields = memo(function DynamicPaymentFields({
   control,
 }: DynamicPaymentFieldsProps) {
@@ -76,99 +78,72 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
   return (
     <>
       <S.GridDuplo>
-        <S.InputGroup>
-          <label htmlFor="select-forma-pagamento">Forma de Pagamento</label>
-          <Controller
-            name="forma_pagamento"
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <>
-                <select
-                  {...field}
-                  id="select-forma-pagamento"
-                  value={field.value ?? ""}
-                >
-                  <option value="">Selecione</option>
-                  <option value="boleto">Boleto</option>
-                  <option value="pix">PIX</option>
-                  <option value="transferencia">Transferência (TED/DOC)</option>
-                  <option value="link_pagamento">Link de Pagamento</option>
-                  <option value="cartao_credito">Cartão de Crédito</option>
-                  <option value="dinheiro">Dinheiro</option>
-                </select>
-                {errors.forma_pagamento && (
-                  <S.ErrorMessage>
-                    <S.ErrorIcon size={14} />
-                    {errors.forma_pagamento.message}
-                  </S.ErrorMessage>
-                )}
-              </>
-            )}
-          />
-        </S.InputGroup>
+        {/* 🎯 SELECT INTELIGENTE: FORMA PAGAMENTO */}
+        <Controller
+          name="forma_pagamento"
+          control={control}
+          defaultValue=""
+          render={({ field }) => (
+            <Select
+              label="Forma de Pagamento"
+              {...field}
+              id="select-forma-pagamento"
+              value={field.value ?? ""}
+              error={errors.forma_pagamento?.message}
+            >
+              <option value="">Selecione</option>
+              <option value="boleto">Boleto</option>
+              <option value="pix">PIX</option>
+              <option value="transferencia">Transferência (TED/DOC)</option>
+              <option value="link_pagamento">Link de Pagamento</option>
+              <option value="cartao_credito">Cartão de Crédito</option>
+              <option value="dinheiro">Dinheiro</option>
+            </Select>
+          )}
+        />
 
-        <S.InputGroup>
-          <label htmlFor="input-valor">Valor (R$)</label>
-          <Controller
-            name="valor"
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <>
-                <input
-                  id="input-valor"
-                  type="text"
-                  placeholder="R$ 0,00"
-                  name={field.name}
-                  value={aplicarMascaraMoeda(field.value ?? "")}
-                  onChange={(e) => field.onChange(e.target.value)}
-                  onBlur={field.onBlur}
-                  ref={field.ref}
-                />
-                {errors.valor && (
-                  <S.ErrorMessage>
-                    <S.ErrorIcon size={14} />
-                    {errors.valor.message}
-                  </S.ErrorMessage>
-                )}
-              </>
-            )}
-          />
-        </S.InputGroup>
+        <Controller
+          name="valor"
+          control={control}
+          defaultValue=""
+          render={({ field }) => (
+            <Input
+              id="input-valor"
+              label="Valor (R$)"
+              type="text"
+              placeholder="R$ 0,00"
+              name={field.name}
+              value={aplicarMascaraMoeda(field.value ?? "")}
+              onChange={(e) => field.onChange(e.target.value)}
+              onBlur={field.onBlur}
+              ref={field.ref}
+              error={errors.valor?.message}
+            />
+          )}
+        />
       </S.GridDuplo>
 
       {formaPagamento === "link_pagamento" && (
         <S.BlocoDinamicoAnimado>
-          <S.InputGroup>
-            <label htmlFor="input-link-pagamento">
-              URL do Link de Pagamento
-            </label>
-            <Controller
-              name="pix_chave"
-              control={control}
-              defaultValue=""
-              render={({ field, fieldState: { error } }) => (
-                <>
-                  <input
-                    id="input-link-pagamento"
-                    type="url"
-                    placeholder="https://link.operadora.com.br/sua-cobranca..."
-                    name={field.name}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    ref={field.ref}
-                  />
-                  {error && (
-                    <S.ErrorMessage>
-                      <S.ErrorIcon size={14} /> {error.message}
-                    </S.ErrorMessage>
-                  )}
-                </>
-              )}
-            />
-          </S.InputGroup>
+          <Controller
+            name="pix_chave"
+            control={control}
+            defaultValue=""
+            render={({ field, fieldState: { error } }) => (
+              <Input
+                id="input-link-pagamento"
+                label="URL do Link de Pagamento"
+                type="url"
+                placeholder="https://link.operadora.com.br/sua-cobranca..."
+                name={field.name}
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                ref={field.ref}
+                error={error?.message}
+              />
+            )}
+          />
         </S.BlocoDinamicoAnimado>
       )}
 
@@ -176,314 +151,245 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
         <S.BlocoDinamicoAnimado>
           <S.GridPix>
             <S.FullWidthGridItem>
-              <S.InputGroup>
-                <label htmlFor="pix-nome-favorecido">Nome do Favorecido</label>
-                <Controller
-                  name="ted_favorecido"
-                  control={control}
-                  defaultValue=""
-                  rules={{ required: "O nome do favorecido é obrigatório." }}
-                  render={({ field, fieldState: { error } }) => (
-                    <>
-                      <input
-                        id="pix-nome-favorecido"
-                        type="text"
-                        placeholder="Nome completo"
-                        name={field.name}
-                        value={field.value ?? ""}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        ref={field.ref}
-                      />
-                      {error && (
-                        <S.ErrorMessage>
-                          <S.ErrorIcon size={14} /> {error.message}
-                        </S.ErrorMessage>
-                      )}
-                    </>
-                  )}
-                />
-              </S.InputGroup>
-            </S.FullWidthGridItem>
-
-            <S.InputGroup>
-              <label htmlFor="select-tipo-pix">Tipo de Chave</label>
-              <Controller
-                name="pix_tipo"
-                control={control}
-                defaultValue="cnpj_cpf"
-                render={({ field }) => (
-                  <select
-                    {...field}
-                    id="select-tipo-pix"
-                    value={field.value ?? "cnpj_cpf"}
-                  >
-                    <option value="cnpj_cpf">CPF / CNPJ</option>
-                    <option value="celular">Celular</option>
-                    <option value="email">E-mail</option>
-                    <option value="aleatoria">Aleatória</option>
-                    <option value="copia_cola">Copia e Cola</option>
-                  </select>
-                )}
-              />
-            </S.InputGroup>
-
-            <S.InputGroup>
-              <label htmlFor="input-chave-pix">
-                {tipoChavePix === "copia_cola"
-                  ? "Código Copia e Cola"
-                  : "Chave PIX"}
-              </label>
-              <Controller
-                name="pix_chave"
-                control={control}
-                defaultValue=""
-                rules={{
-                  validate: (v) => {
-                    if (!v) return true;
-                    const raw = v.trim();
-                    const digits = cleanDigits(raw);
-
-                    if (tipoChavePix === "cnpj_cpf") {
-                      if (digits.length === 0) return true;
-                      if (digits.length === 11 || digits.length === 14)
-                        return true;
-                      return digits.length < 11
-                        ? "CPF ou CNPJ incompleto."
-                        : "CPF ou CNPJ inválido.";
-                    }
-
-                    if (tipoChavePix === "celular") {
-                      if (!isPixKeyComplete(raw, tipoChavePix)) return true;
-                      return REGEX_TELEFONE.test(raw)
-                        ? true
-                        : "Telefone incompleto.";
-                    }
-
-                    if (tipoChavePix === "email") {
-                      if (!isPixKeyComplete(raw, tipoChavePix)) return true;
-                      return REGEX_EMAIL.test(raw) ? true : "E-mail inválido.";
-                    }
-
-                    if (tipoChavePix === "aleatoria") {
-                      return raw.length >= 36 || "Chave aleatória incompleta.";
-                    }
-
-                    if (tipoChavePix === "copia_cola") {
-                      return raw.length >= 20 || "Copia e cola incompleta.";
-                    }
-
-                    return true;
-                  },
-                }}
-                render={({ field, fieldState: { error } }) => (
-                  <>
-                    <input
-                      id="input-chave-pix"
-                      type="text"
-                      placeholder={obterPlaceholderPix()}
-                      name={field.name}
-                      value={
-                        tipoChavePix === "cnpj_cpf"
-                          ? aplicarCpfCnpj(field.value ?? "")
-                          : tipoChavePix === "celular"
-                            ? aplicarMascaraCelular(field.value ?? "")
-                            : (field.value ?? "")
-                      }
-                      onChange={(e) =>
-                        field.onChange(
-                          tipoChavePix === "cnpj_cpf"
-                            ? aplicarCpfCnpj(e.target.value)
-                            : tipoChavePix === "celular"
-                              ? aplicarMascaraCelular(e.target.value)
-                              : e.target.value,
-                        )
-                      }
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
-                    {error && (
-                      <S.ErrorMessage>
-                        <S.ErrorIcon size={14} /> {error.message}
-                      </S.ErrorMessage>
-                    )}
-                  </>
-                )}
-              />
-            </S.InputGroup>
-          </S.GridPix>
-        </S.BlocoDinamicoAnimado>
-      )}
-
-      {formaPagamento === "transferencia" && (
-        <S.BlocoDinamicoAnimado>
-          <S.GridTedLinhaUm>
-            <S.InputGroup>
-              <label htmlFor="ted-banco">Banco</label>
-              <Controller
-                name="ted_banco"
-                control={control}
-                defaultValue=""
-               
-                render={({ field, fieldState: { error } }) => (
-                  <>
-                    <input
-                      id="ted-banco"
-                      type="text"
-                      placeholder="Ex: Itaú"
-                      name={field.name}
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
-                   
-                    {error && (
-                      <S.ErrorMessage>
-                        <S.ErrorIcon size={14} /> {error.message}
-                      </S.ErrorMessage>
-                    )}
-                  </>
-                )}
-              />
-            </S.InputGroup>
-
-            <S.InputGroup>
-              <label htmlFor="ted-agencia">Ag.</label>
-              <Controller
-                name="ted_agencia"
-                control={control}
-                defaultValue=""
-                render={({ field, fieldState: { error } }) => (
-                  <>
-                    <input
-                      id="ted-agencia"
-                      type="text"
-                      placeholder="0001"
-                      name={field.name}
-                      value={
-                        field.value?.replace(/\D/g, "").substring(0, 4) || ""
-                      }
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value.replace(/\D/g, "").substring(0, 4),
-                        )
-                      }
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
-                    {error && (
-                      <S.ErrorMessage>
-                        <S.ErrorIcon size={14} /> {error.message}
-                      </S.ErrorMessage>
-                    )}
-                  </>
-                )}
-              />
-            </S.InputGroup>
-
-            <S.InputGroup>
-              <label htmlFor="ted-conta">Conta Corrente</label>
-              <Controller
-                name="ted_conta"
-                control={control}
-                defaultValue=""
-                render={({ field, fieldState: { error } }) => (
-                  <>
-                    <input
-                      id="ted-conta"
-                      type="text"
-                      placeholder="12345-6"
-                      name={field.name}
-                      value={(() => {
-                        let v = (field.value ?? "").replace(/\D/g, "");
-                        if (v.length > 1)
-                          v = v.replace(/(\d+)(\d{1})$/, "$1-$2");
-                        return v;
-                      })()}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
-                    {error && (
-                      <S.ErrorMessage>
-                        <S.ErrorIcon size={14} /> {error.message}
-                      </S.ErrorMessage>
-                    )}
-                  </>
-                )}
-              />
-            </S.InputGroup>
-          </S.GridTedLinhaUm>
-
-          <S.GridTedLinhaDois>
-            <S.InputGroup>
-              <label htmlFor="ted-favorecido-doc">CPF/CNPJ Favorecido</label>
-              <Controller
-                name="ted_cpf_cnpj"
-                control={control}
-                defaultValue=""
-                rules={{
-                  validate: (v) =>
-                    !v ||
-                    REGEX_CPF.test(v) ||
-                    REGEX_CNPJ.test(v) ||
-                    "CPF ou CNPJ incompleto.",
-                }}
-                render={({ field, fieldState: { error } }) => (
-                  <>
-                    <input
-                      id="ted-favorecido-doc"
-                      type="text"
-                      placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                      name={field.name}
-                      value={aplicarCpfCnpj(field.value ?? "")}
-                      onChange={(e) =>
-                        field.onChange(aplicarCpfCnpj(e.target.value))
-                      }
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
-                    {error && (
-                      <S.ErrorMessage>
-                        <S.ErrorIcon size={14} /> {error.message}
-                      </S.ErrorMessage>
-                    )}
-                  </>
-                )}
-              />
-            </S.InputGroup>
-
-            <S.InputGroup>
-              <label htmlFor="ted-nome-titular">
-                Nome do Favorecido / Titular
-              </label>
               <Controller
                 name="ted_favorecido"
                 control={control}
                 defaultValue=""
                 rules={{ required: "O nome do favorecido é obrigatório." }}
                 render={({ field, fieldState: { error } }) => (
-                  <>
-                    <input
-                      id="ted-nome-titular"
-                      type="text"
-                      placeholder="Nome completo"
-                      name={field.name}
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
-                    {error && (
-                      <S.ErrorMessage>
-                        <S.ErrorIcon size={14} /> {error.message}
-                      </S.ErrorMessage>
-                    )}
-                  </>
+                  <Input
+                    id="pix-nome-favorecido"
+                    label="Nome do Favorecido"
+                    type="text"
+                    placeholder="Nome completo"
+                    name={field.name}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                    error={error?.message}
+                  />
                 )}
               />
-            </S.InputGroup>
+            </S.FullWidthGridItem>
+
+            {/* 🎯 SELECT INTELIGENTE: TIPO CHAVE */}
+            <Controller
+              name="pix_tipo"
+              control={control}
+              defaultValue="cnpj_cpf"
+              render={({ field }) => (
+                <Select
+                  label="Tipo de Chave"
+                  {...field}
+                  id="select-tipo-pix"
+                  value={field.value ?? "cnpj_cpf"}
+                >
+                  <option value="cnpj_cpf">CPF / CNPJ</option>
+                  <option value="celular">Celular</option>
+                  <option value="email">E-mail</option>
+                  <option value="aleatoria">Aleatória</option>
+                  <option value="copia_cola">Copia e Cola</option>
+                </Select>
+              )}
+            />
+
+            <Controller
+              name="pix_chave"
+              control={control}
+              defaultValue=""
+              rules={{
+                validate: (v) => {
+                  if (!v) return true;
+                  const raw = v.trim();
+                  const digits = cleanDigits(raw);
+
+                  if (tipoChavePix === "cnpj_cpf") {
+                    if (digits.length === 0) return true;
+                    if (digits.length === 11 || digits.length === 14)
+                      return true;
+                    return digits.length < 11
+                      ? "CPF ou CNPJ incompleto."
+                      : "CPF ou CNPJ inválido.";
+                  }
+
+                  if (tipoChavePix === "celular") {
+                    if (!isPixKeyComplete(raw, tipoChavePix)) return true;
+                    return REGEX_TELEFONE.test(raw)
+                      ? true
+                      : "Telefone incompleto.";
+                  }
+
+                  if (tipoChavePix === "email") {
+                    if (!isPixKeyComplete(raw, tipoChavePix)) return true;
+                    return REGEX_EMAIL.test(raw) ? true : "E-mail inválido.";
+                  }
+
+                  if (tipoChavePix === "aleatoria") {
+                    return raw.length >= 36 || "Chave aleatória incompleta.";
+                  }
+
+                  if (tipoChavePix === "copia_cola") {
+                    return raw.length >= 20 || "Copia e cola incompleta.";
+                  }
+
+                  return true;
+                },
+              }}
+              render={({ field, fieldState: { error } }) => (
+                <Input
+                  id="input-chave-pix"
+                  label={
+                    tipoChavePix === "copia_cola"
+                      ? "Código Copia e Cola"
+                      : "Chave PIX"
+                  }
+                  type="text"
+                  placeholder={obterPlaceholderPix()}
+                  name={field.name}
+                  value={
+                    tipoChavePix === "cnpj_cpf"
+                      ? aplicarCpfCnpj(field.value ?? "")
+                      : tipoChavePix === "celular"
+                        ? aplicarMascaraCelular(field.value ?? "")
+                        : (field.value ?? "")
+                  }
+                  onChange={(e) =>
+                    field.onChange(
+                      tipoChavePix === "cnpj_cpf"
+                        ? aplicarCpfCnpj(e.target.value)
+                        : tipoChavePix === "celular"
+                          ? aplicarMascaraCelular(e.target.value)
+                          : e.target.value,
+                    )
+                  }
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  error={error?.message}
+                />
+              )}
+            />
+          </S.GridPix>
+        </S.BlocoDinamicoAnimado>
+      )}
+
+     {formaPagamento === "transferencia" && (
+        <S.BlocoDinamicoAnimado>
+          <S.GridTedLinhaUm>
+            <Controller
+              name="ted_banco"
+              control={control}
+              defaultValue=""
+              render={({ field, fieldState: { error } }) => (
+                <Input
+                  id="ted-banco"
+                  label="Banco"
+                  type="text"
+                  placeholder="Ex: Itaú"
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  error={error?.message}
+                />
+              )}
+            />
+
+            <Controller
+              name="ted_agencia"
+              control={control}
+              defaultValue=""
+              render={({ field, fieldState: { error } }) => (
+                <Input
+                  id="ted-agencia"
+                  label="Ag."
+                  type="text"
+                  placeholder="0001"
+                  name={field.name}
+                  value={field.value?.replace(/\D/g, "").substring(0, 4) || ""}
+                  onChange={(e) => field.onChange(e.target.value.replace(/\D/g, "").substring(0, 4))}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  error={error?.message}
+                />
+              )}
+            />
+
+            <Controller
+              name="ted_conta"
+              control={control}
+              defaultValue=""
+              render={({ field, fieldState: { error } }) => (
+                <Input
+                  id="ted-conta"
+                  label="Conta Corrente"
+                  type="text"
+                  placeholder="12345-6"
+                  name={field.name}
+                  value={(() => {
+                    let v = (field.value ?? "").replace(/\D/g, "");
+                    if (v.length > 1) v = v.replace(/(\d+)(\d{1})$/, "$1-$2");
+                    return v;
+                  })()}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  error={error?.message}
+                />
+              )}
+            />
+          </S.GridTedLinhaUm>
+
+          <S.GridTedLinhaDois>
+            {/* AQUI ELES SÃO USADOS E O AVISO DO ESLINT SUMIRÁ */}
+            <Controller
+              name="ted_cpf_cnpj"
+              control={control}
+              defaultValue=""
+              rules={{
+                validate: (v) =>
+                  !v ||
+                  REGEX_CPF.test(v) ||
+                  REGEX_CNPJ.test(v) ||
+                  "CPF ou CNPJ incompleto.",
+              }}
+              render={({ field, fieldState: { error } }) => (
+                <Input
+                  id="ted-favorecido-doc"
+                  label="CPF/CNPJ Favorecido"
+                  type="text"
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  name={field.name}
+                  value={aplicarCpfCnpj(field.value ?? "")}
+                  onChange={(e) => field.onChange(aplicarCpfCnpj(e.target.value))}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  error={error?.message}
+                />
+              )}
+            />
+
+            <Controller
+              name="ted_favorecido"
+              control={control}
+              defaultValue=""
+              rules={{ required: "O nome do favorecido é obrigatório." }}
+              render={({ field, fieldState: { error } }) => (
+                <Input
+                  id="ted-nome-titular"
+                  label="Nome do Favorecido / Titular"
+                  type="text"
+                  placeholder="Nome completo"
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  error={error?.message}
+                />
+              )}
+            />
           </S.GridTedLinhaDois>
         </S.BlocoDinamicoAnimado>
       )}

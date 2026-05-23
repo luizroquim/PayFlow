@@ -1,11 +1,14 @@
 import { memo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { supabase } from "../../../../lib/supabase";
 import emailjs from "@emailjs/browser";
-import { AlertCircle, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import { DynamicPaymentFields } from "../DynamicPaymentFields";
 import * as S from "./styles";
 import { yupResolver } from "@hookform/resolvers/yup";
+
+// 🎯 IMPORTAÇÕES DOS NOSSOS NOVOS COMPONENTES GLOBAIS DE UI
+import { Input, TextArea } from "../UI"; // Importando TextArea aqui
 
 import type { FormInputs } from "./types";
 import { newRequestSchema } from "./schema";
@@ -42,7 +45,7 @@ interface PagadorPerfil {
   email: string | null;
 }
 
-// 🧠 FUNÇÕES PURAS EXTERNALIZADAS: Isoladas fora do escopo do componente
+// 🧠 FUNÇÕES PURAS EXTERNALIZADAS
 function toTitleCase(str: string) {
   return str
     .toLowerCase()
@@ -74,7 +77,6 @@ function obterNomeDoAnexo(url: string) {
   }
 }
 
-// 🎯 PERFORMANCE: Componente agora utiliza memo() para evitar re-renders da Dashboard
 export const NewRequest = memo(function NewRequest({
   onSucesso,
   dadosParaEditar,
@@ -88,7 +90,7 @@ export const NewRequest = memo(function NewRequest({
     setValue,
     formState: { errors },
   } = useForm<FormInputs>({
-    mode: "onChange", // Validação dinâmica
+    mode: "onChange",
     resolver: yupResolver(newRequestSchema),
     defaultValues: {
       titulo: dadosParaEditar?.titulo || "",
@@ -236,52 +238,44 @@ export const NewRequest = memo(function NewRequest({
       </S.TituloModal>
 
       <S.ColunaEsquerda>
-        <S.InputGroup>
-          <label>Título do Item</label>
-          <input
-            type="text"
-            placeholder="Ex: Monitor Dell 24 polegadas"
-            {...register("titulo")}
-          />
-          {errors.titulo && (
-            <S.ErrorHint>
-              <S.IconInline>
-                <AlertCircle size={14} />
-              </S.IconInline>
-              {errors.titulo.message}
-            </S.ErrorHint>
-          )}
-        </S.InputGroup>
+        {/* 🎯 Componente Inteligente: Título */}
+        <Input
+          label="Título do Item"
+          placeholder="Ex: Monitor Dell 24 polegadas"
+          error={errors.titulo?.message}
+          {...register("titulo")}
+        />
 
-        <S.InputGroup>
-          <label>Descrição Detalhada</label>
-          <S.TextArea
-            placeholder="Insira as especificações técnicas, marca, quantidade..."
-            {...register("descricao")}
-          />
-          {errors.descricao && (
-            <S.ErrorHint>
-              <S.IconInline>
-                <AlertCircle size={14} />
-              </S.IconInline>
-              {errors.descricao.message}
-            </S.ErrorHint>
+        {/* 🎯 TextArea Global Integrado */}
+        <Controller<FormInputs>
+          name="descricao"
+          control={control}
+          render={({ field, fieldState: { error } }) => (
+            <TextArea
+              label="Descrição Detalhada"
+              placeholder="Insira as especificações técnicas, marca, quantidade, observações..."
+              {...field}
+              // Garante que o value seja uma string e nunca null/undefined
+              value={field.value?.toString() ?? ""}
+              error={error?.message}
+            />
           )}
-        </S.InputGroup>
+        />
 
-        <S.InputGroup>
-          <label>Link para Compra (Opcional)</label>
-          <input
-            type="url"
-            placeholder="https://exemplo.com/produto"
-            {...register("link_compra")}
-          />
-        </S.InputGroup>
+        {/* 🎯 Componente Inteligente: Link */}
+        <Input
+          type="url"
+          label="Link para Compra (Opcional)"
+          placeholder="https://exemplo.com/produto"
+          error={errors.link_compra?.message}
+          {...register("link_compra")}
+        />
       </S.ColunaEsquerda>
 
       <S.ColunaDireita>
         <CamposPaymentDynamicsWrapper control={control} />
 
+        {/* 🎯 InputGroup Global para o Gerenciador de Anexos */}
         <S.InputGroup>
           <label>Anexar Boleto ou Orçamento (PDF/Imagem)</label>
 

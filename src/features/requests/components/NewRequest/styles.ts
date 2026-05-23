@@ -1,6 +1,5 @@
 import styled from "styled-components";
 
-// 🎯 FORMULÁRIO PRINCIPAL: Grid responsivo sem travas para garantir fluidez
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -8,28 +7,25 @@ export const Form = styled.form`
   width: 100%;
   box-sizing: border-box;
 
-  /* 🖥️ ALINHAMENTO DO GRID EM COMPUTADORES (Telas maiores) */
   @media (min-width: 768px) {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Duas colunas idênticas lado a lado */
-    column-gap: 32px; /* Espaço generoso entre as duas colunas */
+    grid-template-columns: 1fr 1fr;
+    column-gap: 32px;
     row-gap: 16px;
   }
 `;
 
-// 🎯 TÍTULO: Cruza o topo da modal de ponta a ponta no computador
 export const TituloModal = styled.h2`
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-size: ${({ theme }) => theme.fonts.sizes.title};
+  font-weight: ${({ theme }) => theme.fonts.weights.bold};
   margin-bottom: 4px;
-  color: #0f172a;
+  color: ${({ theme }) => theme.colors.textTitle};
 
   @media (min-width: 768px) {
     grid-column: span 2;
   }
 `;
 
-// 🎯 BLOCOS QUE FILTRAN A DISPOSIÇÃO LÓGICA DOS INPUTS
 export const ColunaEsquerda = styled.div`
   display: flex;
   flex-direction: column;
@@ -44,7 +40,7 @@ export const ColunaDireita = styled.div`
   width: 100%;
 `;
 
-// 🎯 GRUPO DE INPUTS: Padronizado com focos suaves e transições limpas
+// 🎯 GRUPO DE INPUTS E TEXTAREA LOCAIS
 export const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
@@ -53,56 +49,38 @@ export const InputGroup = styled.div`
   box-sizing: border-box;
 
   label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #475569;
-  }
-
-  input {
-    width: 100%;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    font-size: 0.95rem;
-    color: #1e293b;
-    outline: none;
-    transition: all 0.2s;
-    box-sizing: border-box;
-
-    &:focus {
-      border-color: #0284c7;
-      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1);
-    }
+    font-size: ${({ theme }) => theme.fonts.sizes.label};
+    font-weight: ${({ theme }) => theme.fonts.weights.semiBold};
+    color: ${({ theme }) => theme.colors.textSecondary};
   }
 `;
 
-// 🎯 TEXTAREA: Travada verticalmente para manter simetria entre as colunas
 export const TextArea = styled.textarea`
   width: 100%;
   min-height: 120px;
   max-height: 120px;
   padding: 12px 14px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 0.95rem;
+  border-radius: ${({ theme }) => theme.radii.default};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  font-size: ${({ theme }) => theme.fonts.sizes.body};
   font-family: inherit;
-  color: #1e293b;
+  color: ${({ theme }) => theme.colors.textMain};
   outline: none;
   resize: none;
   line-height: 1.5;
-  transition: all 0.2s;
+  transition: ${({ theme }) => theme.transitions.fast};
   box-sizing: border-box;
+  background-color: ${({ theme }) => theme.colors.background};
 
   &:focus {
-    border-color: #0284c7;
-    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1);
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primaryFocusShadow};
   }
 `;
 
-// 🎯 CONTAINER DE BOTÕES: Configurado com inversão mobile automatizada
 export const ButtonContainer = styled.div`
   display: flex;
-  flex-direction: column-reverse; /* No celular, força o submit para cima e o fechar para baixo */
+  flex-direction: column-reverse;
   gap: 10px;
   margin-top: 10px;
   width: 100%;
@@ -111,60 +89,58 @@ export const ButtonContainer = styled.div`
   a {
     width: 100%;
     padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.95rem;
+    border-radius: ${({ theme }) => theme.radii.default};
+    font-weight: ${({ theme }) => theme.fonts.weights.bold};
+    font-size: ${({ theme }) => theme.fonts.sizes.body};
     cursor: pointer;
-    transition: all 0.2s;
+    transition: ${({ theme }) => theme.transitions.fast};
     box-sizing: border-box;
   }
 
-  /* 🖥️ ALINHAMENTO PARA COMPUTADORES (Telas maiores) */
   @media (min-width: 768px) {
     grid-column: span 2;
-    flex-direction: row; /* Restaura lado a lado */
-    justify-content: center; /* Centraliza no rodapé */
-    width: 50%; /* Ocupa exatamente 50% da largura total */
-    margin-left: auto; /* Centralização horizontal automática do bloco */
+    flex-direction: row;
+    justify-content: center;
+    width: 50%;
+    margin-left: auto;
     margin-right: auto;
     gap: 16px;
 
     button,
     a {
-      flex: 1; /* Divide o espaço igualmente entre os botões */
+      flex: 1;
     }
   }
 
   .btn-submit {
-    background-color: #0284c7;
-    color: #fff;
+    background-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.white};
     border: none;
 
     &:hover {
-      background-color: #079cdc;
+      background-color: ${({ theme }) => theme.colors.primaryHover};
     }
 
     &:disabled {
-      background-color: #94a3b8;
+      background-color: ${({ theme }) => theme.colors.disabled};
       cursor: not-allowed;
     }
   }
 
-  /* Estilização base para o botão de "Voltar" */
   button:not(.btn-submit),
   a {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fdfdfd;
-    border: 1px solid #cbd5e1;
-    color: #475569;
+    background-color: ${({ theme }) => theme.colors.backgroundLight};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    color: ${({ theme }) => theme.colors.textSecondary};
     text-decoration: none;
 
     &:hover {
-      background-color: #f8fafc;
-      color: #1e293b;
-      border-color: #94a3b8;
+      background-color: ${({ theme }) => theme.colors.backgroundHover};
+      color: ${({ theme }) => theme.colors.textMain};
+      border-color: ${({ theme }) => theme.colors.disabled};
     }
   }
 `;
@@ -177,9 +153,9 @@ export const AnexoEditContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background-color: #fff;
+  border-radius: ${({ theme }) => theme.radii.default};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.background};
   box-sizing: border-box;
 `;
 
@@ -187,8 +163,8 @@ export const NomeArquivo = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.95rem;
-  color: #1e293b;
+  font-size: ${({ theme }) => theme.fonts.sizes.body};
+  color: ${({ theme }) => theme.colors.textMain};
   overflow: hidden;
   max-width: 75%;
   cursor: pointer;
@@ -200,22 +176,22 @@ export const NomeArquivo = styled.div`
   }
 
   &:hover {
-    color: #0284c7;
+    color: ${({ theme }) => theme.colors.primary};
   }
 `;
 
 export const BtnTextoRemover = styled.button`
   background: none;
   border: none;
-  color: #0284c7;
-  font-size: 0.85rem;
-  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: ${({ theme }) => theme.fonts.sizes.label};
+  font-weight: ${({ theme }) => theme.fonts.weights.semiBold};
   cursor: pointer;
   padding: 4px 8px;
-  transition: all 0.2s;
+  transition: ${({ theme }) => theme.transitions.fast};
 
   &:hover {
-    color: #079cdc;
+    color: ${({ theme }) => theme.colors.primaryHover};
   }
 `;
 
@@ -225,9 +201,9 @@ export const AnexoNovoContainer = styled.div`
 `;
 
 export const TextoPlaceholder = styled.span`
-  color: #1e293b;
-  font-size: 0.95rem;
-  font-weight: 500;
+  color: ${({ theme }) => theme.colors.textMain};
+  font-size: ${({ theme }) => theme.fonts.sizes.body};
+  font-weight: ${({ theme }) => theme.fonts.weights.medium};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -238,9 +214,9 @@ export const NomeArquivoNovo = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #1e293b;
-  font-weight: 500;
-  font-size: 0.95rem;
+  color: ${({ theme }) => theme.colors.textMain};
+  font-weight: ${({ theme }) => theme.fonts.weights.medium};
+  font-size: ${({ theme }) => theme.fonts.sizes.body};
   overflow: hidden;
   max-width: 100%;
 `;
@@ -255,9 +231,9 @@ export const ErrorHint = styled.span`
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #0284c7;
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary}; /* Ou colors.danger quando criarmos */
+  font-size: ${({ theme }) => theme.fonts.sizes.small};
+  font-weight: ${({ theme }) => theme.fonts.weights.semiBold};
   margin-top: 6px;
 `;
 
@@ -269,14 +245,14 @@ export const IconInline = styled.span`
 `;
 
 export const BtnTextoAzulNativo = styled.span`
-  color: #0284c7;
-  font-size: 0.85rem;
-  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: ${({ theme }) => theme.fonts.sizes.label};
+  font-weight: ${({ theme }) => theme.fonts.weights.semiBold};
   padding: 4px 8px;
-  transition: all 0.2s ease-in-out;
+  transition: ${({ theme }) => theme.transitions.smooth};
 
   &:hover {
-    color: #079cdc;
+    color: ${({ theme }) => theme.colors.primaryHover};
   }
 `;
 
@@ -286,20 +262,20 @@ export const LabelAnexoCustomizado = styled.label`
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background-color: #fff;
+  border-radius: ${({ theme }) => theme.radii.default};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.background};
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: ${({ theme }) => theme.transitions.smooth};
   box-sizing: border-box;
 
   &:hover ${BtnTextoAzulNativo} {
-    color: #079cdc;
+    color: ${({ theme }) => theme.colors.primaryHover};
   }
 
   &:hover {
-    border-color: #0284c7;
-    background-color: #f8fafc;
+    border-color: ${({ theme }) => theme.colors.primary};
+    background-color: ${({ theme }) => theme.colors.backgroundHover};
   }
 `;
 
@@ -310,15 +286,15 @@ export const InputFileInvisivel = styled.input`
 export const BtnLimparArquivoNovo = styled.button`
   background: none;
   border: none;
-  color: #0284c7;
-  font-size: 0.85rem;
-  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: ${({ theme }) => theme.fonts.sizes.label};
+  font-weight: ${({ theme }) => theme.fonts.weights.semiBold};
   cursor: pointer;
   padding: 4px 8px;
-  transition: all 0.2s;
+  transition: ${({ theme }) => theme.transitions.fast};
 
   &:hover {
-    color: #079cdc;
+    color: ${({ theme }) => theme.colors.primaryHover};
   }
 `;
 
