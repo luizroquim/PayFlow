@@ -354,7 +354,7 @@ export function Dashboard() {
       )}
 
       {/* 2. MODAL: FINALIZAR PROCESSO */}
-      {/* 🎯 Chamada limpa: a responsabilidade de gerenciar o fundo escuro agora é do componente Modal dentro do ModalCompleteProcess */}
+     
       {mostrarModalPagamento && itemEmPagamento && (
         <ModalCompleteProcess
           itemEmPagamento={itemEmPagamento}

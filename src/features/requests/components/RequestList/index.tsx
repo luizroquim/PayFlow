@@ -49,7 +49,7 @@ export const RequestList = memo(function RequestList({
             onClick={() => setPaginaAtual((prev) => Math.max(prev - 1, 1))}
             disabled={paginaSegura === 1}
           >
-            <ChevronLeft size={16} /> Anterior
+            <ChevronLeft size={16} /> <span>Anterior</span>
           </S.PaginationButton>
 
           {Array.from({ length: totalPaginas }, (_, index) => (
@@ -68,7 +68,7 @@ export const RequestList = memo(function RequestList({
             }
             disabled={paginaSegura === totalPaginas}
           >
-            Próximo <ChevronRight size={16} />
+           <span> Próximo</span> <ChevronRight size={16} />
           </S.PaginationButton>
         </S.PaginationContainer>
       )}

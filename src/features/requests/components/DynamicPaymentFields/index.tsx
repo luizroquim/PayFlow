@@ -173,27 +173,28 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
               />
             </S.FullWidthGridItem>
 
-            {/* 🎯 SELECT INTELIGENTE: TIPO CHAVE */}
-            <Controller
-              name="pix_tipo"
-              control={control}
-              defaultValue="cnpj_cpf"
-              render={({ field }) => (
-                <Select
-                  label="Tipo de Chave"
-                  {...field}
-                  id="select-tipo-pix"
-                  value={field.value ?? "cnpj_cpf"}
-                >
-                  <option value="cnpj_cpf">CPF / CNPJ</option>
-                  <option value="celular">Celular</option>
-                  <option value="email">E-mail</option>
-                  <option value="aleatoria">Aleatória</option>
-                  <option value="copia_cola">Copia e Cola</option>
-                </Select>
-              )}
-            />
-
+            <S.FullWidthGridItem>
+              <Controller
+                name="pix_tipo"
+                control={control}
+                defaultValue="cnpj_cpf"
+                render={({ field }) => (
+                  <Select
+                    label="Tipo de Chave"
+                    {...field}
+                    id="select-tipo-pix"
+                    value={field.value ?? "cnpj_cpf"}
+                  >
+                    <option value="cnpj_cpf">CPF / CNPJ</option>
+                    <option value="celular">Celular</option>
+                    <option value="email">E-mail</option>
+                    <option value="aleatoria">Aleatória</option>
+                    <option value="copia_cola">Copia e Cola</option>
+                  </Select>
+                )}
+              />
+            </S.FullWidthGridItem>
+            <S.FullWidthGridItem>
             <Controller
               name="pix_chave"
               control={control}
@@ -269,11 +270,12 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                 />
               )}
             />
+            </S.FullWidthGridItem>
           </S.GridPix>
         </S.BlocoDinamicoAnimado>
       )}
 
-     {formaPagamento === "transferencia" && (
+      {formaPagamento === "transferencia" && (
         <S.BlocoDinamicoAnimado>
           <S.GridTedLinhaUm>
             <Controller
@@ -308,7 +310,11 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                   placeholder="0001"
                   name={field.name}
                   value={field.value?.replace(/\D/g, "").substring(0, 4) || ""}
-                  onChange={(e) => field.onChange(e.target.value.replace(/\D/g, "").substring(0, 4))}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value.replace(/\D/g, "").substring(0, 4),
+                    )
+                  }
                   onBlur={field.onBlur}
                   ref={field.ref}
                   error={error?.message}
@@ -342,54 +348,58 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
           </S.GridTedLinhaUm>
 
           <S.GridTedLinhaDois>
-            {/* AQUI ELES SÃO USADOS E O AVISO DO ESLINT SUMIRÁ */}
-            <Controller
-              name="ted_cpf_cnpj"
-              control={control}
-              defaultValue=""
-              rules={{
-                validate: (v) =>
-                  !v ||
-                  REGEX_CPF.test(v) ||
-                  REGEX_CNPJ.test(v) ||
-                  "CPF ou CNPJ incompleto.",
-              }}
-              render={({ field, fieldState: { error } }) => (
-                <Input
-                  id="ted-favorecido-doc"
-                  label="CPF/CNPJ Favorecido"
-                  type="text"
-                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                  name={field.name}
-                  value={aplicarCpfCnpj(field.value ?? "")}
-                  onChange={(e) => field.onChange(aplicarCpfCnpj(e.target.value))}
-                  onBlur={field.onBlur}
-                  ref={field.ref}
-                  error={error?.message}
-                />
-              )}
-            />
-
-            <Controller
-              name="ted_favorecido"
-              control={control}
-              defaultValue=""
-              rules={{ required: "O nome do favorecido é obrigatório." }}
-              render={({ field, fieldState: { error } }) => (
-                <Input
-                  id="ted-nome-titular"
-                  label="Nome do Favorecido / Titular"
-                  type="text"
-                  placeholder="Nome completo"
-                  name={field.name}
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  ref={field.ref}
-                  error={error?.message}
-                />
-              )}
-            />
+            <S.FullWidthGridItem>
+              <Controller
+                name="ted_cpf_cnpj"
+                control={control}
+                defaultValue=""
+                rules={{
+                  validate: (v) =>
+                    !v ||
+                    REGEX_CPF.test(v) ||
+                    REGEX_CNPJ.test(v) ||
+                    "CPF ou CNPJ incompleto.",
+                }}
+                render={({ field, fieldState: { error } }) => (
+                  <Input
+                    id="ted-favorecido-doc"
+                    label="CPF/CNPJ Favorecido"
+                    type="text"
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    name={field.name}
+                    value={aplicarCpfCnpj(field.value ?? "")}
+                    onChange={(e) =>
+                      field.onChange(aplicarCpfCnpj(e.target.value))
+                    }
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                    error={error?.message}
+                  />
+                )}
+              />
+            </S.FullWidthGridItem>
+            <S.FullWidthGridItem>
+              <Controller
+                name="ted_favorecido"
+                control={control}
+                defaultValue=""
+                rules={{ required: "O nome do favorecido é obrigatório." }}
+                render={({ field, fieldState: { error } }) => (
+                  <Input
+                    id="ted-nome-titular"
+                    label="Nome do Favorecido / Titular"
+                    type="text"
+                    placeholder="Nome completo"
+                    name={field.name}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                    error={error?.message}
+                  />
+                )}
+              />
+            </S.FullWidthGridItem>
           </S.GridTedLinhaDois>
         </S.BlocoDinamicoAnimado>
       )}

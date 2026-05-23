@@ -9,7 +9,13 @@ export const CardContainer = styled.div`
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  /* Efeito moderno ao tocar no card no mobile */
+  &:active {
+    transform: scale(0.99);
+  }
 
   @media (min-width: 768px) {
     padding: 24px;
@@ -146,20 +152,28 @@ export const CardContainer = styled.div`
 
     .user-actions {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       width: 100%;
 
       @media (min-width: 480px) {
         width: auto;
       }
 
-      button {
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-size: 0.85rem;
+    button {
+        /* UX Mobile: Tamanho mínimo de toque 44px */
+        min-height: 44px; 
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-weight: 600;
         cursor: pointer;
-        font-weight: 500;
         transition: all 0.2s;
+        
+        &:active {
+          transform: scale(0.96);
+        }
       }
 
       .btn-edit {
@@ -189,6 +203,7 @@ export const CardContainer = styled.div`
     }
 
     .btn-confirm-payment {
+      min-height: 44px;
       width: 100%;
       background-color: #1aac7c;
       color: #fff;
@@ -198,7 +213,12 @@ export const CardContainer = styled.div`
       font-weight: bold;
       font-size: 0.9rem;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+
+      &:active {
+        transform: scale(0.98);
+        
+      }
 
       @media (min-width: 480px) {
         width: auto;

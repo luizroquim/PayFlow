@@ -21,9 +21,13 @@ export const FullWidthGridItem = styled.div`
 
 export const GridDuplo = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr; // Mobile: tudo em 1 coluna
   gap: 16px;
   width: 100%;
+
+  @media (min-width: 600px) {
+    grid-template-columns: 1fr 1fr; // Desktop: lado a lado
+  }
 `;
 
 export const GridPix = styled.div`
@@ -35,9 +39,13 @@ export const GridPix = styled.div`
 
 export const GridTedLinhaUm = styled.div`
   display: grid;
-  grid-template-columns: 2fr 1fr 2fr;
+  grid-template-columns: 1fr; // Mobile: tudo empilhado
   gap: 16px;
   width: 100%;
+
+  @media (min-width: 600px) {
+    grid-template-columns: 2fr 1fr 2fr; // Desktop: volta ao original
+  }
 `;
 
 export const GridTedLinhaDois = styled.div`
@@ -54,15 +62,13 @@ export const BlocoDinamicoAnimado = styled.div`
   width: 100%;
   margin-top: 16px;
   animation: fadeIn 0.2s ease-in-out;
+  
+  /* Garantindo que os campos dentro do bloco dinâmico não estourem a tela */
+  overflow: hidden; 
 
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 `;
+

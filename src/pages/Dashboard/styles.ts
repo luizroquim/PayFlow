@@ -12,7 +12,7 @@ export const MainContent = styled.main`
   width: 100%;
   max-width: 1040px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 16px; // Reduzi levemente de 20px para ganhar mais espaço útil no celular
 
   @media (min-width: 768px) {
     padding: 40px 20px;
@@ -22,15 +22,17 @@ export const MainContent = styled.main`
 // --- SELETOR DE ABAS ---
 export const TabContainer = styled.div`
   display: flex;
-  gap: 8px;
-  margin-bottom: 25px;
+  gap: 4px; // Reduzi um pouco o gap para caber melhor em telas pequenas
+  margin-bottom: 20px;
   background-color: #f1f5f9;
-  padding: 5px;
+  padding: 4px;
   border-radius: 12px;
   width: 100%;
 
   @media (min-width: 480px) {
     width: fit-content;
+    gap: 8px;
+    padding: 5px;
   }
 `;
 
@@ -41,13 +43,15 @@ interface TabButtonProps {
 
 export const TabButton = styled.button<TabButtonProps>`
   flex: 1;
-  padding: 10px 20px;
+  padding: 12px 10px;
   border-radius: 10px;
   border: none;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.2s;
+
+  /* Garantindo o estado ativo/inativo */
   background-color: ${(props) => (props.$isActive ? "#ffffff" : "transparent")};
   box-shadow: ${(props) =>
     props.$isActive ? "0 2px 4px rgba(0, 0, 0, 0.05)" : "none"};
@@ -57,9 +61,11 @@ export const TabButton = styled.button<TabButtonProps>`
     return props.$tabType === "pendente" ? "#0284c7" : "#10b981";
   }};
 
+  /* Ajuste para Desktop */
   @media (min-width: 480px) {
     flex: none;
     padding: 10px 25px;
+    font-size: 0.9rem;
   }
 `;
 
@@ -68,12 +74,6 @@ export const CardsStack = styled.div`
   flex-direction: column;
   gap: 20px;
 `;
-
-
-
-
-
-
 
 // --- ESTADOS VAZIOS ---
 export const EmptyState = styled.div`
@@ -99,51 +99,3 @@ export const EmptyState = styled.div`
   }
 `;
 
-// --- LINKS DE PAGINAÇÃO RESPONSIVA ---
-export const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-top: 30px;
-  width: 100%;
-  flex-wrap: wrap;
-`;
-
-export const PaginationButton = styled.button<{ $isActive?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid
-    ${(props) => (props.$isActive ? props.theme.colors.primary : "#cbd5e1")};
-  background-color: ${(props) =>
-    props.$isActive ? props.theme.colors.primary : "#ffffff"};
-  color: ${(props) => (props.$isActive ? "#ffffff" : "#64748b")};
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover:not(:disabled) {
-    background-color: ${(props) =>
-      props.$isActive ? props.theme.colors.primary : "#f8fafc"};
-    border-color: ${(props) =>
-      props.$isActive ? props.theme.colors.primary : "#94a3b8"};
-    color: ${(props) => (props.$isActive ? "#ffffff" : "#334155")};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background-color: #f1f5f9;
-    border-color: #e2e8f0;
-  }
-
-  @media (max-width: 480px) {
-    padding: 10px 16px;
-    font-size: 0.85rem;
-  }
-`;
