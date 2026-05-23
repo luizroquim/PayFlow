@@ -170,18 +170,10 @@ function RequestCardComponent({
       </S.CardContainer>
 
       {mostrarModalPagamento && (
-        <S.ModalOverlay onClick={() => setMostrarModalPagamento(false)}>
-          <S.ModalContent
-            $maxWidth="480px"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* O componente agora gerencia seu próprio fechamento */}
-            <ModalPaymentDetails
-              solicitacao={item}
-              onClose={() => setMostrarModalPagamento(false)}
-            />
-          </S.ModalContent>
-        </S.ModalOverlay>
+        <ModalPaymentDetails
+          solicitacao={item}
+          onClose={() => setMostrarModalPagamento(false)}
+        />
       )}
     </>
   );

@@ -1,7 +1,6 @@
 import { useState, memo } from "react";
 import { supabase } from "../../../../lib/supabase";
-import * as S from "./styles";
-import { Button } from "../../components/UI/index";
+import { Button, Modal } from "../../components/UI"; // 🎯 Importamos Button e Modal do mesmo lugar
 
 interface ModalDeleteRequestProps {
   onClose: () => void; // Fecha a modal se o usuário cancelar
@@ -41,7 +40,8 @@ export const ModalDeleteRequest = memo(function ModalDeleteRequest({
   }
 
   return (
-    <S.ConfirmModalContent>
+    // 🎯 Trocamos a <div> estilizada pelo Modal global com variant="confirm"
+    <Modal variant="confirm" onClose={onClose}>
       <h3>Excluir Solicitação?</h3>
       <p>
         Esta ação não poderá ser desfeita. O item será removido permanentemente
@@ -63,9 +63,10 @@ export const ModalDeleteRequest = memo(function ModalDeleteRequest({
           onClick={handleExecutarExclusao}
           isLoading={excluindo}
         >
-          {excluindo ? "Excluindo..." : "Sim, excluir"}
+          {/* Como seu Button já mostra "Processando...", ele gerencia sozinho o texto de carregamento */}
+          Sim, excluir
         </Button>
       </div>
-    </S.ConfirmModalContent>
+    </Modal>
   );
 });

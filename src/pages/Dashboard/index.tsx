@@ -1,8 +1,10 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
+import { Header } from "../../features/requests/components/Header";
+import { Loader2 } from "lucide-react";
+import { Modal } from "../../features/requests/components/UI";
 
-// IMPORTAÇÕES DA FEATURE: Alinhadas in inglês e apontando para a estrutura unificada
 import {
   RequestFilters,
   RequestList,
@@ -10,8 +12,7 @@ import {
   ModalCompleteProcess,
   ModalDeleteRequest,
 } from "../../features/requests";
-import { LogOut, Loader2 } from "lucide-react";
-import icon from "../../assets/icon.ico";
+
 import * as S from "./styles";
 
 export interface Solicitacao {
@@ -82,7 +83,6 @@ export function Dashboard() {
     }
   }, [paginaAtual]);
 
-  // 1. Inicializa a sessão do usuário e define funções/permissões
   useEffect(() => {
     async function inicializarUsuario() {
       const {
@@ -121,7 +121,6 @@ export function Dashboard() {
     };
   }, [navigate]);
 
-  // 2. Carrega TODOS os dados (sem filtrar abaAtiva no banco) e escuta Realtime
   useEffect(() => {
     let ativo = true;
 
@@ -176,7 +175,6 @@ export function Dashboard() {
     };
   }, [currentUserId, isPagador]);
 
-  // 3. Atualização manual sem filtro de banco para bater com a nova lógica
   const forcarAtualizacaoManual = useCallback(async () => {
     if (!currentUserId) return;
     setCarregando(true);
@@ -198,7 +196,6 @@ export function Dashboard() {
     }
   }, [currentUserId, isPagador]);
 
-  // 4. A troca de abas agora é instantânea. Não ativa o esqueleto de "carregando"
   const handleTrocaAba = (novaAba: "pendente" | "comprado") => {
     if (abaAtiva === novaAba) return;
 
@@ -206,7 +203,6 @@ export function Dashboard() {
     setPaginaAtual(1);
   };
 
-  // 5. Filtra os dados na memória cache (incluindo o status da aba)
   const solicitacoesFiltradas = useMemo(() => {
     const termo = filtro.toLowerCase().trim();
 
@@ -231,7 +227,6 @@ export function Dashboard() {
     });
   }, [solicitacoes, abaAtiva, filtro, dataInicio, dataFim]);
 
-  // Separação de fatias de paginação em cache síncrono
   const calculoPaginacao = useMemo(() => {
     const totalPaginas = Math.ceil(
       solicitacoesFiltradas.length / itensPorPagina,
@@ -256,36 +251,17 @@ export function Dashboard() {
 
   return (
     <S.Container>
-      <S.Header>
-        <div className="brand-wrapper">
-          <div className="logo-box">
-            <img src={icon} alt="" />
-          </div>
-          <h2>Gestão de Pagamentos</h2>
-        </div>
-
-        <div className="user-controls">
-          <span className="user-email">{userEmail}</span>
-          <button
-            className="btn-new-request"
-            onClick={() => {
-              setSolicitacaoParaEditar(null);
-              setMostrarModal(true);
-            }}
-          >
-            + Nova Solicitação
-          </button>
-          <button
-            className="btn-logout"
-            onClick={() => {
-              supabase.auth.signOut();
-              navigate("/");
-            }}
-          >
-            <LogOut size={19} />
-          </button>
-        </div>
-      </S.Header>
+      <Header
+        userEmail={userEmail}
+        onNovaSolicitacao={() => {
+          setSolicitacaoParaEditar(null);
+          setMostrarModal(true);
+        }}
+        onLogout={() => {
+          supabase.auth.signOut();
+          navigate("/");
+        }}
+      />
 
       <S.MainContent
         ref={secaoSolicitacoesRef}
@@ -361,71 +337,54 @@ export function Dashboard() {
         )}
       </S.MainContent>
 
-      {/* 1. MODAL: NOVA / EDITAR SOLICITAÇÃO (Mantido rígido - fecha apenas no botão) */}
+      {/* 1. MODAL: NOVA / EDITAR SOLICITAÇÃO */}
+      {/* 🎯 Note que NÃO passamos o onClose para o Modal aqui, mantendo a regra de que esse modal em específico só fecha no botão de Cancelar interno */}
       {mostrarModal && (
-        <S.ModalOverlay>
-          <S.ModalContent $maxWidth="950px">
-            <NewRequest
-              key={solicitacaoParaEditar?.id || "nova-solicitacao"}
-              onSucesso={async () => {
-                setMostrarModal(false);
-                await forcarAtualizacaoManual();
-              }}
-              dadosParaEditar={solicitacaoParaEditar}
-              onClose={() => setMostrarModal(false)}
-            />
-          </S.ModalContent>
-        </S.ModalOverlay>
+        <Modal maxWidth="950px">
+          <NewRequest
+            key={solicitacaoParaEditar?.id || "nova-solicitacao"}
+            onSucesso={async () => {
+              setMostrarModal(false);
+              await forcarAtualizacaoManual();
+            }}
+            dadosParaEditar={solicitacaoParaEditar}
+            onClose={() => setMostrarModal(false)}
+          />
+        </Modal>
       )}
 
-      {/* 2. MODAL: FINALIZAR PROCESSO (Fecha ao clicar fora) */}
+      {/* 2. MODAL: FINALIZAR PROCESSO */}
+      {/* 🎯 Chamada limpa: a responsabilidade de gerenciar o fundo escuro agora é do componente Modal dentro do ModalCompleteProcess */}
       {mostrarModalPagamento && itemEmPagamento && (
-        <S.ModalOverlay
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setMostrarModalPagamento(false);
-              setItemEmPagamento(null);
-            }
+        <ModalCompleteProcess
+          itemEmPagamento={itemEmPagamento}
+          onClose={() => {
+            setMostrarModalPagamento(false);
+            setItemEmPagamento(null);
           }}
-        >
-          <ModalCompleteProcess
-            itemEmPagamento={itemEmPagamento}
-            onClose={() => {
-              setMostrarModalPagamento(false);
-              setItemEmPagamento(null);
-            }}
-            onSucesso={async () => {
-              setMostrarModalPagamento(false);
-              setItemEmPagamento(null);
-              await forcarAtualizacaoManual();
-            }}
-          />
-        </S.ModalOverlay>
+          onSucesso={async () => {
+            setMostrarModalPagamento(false);
+            setItemEmPagamento(null);
+            await forcarAtualizacaoManual();
+          }}
+        />
       )}
 
-      {/* 3. MODAL: CONFIRMAR EXCLUSÃO (Fecha ao clicar fora) */}
+      {/* 3. MODAL: CONFIRMAR EXCLUSÃO */}
+      {/* 🎯 O mesmo vale aqui! Fica absurdamente mais legível. */}
       {mostrarModalExcluir && idItemParaExcluir && (
-        <S.ModalOverlay
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setMostrarModalExcluir(false);
-              setIdItemParaExcluir(null);
-            }
+        <ModalDeleteRequest
+          idItemParaExcluir={idItemParaExcluir}
+          onClose={() => {
+            setMostrarModalExcluir(false);
+            setIdItemParaExcluir(null);
           }}
-        >
-          <ModalDeleteRequest
-            idItemParaExcluir={idItemParaExcluir}
-            onClose={() => {
-              setMostrarModalExcluir(false);
-              setIdItemParaExcluir(null);
-            }}
-            onSucesso={async () => {
-              setMostrarModalExcluir(false);
-              setIdItemParaExcluir(null);
-              await forcarAtualizacaoManual();
-            }}
-          />
-        </S.ModalOverlay>
+          onSucesso={async () => {
+            setMostrarModalExcluir(false);
+            setIdItemParaExcluir(null);
+            await forcarAtualizacaoManual();
+          }}
+        />
       )}
     </S.Container>
   );

@@ -1,8 +1,6 @@
 import { useState } from "react";
-
 import { supabase } from "../../../../lib/supabase";
-import * as S from "./styles";
-import { Button, FileUploader } from "../../components/UI/index";
+import { Button, FileUploader, Modal } from "../../components/UI"; // 🎯 Centralizamos os imports
 
 /* 🎯 NOMES ATUALIZADOS: Interface agora segue o padrão em inglês */
 interface ModalCompleteProcessProps {
@@ -71,14 +69,17 @@ export function ModalCompleteProcess({
   }
 
   return (
-    <S.WrapperModalFinalizar>
-      <h3 className="titulo-finalizar">Finalizar Processo</h3>
-      <p className="descricao-finalizar">
+    // 🎯 Utilizamos o Modal global configurando uma largura máxima agradável
+    <Modal maxWidth="550px" onClose={onClose}>
+      <h3>Finalizar Processo</h3>
+      {/* 🎯 A classe modal-description vem nativamente do nosso Modal global */}
+      <p className="modal-description">
         Carregue o comprovante de transferência ou pagamento bancário para a
         solicitação: <strong>{itemEmPagamento.titulo}</strong>
       </p>
 
-      <div className="container-upload-file">
+      {/* Margem simples apenas para afastar o uploader do resto */}
+      <div style={{ marginBottom: "20px" }}>
         <FileUploader
           arquivoBoleto={arquivo}
           // Passamos vazio para satisfazer a tipagem, já que é um novo upload
@@ -94,6 +95,8 @@ export function ModalCompleteProcess({
           onUploadArquivo={(file) => setArquivo(file)}
         />
       </div>
+
+      {/* 🎯 A classe finalizar-acoes-container já existe no Modal global alinhando os botões */}
       <div className="finalizar-acoes-container">
         <Button
           variant="secondary"
@@ -112,6 +115,6 @@ export function ModalCompleteProcess({
           Confirmar
         </Button>
       </div>
-    </S.WrapperModalFinalizar>
+    </Modal>
   );
 }

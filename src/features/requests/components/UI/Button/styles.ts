@@ -10,7 +10,7 @@ export const ButtonBase = styled.button<ButtonBaseProps>`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 3px;
   padding: ${({ $size }) => ($size === "sm" ? "6px 12px" : "12px")};
   border-radius: ${({ theme }) => theme.radii.default};
   font-weight: ${({ theme }) => theme.fonts.weights.bold};

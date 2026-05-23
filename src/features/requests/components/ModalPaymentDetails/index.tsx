@@ -1,7 +1,8 @@
 import { useState, memo } from "react";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import * as S from "./styles";
-import { Button } from "../../components/UI/index";
+import { Button, Modal } from "../../components/UI"; // 🎯 Centralizamos a importação do Modal e Button
+
 // 🎯 IMPORTANDO OS FORMATADORES CENTRALIZADOS
 import {
   aplicarTitleCase,
@@ -144,9 +145,12 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
   }
 
   return (
-    <S.WrapperModalPagamento>
-      <h3 className="titulo-modal-pagamento">{obterNomeForma()}</h3>
-      <p className="descricao-modal-pagamento">
+    // 🎯 Aplicamos o Modal Global (Coloquei 650px pois costuma ter mais colunas, ajuste se quiser menor)
+    <Modal maxWidth="650px" onClose={onClose}>
+      <h3>{obterNomeForma()}</h3>
+
+      {/* 🎯 Trocamos a classe antiga pela modal-description global */}
+      <p className="modal-description">
         Clique no campo ou no ícone para copiar os dados limpos direto para o
         aplicativo do banco.
       </p>
@@ -255,11 +259,12 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
         )}
       </S.ContainerDados>
 
-      <S.AcoesModalPagamento>
-        <Button variant="secondary" onClick={onClose} style={{ width: "100%" }}>
+      {/* 🎯 Utilizamos a classe global finalizar-acoes-container no lugar da AcoesModalPagamento */}
+      <div className="finalizar-acoes-container">
+        <Button variant="secondary" onClick={onClose}>
           Fechar informações
         </Button>
-      </S.AcoesModalPagamento>
-    </S.WrapperModalPagamento>
+      </div>
+    </Modal>
   );
 });

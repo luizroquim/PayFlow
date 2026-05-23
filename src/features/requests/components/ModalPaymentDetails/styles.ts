@@ -1,26 +1,5 @@
 import styled from "styled-components";
 
-/* Container soberano que blinda o componente interno */
-export const WrapperModalPagamento = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-
-  .titulo-modal-pagamento {
-    color: #0f172a !important; /* Força grafite escuro original */
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0 0 6px 0;
-  }
-
-  .descricao-modal-pagamento {
-    color: #64748b !important; /* Força cinza slate original legível */
-    font-size: 0.9rem;
-    line-height: 1.5;
-    margin: 0 0 16px 0;
-  }
-`;
-
 export const ContainerDados = styled.div`
   display: flex;
   flex-direction: column;
@@ -167,20 +146,5 @@ export const AlertaCopiado = styled.span`
       opacity: 0;
       transform: translateY(-4px);
     }
-  }
-`;
-
-
-export const AcoesModalPagamento = styled.div`
-  margin-top: 24px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-
-  /* Aumentamos a especificidade para sobrescrever o botão global */
-  & > button {
-    width: auto !important;
-    min-width: 160px !important;
-    display: inline-flex !important; /* Garante que ele não ocupe a linha toda */
   }
 `;

@@ -3,3 +3,4 @@ export { Select } from "./Select";
 export { TextArea } from "./TextArea";
 export {FileUploader} from "./FileUploader";
 export {Button} from "./Button";
+export {Modal} from "./Modal";
