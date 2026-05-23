@@ -171,16 +171,15 @@ function RequestCardComponent({
 
       {mostrarModalPagamento && (
         <S.ModalOverlay onClick={() => setMostrarModalPagamento(false)}>
-          {/* 🎯 CORRIGIDO: Adicionado o prefixo "$" para barrar o vazamento no DOM */}
-          <S.ModalContent $maxWidth="480px" onClick={(e) => e.stopPropagation()}>
-            <ModalPaymentDetails solicitacao={item} />
-
-            <S.ButtonFecharDados
-              type="button"
-              onClick={() => setMostrarModalPagamento(false)}
-            >
-              Fechar informações
-            </S.ButtonFecharDados>
+          <S.ModalContent
+            $maxWidth="480px"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* O componente agora gerencia seu próprio fechamento */}
+            <ModalPaymentDetails
+              solicitacao={item}
+              onClose={() => setMostrarModalPagamento(false)}
+            />
           </S.ModalContent>
         </S.ModalOverlay>
       )}
@@ -188,15 +187,18 @@ function RequestCardComponent({
   );
 }
 
-export const RequestCard = memo(RequestCardComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.item.id === nextProps.item.id &&
-    prevProps.item.status === nextProps.item.status &&
-    prevProps.item.titulo === nextProps.item.titulo &&
-    prevProps.item.descricao === nextProps.item.descricao &&
-    prevProps.item.boleto_url === nextProps.item.boleto_url &&
-    prevProps.item.comprovante_url === nextProps.item.comprovante_url &&
-    prevProps.currentUserId === nextProps.currentUserId &&
-    prevProps.isPagador === nextProps.isPagador
-  );
-});
+export const RequestCard = memo(
+  RequestCardComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.item.id === nextProps.item.id &&
+      prevProps.item.status === nextProps.item.status &&
+      prevProps.item.titulo === nextProps.item.titulo &&
+      prevProps.item.descricao === nextProps.item.descricao &&
+      prevProps.item.boleto_url === nextProps.item.boleto_url &&
+      prevProps.item.comprovante_url === nextProps.item.comprovante_url &&
+      prevProps.currentUserId === nextProps.currentUserId &&
+      prevProps.isPagador === nextProps.isPagador
+    );
+  },
+);

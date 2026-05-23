@@ -1,7 +1,7 @@
 import styled, { css } from "styled-components";
 
 interface ButtonBaseProps {
-  $variant: 'primary' | 'secondary' | 'danger' | 'confirm' | 'ghost';
+  $variant: "primary" | "secondary" | "danger" | "confirm" | "ghost";
   $ativo?: boolean;
 }
 
@@ -26,29 +26,43 @@ export const ButtonBase = styled.button<ButtonBaseProps>`
 
   ${({ $variant, theme }) => {
     switch ($variant) {
-      case 'primary': return css`
-        background-color: ${theme.colors.primary};
-        color: ${theme.colors.white};
-        &:hover:not(:disabled) { background-color: ${theme.colors.primaryHover}; }
-      `;
-      case 'confirm': return css`
-        background-color: ${theme.colors.success};
-        color: ${theme.colors.white};
-        &:hover:not(:disabled) { background-color: ${theme.colors.successHover}; }
-      `;
-      case 'danger': return css`
-        background-color: #fff;
-        color: ${theme.colors.danger};
-        border-color: #fee2e2;
-        &:hover:not(:disabled) { background-color: #fef2f2; }
-      `;
-      case 'secondary':
-      default: return css`
-        background-color: ${theme.colors.secondary};
-        color: ${theme.colors.textSecondary};
-        border: 1px solid ${theme.colors.secondaryBorder};
-        &:hover:not(:disabled) { color: black; border-color: #4d4c4c; background-color: white; }
-      `;
+      case "primary":
+        return css`
+          background-color: ${theme.colors.primary};
+          color: ${theme.colors.white};
+          &:hover:not(:disabled) {
+            background-color: ${theme.colors.primaryHover};
+          }
+        `;
+      case "confirm":
+        return css`
+          background-color: ${theme.colors.success};
+          color: ${theme.colors.white};
+          &:hover:not(:disabled) {
+            background-color: ${theme.colors.successHover};
+          }
+        `;
+      case "danger":
+        return css`
+          background-color: ${theme.colors.danger};
+          color: ${theme.colors.secondary};
+          &:hover:not(:disabled) {
+            background-color: ${theme.colors.dangerHover};
+          }
+        `;
+
+      case "secondary":
+      default:
+        return css`
+          background-color: ${theme.colors.secondary};
+          color: ${theme.colors.textSecondary};
+          border: 1px solid ${theme.colors.secondaryBorder};
+          &:hover:not(:disabled) {
+            color: black;
+            border-color: #4d4c4c;
+            background-color: white;
+          }
+        `;
     }
   }}
 `;

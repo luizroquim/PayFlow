@@ -169,3 +169,18 @@ export const AlertaCopiado = styled.span`
     }
   }
 `;
+
+
+export const AcoesModalPagamento = styled.div`
+  margin-top: 24px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+
+  /* Aumentamos a especificidade para sobrescrever o botão global */
+  & > button {
+    width: auto !important;
+    min-width: 160px !important;
+    display: inline-flex !important; /* Garante que ele não ocupe a linha toda */
+  }
+`;

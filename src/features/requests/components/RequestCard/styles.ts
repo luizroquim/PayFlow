@@ -270,29 +270,4 @@ export const ModalContent = styled.div<{ $maxWidth: string }>`
   }
 `;
 
-export const ButtonFecharDados = styled.button`
-  width: 100%;
-  margin-top: 15px;
-  background-color: #fdfdfd;
-  border: 1px solid #c5c5c5;
-  color: #4d4c4c;
-  padding: 13px;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s;
 
-  &:hover {
-    color: black;
-    border: #4d4c4c 1px solid;
-    background-color: white;
-  }
-
-  @media (min-width: 768px) {
-    width: 50%;
-    margin-left: auto;
-    margin-right: auto;
-    font-size: 0.9rem;
-  }
-`;

@@ -1,7 +1,7 @@
 import { useState, memo } from "react";
 import { Copy, Check, ExternalLink } from "lucide-react";
 import * as S from "./styles";
-
+import { Button } from "../../components/UI/index";
 // 🎯 IMPORTANDO OS FORMATADORES CENTRALIZADOS
 import {
   aplicarTitleCase,
@@ -10,6 +10,7 @@ import {
 import type { Solicitacao } from "../../../../pages/Dashboard";
 
 interface ModalPaymentDetailsProps {
+  onClose: () => void;
   solicitacao: Partial<Solicitacao> & {
     forma_pagamento?: string | null;
     valor?: string | null;
@@ -106,6 +107,7 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
 
 export const ModalPaymentDetails = memo(function ModalPaymentDetails({
   solicitacao,
+  onClose,
 }: ModalPaymentDetailsProps) {
   const forma_pagamento = solicitacao.forma_pagamento ?? undefined;
   const pix_chave = solicitacao.pix_chave ?? undefined;
@@ -252,6 +254,12 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
           </>
         )}
       </S.ContainerDados>
+
+      <S.AcoesModalPagamento>
+        <Button variant="secondary" onClick={onClose} style={{ width: "100%" }}>
+          Fechar informações
+        </Button>
+      </S.AcoesModalPagamento>
     </S.WrapperModalPagamento>
   );
 });
