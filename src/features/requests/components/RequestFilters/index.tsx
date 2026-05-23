@@ -1,6 +1,7 @@
 import { useState, memo } from "react";
 import { Search, Calendar } from "lucide-react";
 import * as S from "./styles";
+import { Button } from "../../components/UI/index";
 
 interface RequestFiltersProps {
   valor: string;
@@ -55,13 +56,14 @@ function RequestFiltersComponent({
           </div>
           <input
             type="text"
-            placeholder={placeholder || "Pesquisar por título ou solicitante..."}
+            placeholder={
+              placeholder || "Pesquisar por título ou solicitante..."
+            }
             value={valor}
             onChange={(e) => setValor(e.target.value)}
           />
         </S.InputWrapper>
 
-        
         <S.BotaoCalendario
           type="button"
           onClick={() => setMostrarDatas(!mostrarDatas)}
@@ -95,13 +97,14 @@ function RequestFiltersComponent({
           </div>
 
           {temDataAtiva && (
-            <button
-              className="btn-limpar-data"
+            <Button
+              variant="primary" // Ou a variante que você usa para botões de suporte
+              size="sm" // Se o seu componente Button suportar um tamanho menor
               onClick={limparFiltrosData}
               type="button"
             >
-              Limpar
-            </button>
+              Limpar Filtro
+            </Button>
           )}
         </S.AreaDatas>
       )}
@@ -110,11 +113,14 @@ function RequestFiltersComponent({
 }
 
 // 🎯 EXPORTAÇÃO NOMEADA CORRETA: Vincula o memo diretamente à constante que a Dashboard importa
-export const RequestFilters = memo(RequestFiltersComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.valor === nextProps.valor &&
-    prevProps.dataInicio === nextProps.dataInicio &&
-    prevProps.dataFim === nextProps.dataFim &&
-    prevProps.placeholder === nextProps.placeholder
-  );
-});
+export const RequestFilters = memo(
+  RequestFiltersComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.valor === nextProps.valor &&
+      prevProps.dataInicio === nextProps.dataInicio &&
+      prevProps.dataFim === nextProps.dataFim &&
+      prevProps.placeholder === nextProps.placeholder
+    );
+  },
+);

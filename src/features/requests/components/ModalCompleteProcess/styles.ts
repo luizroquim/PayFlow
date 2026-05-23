@@ -38,7 +38,11 @@ export const WrapperModalFinalizar = styled.div`
   }
 
   .finalizar-acoes-container {
+    width: auto !important;
+    min-width: 120px;
     display: flex;
+    justify-content:center;
+    align-items:center;
     gap: 12px;
     width: 100%;
     margin-top: 20px;

@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const ContainerFiltros = styled.div`
   display: flex;
@@ -60,9 +60,9 @@ export const BotaoCalendario = styled.button<{ $ativo: boolean }>`
   gap: 8px;
   padding: 0 16px;
   height: 46px; /* Alinhado perfeitamente com a altura do input */
-  background-color: ${props => props.$ativo ? '#0284c7' : '#fff'};
-  color: ${props => props.$ativo ? '#fff' : '#0284c7'};
-  border: 1px solid ${props => props.$ativo ? '#0284c7' : '#e2e8f0'};
+  background-color: ${(props) => (props.$ativo ? "#0284c7" : "#fff")};
+  color: ${(props) => (props.$ativo ? "#fff" : "#0284c7")};
+  border: 1px solid ${(props) => (props.$ativo ? "#0284c7" : "#e2e8f0")};
   border-radius: 12px;
   cursor: pointer;
   font-weight: 500;
@@ -72,16 +72,16 @@ export const BotaoCalendario = styled.button<{ $ativo: boolean }>`
   flex-shrink: 0;
 
   &:hover {
-    background-color: ${props => props.$ativo ? '#0369a1' : '#f8fafc'};
-    border-color: ${props => props.$ativo ? '#0369a1' : '#cbd5e1'};
+    background-color: ${(props) => (props.$ativo ? "#0369a1" : "#f8fafc")};
+    border-color: ${(props) => (props.$ativo ? "#0369a1" : "#cbd5e1")};
   }
 
   @media (max-width: 480px) {
     padding: 0 14px;
-    
-    .texto-botao { 
-      display: none; 
-    } 
+
+    .texto-botao {
+      display: none;
+    }
   }
 `;
 
@@ -93,7 +93,6 @@ export const AreaDatas = styled.div`
   padding: 14px;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
- 
 
   /* 📱 Se for tela de celular, os campos de data empilham na vertical automaticamente */
   @media (max-width: 600px) {
@@ -130,43 +129,6 @@ export const AreaDatas = styled.div`
       &:focus {
         border-color: #0284c7;
       }
-    }
-  }
-
-  .btn-limpar-data {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1px;
-    background: transparent;
-    border: none;
-    
-    background-color: #0284c7; 
-    color: #ffffff;
-
-        
-    font-size: 0.88rem;
-    cursor: pointer;
-    font-weight: bold;
-    padding: 6px 10px;
-    border-radius: 6px;
-    transition: background-color 0.15s;
-    
-    &:hover { 
-      background-color: #0369a1;
-      
-    }
-
-    @media (max-width: 600px) {
-      margin-top: 4px;
-      height: 38px;
-      background-color: #0284c7; 
-      
-
-      &:hover{
-        background-color: #0369a1; 
-      }
-      
     }
   }
 `;

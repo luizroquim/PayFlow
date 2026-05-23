@@ -3,6 +3,7 @@ import styled, { css } from "styled-components";
 interface ButtonBaseProps {
   $variant: "primary" | "secondary" | "danger" | "confirm" | "ghost";
   $ativo?: boolean;
+  $size?: "sm" | "md";
 }
 
 export const ButtonBase = styled.button<ButtonBaseProps>`
@@ -10,10 +11,10 @@ export const ButtonBase = styled.button<ButtonBaseProps>`
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px;
+  padding: ${({ $size }) => ($size === "sm" ? "6px 12px" : "12px")};
   border-radius: ${({ theme }) => theme.radii.default};
   font-weight: ${({ theme }) => theme.fonts.weights.bold};
-  font-size: ${({ theme }) => theme.fonts.sizes.body};
+  font-size: ${({ $size, theme }) => ($size === "sm" ? "0.8rem" : theme.fonts.sizes.body)};
   cursor: pointer;
   transition: ${({ theme }) => theme.transitions.fast};
   border: 1px solid transparent;
