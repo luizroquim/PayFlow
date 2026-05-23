@@ -324,17 +324,26 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                 name="ted_banco"
                 control={control}
                 defaultValue=""
-                render={({ field }) => (
-                  <input
-                    id="ted-banco"
-                    type="text"
-                    placeholder="Ex: Itaú"
-                    name={field.name}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    ref={field.ref}
-                  />
+               
+                render={({ field, fieldState: { error } }) => (
+                  <>
+                    <input
+                      id="ted-banco"
+                      type="text"
+                      placeholder="Ex: Itaú"
+                      name={field.name}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                    />
+                   
+                    {error && (
+                      <S.ErrorMessage>
+                        <S.ErrorIcon size={14} /> {error.message}
+                      </S.ErrorMessage>
+                    )}
+                  </>
                 )}
               />
             </S.InputGroup>
