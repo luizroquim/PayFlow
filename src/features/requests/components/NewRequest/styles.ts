@@ -47,18 +47,6 @@ export const ButtonContainer = styled.div`
   margin-top: 10px;
   width: 100%;
 
-  button,
-  a {
-    width: 100%;
-    padding: 12px;
-    border-radius: ${({ theme }) => theme.radii.default};
-    font-weight: ${({ theme }) => theme.fonts.weights.bold};
-    font-size: ${({ theme }) => theme.fonts.sizes.body};
-    cursor: pointer;
-    transition: ${({ theme }) => theme.transitions.fast};
-    box-sizing: border-box;
-  }
-
   @media (min-width: 768px) {
     grid-column: span 2;
     flex-direction: row;
@@ -67,43 +55,6 @@ export const ButtonContainer = styled.div`
     margin-left: auto;
     margin-right: auto;
     gap: 16px;
-
-    button,
-    a {
-      flex: 1;
-    }
-  }
-
-  .btn-submit {
-    background-color: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.colors.white};
-    border: none;
-
-    &:hover {
-      background-color: ${({ theme }) => theme.colors.primaryHover};
-    }
-
-    &:disabled {
-      background-color: ${({ theme }) => theme.colors.disabled};
-      cursor: not-allowed;
-    }
-  }
-
-  button:not(.btn-submit),
-  a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: ${({ theme }) => theme.colors.backgroundLight};
-    border: 1px solid ${({ theme }) => theme.colors.border};
-    color: ${({ theme }) => theme.colors.textSecondary};
-    text-decoration: none;
-
-    &:hover {
-      background-color: ${({ theme }) => theme.colors.backgroundHover};
-      color: ${({ theme }) => theme.colors.textMain};
-      border-color: ${({ theme }) => theme.colors.disabled};
-    }
   }
 `;
 

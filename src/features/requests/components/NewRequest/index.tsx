@@ -7,7 +7,7 @@ import * as S from "./styles";
 import { yupResolver } from "@hookform/resolvers/yup";
 
 // 🎯 IMPORTAÇÕES DOS NOSSOS NOVOS COMPONENTES GLOBAIS DE UI
-import { Input, TextArea, FileUploader } from "../UI";
+import { Input, TextArea, FileUploader,Button } from "../UI";
 
 import type { FormInputs } from "./types";
 import { newRequestSchema } from "./schema";
@@ -293,26 +293,27 @@ export const NewRequest = memo(function NewRequest({
         />
       </S.ColunaDireita>
 
-      <S.ButtonContainer>
-        <button
+<S.ButtonContainer>
+        <Button
           type="button"
-          className="btn-cancelar"
+          variant="secondary"
           onClick={onClose}
           disabled={enviando}
         >
           Voltar para a lista
-        </button>
+        </Button>
 
-        <button type="submit" className="btn-submit" disabled={enviando}>
-          {enviando
-            ? "Salvando..."
-            : dadosParaEditar
-              ? "Salvar Alterações"
-              : "Criar Solicitação"}
-        </button>
+        <Button 
+          type="submit" 
+          variant="primary" 
+          isLoading={enviando}
+        >
+          {dadosParaEditar ? "Salvar Alterações" : "Criar Solicitação"}
+        </Button>
       </S.ButtonContainer>
     </S.Form>
   );
 });
+ 
 
 const CamposPaymentDynamicsWrapper = memo(DynamicPaymentFields);

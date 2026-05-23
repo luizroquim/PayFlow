@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { FileText } from "lucide-react";
+
 import { supabase } from "../../../../lib/supabase";
 import * as S from "./styles";
+import { Button, FileUploader } from "../../components/UI/index";
 
 /* 🎯 NOMES ATUALIZADOS: Interface agora segue o padrão em inglês */
 interface ModalCompleteProcessProps {
@@ -78,69 +79,38 @@ export function ModalCompleteProcess({
       </p>
 
       <div className="container-upload-file">
-        <S.AnexoNovoContainer>
-          <S.LabelAnexoCustomizado htmlFor="upload-comprovante-modal">
-            <S.TextoPlaceholder>
-              {arquivo ? (
-                <S.NomeArquivoNovo>
-                  <FileText
-                    size={18}
-                    color="#1e293b"
-                    style={{ flexShrink: 0 }}
-                  />
-                  <S.TextoNomeFiltrado>{arquivo.name}</S.TextoNomeFiltrado>
-                </S.NomeArquivoNovo>
-              ) : (
-                "Nenhum comprovante anexado..."
-              )}
-            </S.TextoPlaceholder>
-
-            {arquivo ? (
-              <S.BtnLimparArquivoNovo
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setArquivo(null);
-                }}
-              >
-                Remover
-              </S.BtnLimparArquivoNovo>
-            ) : (
-              <S.BtnTextoAzulNativo>Anexar Arquivo</S.BtnTextoAzulNativo>
-            )}
-          </S.LabelAnexoCustomizado>
-
-          <S.InputFileInvisivel
-            id="upload-comprovante-modal"
-            type="file"
-            accept="image/*,application/pdf"
-            onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                setArquivo(e.target.files[0]);
-              }
-            }}
-          />
-        </S.AnexoNovoContainer>
+        <FileUploader
+          arquivoBoleto={arquivo}
+          // Passamos vazio para satisfazer a tipagem, já que é um novo upload
+          anexoExistenteUrl=""
+          nomeAnexo={arquivo ? arquivo.name : "Nenhum comprovante anexado..."}
+          // Função nula pois não há o que remover de um anexo existente ainda
+          onRemoverAnexo={() => {}}
+          onRemoverNovoArquivo={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setArquivo(null);
+          }}
+          onUploadArquivo={(file) => setArquivo(file)}
+        />
       </div>
-
       <div className="finalizar-acoes-container">
-        <button
-          className="btn-cancelar-final"
+        <Button
+          variant="secondary"
           type="button"
           onClick={onClose}
           disabled={enviando}
         >
           Cancelar
-        </button>
+        </Button>
 
-        <button
-          className="btn-confirmar-final"
+        <Button
+          variant="confirm"
           onClick={handleConfirmarPagamento}
-          disabled={enviando}
+          isLoading={enviando}
         >
-          {enviando ? "Processando..." : "Confirmar"}
-        </button>
+          Confirmar
+        </Button>
       </div>
     </S.WrapperModalFinalizar>
   );

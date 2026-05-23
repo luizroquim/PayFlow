@@ -1,6 +1,7 @@
 import { useState, memo } from "react";
 import { supabase } from "../../../../lib/supabase";
 import * as S from "./styles";
+import { Button } from "../../components/UI/index";
 
 interface ModalDeleteRequestProps {
   onClose: () => void; // Fecha a modal se o usuário cancelar
@@ -48,22 +49,22 @@ export const ModalDeleteRequest = memo(function ModalDeleteRequest({
       </p>
 
       <div className="actions">
-        <button
+        <Button
           type="button"
-          className="btn-cancel"
+          variant="secondary"
           onClick={onClose}
           disabled={excluindo}
         >
           Cancelar
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="btn-delete"
+          variant="danger"
           onClick={handleExecutarExclusao}
-          disabled={excluindo}
+          isLoading={excluindo}
         >
           {excluindo ? "Excluindo..." : "Sim, excluir"}
-        </button>
+        </Button>
       </div>
     </S.ConfirmModalContent>
   );
