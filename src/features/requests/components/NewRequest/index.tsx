@@ -2,13 +2,12 @@ import { memo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { supabase } from "../../../../lib/supabase";
 import emailjs from "@emailjs/browser";
-import { FileText } from "lucide-react";
 import { DynamicPaymentFields } from "../DynamicPaymentFields";
 import * as S from "./styles";
 import { yupResolver } from "@hookform/resolvers/yup";
 
 // 🎯 IMPORTAÇÕES DOS NOSSOS NOVOS COMPONENTES GLOBAIS DE UI
-import { Input, TextArea } from "../UI"; // Importando TextArea aqui
+import { Input, TextArea, FileUploader } from "../UI";
 
 import type { FormInputs } from "./types";
 import { newRequestSchema } from "./schema";
@@ -276,76 +275,22 @@ export const NewRequest = memo(function NewRequest({
         <CamposPaymentDynamicsWrapper control={control} />
 
         {/* 🎯 InputGroup Global para o Gerenciador de Anexos */}
-        <S.InputGroup>
-          <label>Anexar Boleto ou Orçamento (PDF/Imagem)</label>
-
-          {anexoExistenteUrl ? (
-            <S.AnexoEditContainer>
-              <S.NomeArquivo
-                onClick={() => window.open(anexoExistenteUrl, "_blank")}
-              >
-                <S.IconInline>
-                  <FileText size={18} color="#64748b" />
-                </S.IconInline>
-                <span>{obterNomeDoAnexo(anexoExistenteUrl)}</span>
-              </S.NomeArquivo>
-              <S.BtnTextoRemover
-                type="button"
-                onClick={() => {
-                  setValue("anexo_existente_url", "");
-                  setValue("boleto_file", null);
-                }}
-              >
-                Remover
-              </S.BtnTextoRemover>
-            </S.AnexoEditContainer>
-          ) : (
-            <S.AnexoNovoContainer>
-              <S.LabelAnexoCustomizado htmlFor="upload-boleto-nova-solicitacao">
-                <S.TextoPlaceholder>
-                  {arquivoBoleto ? (
-                    <S.NomeArquivoNovo>
-                      <S.IconInline>
-                        <FileText size={18} color="#1e293b" />
-                      </S.IconInline>
-                      <S.TextoNomeFiltrado>
-                        {arquivoBoleto.name}
-                      </S.TextoNomeFiltrado>
-                    </S.NomeArquivoNovo>
-                  ) : (
-                    "Nenhum arquivo anexado..."
-                  )}
-                </S.TextoPlaceholder>
-
-                {arquivoBoleto ? (
-                  <S.BtnLimparArquivoNovo
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setValue("boleto_file", null);
-                    }}
-                  >
-                    Remover
-                  </S.BtnLimparArquivoNovo>
-                ) : (
-                  <S.BtnTextoAzulNativo>Anexar Arquivo</S.BtnTextoAzulNativo>
-                )}
-              </S.LabelAnexoCustomizado>
-
-              <S.InputFileInvisivel
-                id="upload-boleto-nova-solicitacao"
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files.length > 0) {
-                    setValue("boleto_file", e.target.files[0]);
-                  }
-                }}
-              />
-            </S.AnexoNovoContainer>
-          )}
-        </S.InputGroup>
+        <FileUploader
+          anexoExistenteUrl={anexoExistenteUrl}
+          arquivoBoleto={arquivoBoleto}
+          nomeAnexo={obterNomeDoAnexo(anexoExistenteUrl ?? "")} // Garante string para a função
+          onRemoverAnexo={() => {
+            setValue("anexo_existente_url", "");
+            setValue("boleto_file", null);
+          }}
+          onRemoverNovoArquivo={(e) => {
+            // Agora aceita o evento 'e'
+            e.preventDefault();
+            e.stopPropagation();
+            setValue("boleto_file", null);
+          }}
+          onUploadArquivo={(file) => setValue("boleto_file", file)}
+        />
       </S.ColunaDireita>
 
       <S.ButtonContainer>
