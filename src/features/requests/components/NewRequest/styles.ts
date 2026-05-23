@@ -107,7 +107,8 @@ export const ButtonContainer = styled.div`
   margin-top: 10px;
   width: 100%;
 
-  button, a {
+  button,
+  a {
     width: 100%;
     padding: 12px;
     border-radius: 8px;
@@ -121,15 +122,16 @@ export const ButtonContainer = styled.div`
   /* 🖥️ ALINHAMENTO PARA COMPUTADORES (Telas maiores) */
   @media (min-width: 768px) {
     grid-column: span 2;
-    flex-direction: row;        /* Restaura lado a lado */
-    justify-content: center;    /* Centraliza no rodapé */
-    width: 50%;                 /* Ocupa exatamente 50% da largura total */
-    margin-left: auto;          /* Centralização horizontal automática do bloco */
+    flex-direction: row; /* Restaura lado a lado */
+    justify-content: center; /* Centraliza no rodapé */
+    width: 50%; /* Ocupa exatamente 50% da largura total */
+    margin-left: auto; /* Centralização horizontal automática do bloco */
     margin-right: auto;
     gap: 16px;
 
-    button, a {
-      flex: 1;                  /* Divide o espaço igualmente entre os botões */
+    button,
+    a {
+      flex: 1; /* Divide o espaço igualmente entre os botões */
     }
   }
 
@@ -149,7 +151,8 @@ export const ButtonContainer = styled.div`
   }
 
   /* Estilização base para o botão de "Voltar" */
-  button:not(.btn-submit), a {
+  button:not(.btn-submit),
+  a {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -246,6 +249,23 @@ export const TextoNomeFiltrado = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+`;
+
+export const ErrorHint = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #0284c7;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 6px;
+`;
+
+export const IconInline = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 `;
 
 export const BtnTextoAzulNativo = styled.span`

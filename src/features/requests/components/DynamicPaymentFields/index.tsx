@@ -1,30 +1,12 @@
 import { memo } from "react";
-import { Controller, useWatch } from "react-hook-form";
+import { Controller, useFormState, useWatch } from "react-hook-form";
 import type { Control } from "react-hook-form";
-import { AlertCircle } from "lucide-react";
 import * as S from "./styles";
 import {
   aplicarCpfCnpj,
   aplicarMascaraMoeda,
 } from "../../../../utils/formatters";
-
-interface FormInputs {
-  titulo: string;
-  descricao: string;
-  link_compra: string;
-  forma_pagamento: string;
-  valor: string;
-  pix_tipo: string;
-  pix_chave: string;
-  ted_banco: string;
-  ted_agencia: string;
-  ted_conta: string;
-  ted_cpf_cnpj: string;
-  ted_favorecido: string;
-  boleto_file: File | null;
-  anexo_existente_url: string;
-  is_submitting: boolean;
-}
+import type { FormInputs } from "../NewRequest/types";
 
 interface DynamicPaymentFieldsProps {
   control: Control<FormInputs>;
@@ -36,17 +18,42 @@ const REGEX_TELEFONE = /^\(\d{2}\)\s\d{5}-\d{4}$/;
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // 🎯 PERFORMANCE: Componente envelopado com memo() para evitar re-renderizações desnecessárias
-export const DynamicPaymentFields = memo(function DynamicPaymentFields({ 
-  control 
+export const DynamicPaymentFields = memo(function DynamicPaymentFields({
+  control,
 }: DynamicPaymentFieldsProps) {
   const formaPagamento = useWatch({ control, name: "forma_pagamento" });
   const tipoChavePix = useWatch({ control, name: "pix_tipo" });
+  const { errors } = useFormState({ control });
 
   function aplicarMascaraCelular(v: string) {
     let digitos = v.replace(/\D/g, "").substring(0, 11);
     digitos = digitos.replace(/^(\d{2})(\d)/g, "($1) $2");
     digitos = digitos.replace(/(\d{5})(\d)/, "$1-$2");
     return digitos;
+  }
+
+  function cleanDigits(v: string) {
+    return (v || "").replace(/\D/g, "");
+  }
+
+  function isPixKeyComplete(value: string, tipo: string) {
+    const raw = value.trim();
+    const digits = cleanDigits(raw);
+
+    switch (tipo) {
+      case "cnpj_cpf":
+        return digits.length === 11 || digits.length === 14;
+      case "celular":
+        return digits.length === 11;
+      case "email":
+        return raw.includes("@") && raw.length >= 6;
+      case "aleatoria":
+        return raw.length >= 36;
+      case "copia_cola":
+        return raw.length >= 20;
+      default:
+        return false;
+    }
   }
 
   function obterPlaceholderPix() {
@@ -76,14 +83,27 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
             control={control}
             defaultValue=""
             render={({ field }) => (
-              <select {...field} id="select-forma-pagamento">
-                <option value="">Selecione</option>
-                <option value="boleto">Boleto</option>
-                <option value="pix">PIX</option>
-                <option value="transferencia">Transferência (TED/DOC)</option>
-                <option value="link_pagamento">Link de Pagamento</option>
-                <option value="dinheiro">Dinheiro</option>
-              </select>
+              <>
+                <select
+                  {...field}
+                  id="select-forma-pagamento"
+                  value={field.value ?? ""}
+                >
+                  <option value="">Selecione</option>
+                  <option value="boleto">Boleto</option>
+                  <option value="pix">PIX</option>
+                  <option value="transferencia">Transferência (TED/DOC)</option>
+                  <option value="link_pagamento">Link de Pagamento</option>
+                  <option value="cartao_credito">Cartão de Crédito</option>
+                  <option value="dinheiro">Dinheiro</option>
+                </select>
+                {errors.forma_pagamento && (
+                  <S.ErrorMessage>
+                    <S.ErrorIcon size={14} />
+                    {errors.forma_pagamento.message}
+                  </S.ErrorMessage>
+                )}
+              </>
             )}
           />
         </S.InputGroup>
@@ -95,14 +115,24 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
             control={control}
             defaultValue=""
             render={({ field }) => (
-              <input
-                {...field}
-                id="input-valor"
-                type="text"
-                placeholder="R$ 0,00"
-                value={aplicarMascaraMoeda(field.value || "")}
-                onChange={(e) => field.onChange(e.target.value)}
-              />
+              <>
+                <input
+                  id="input-valor"
+                  type="text"
+                  placeholder="R$ 0,00"
+                  name={field.name}
+                  value={aplicarMascaraMoeda(field.value ?? "")}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                />
+                {errors.valor && (
+                  <S.ErrorMessage>
+                    <S.ErrorIcon size={14} />
+                    {errors.valor.message}
+                  </S.ErrorMessage>
+                )}
+              </>
             )}
           />
         </S.InputGroup>
@@ -118,14 +148,24 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
               name="pix_chave"
               control={control}
               defaultValue=""
-              render={({ field }) => (
-                <input
-                  {...field}
-                  id="input-link-pagamento"
-                  type="url"
-                  placeholder="https://link.operadora.com.br/sua-cobranca/..."
-                  required
-                />
+              render={({ field, fieldState: { error } }) => (
+                <>
+                  <input
+                    id="input-link-pagamento"
+                    type="url"
+                    placeholder="https://link.operadora.com.br/sua-cobranca..."
+                    name={field.name}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                  />
+                  {error && (
+                    <S.ErrorMessage>
+                      <S.ErrorIcon size={14} /> {error.message}
+                    </S.ErrorMessage>
+                  )}
+                </>
               )}
             />
           </S.InputGroup>
@@ -135,25 +175,36 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
       {formaPagamento === "pix" && (
         <S.BlocoDinamicoAnimado>
           <S.GridPix>
-            <div style={{ gridColumn: "1 / -1" }}>
+            <S.FullWidthGridItem>
               <S.InputGroup>
                 <label htmlFor="pix-nome-favorecido">Nome do Favorecido</label>
                 <Controller
                   name="ted_favorecido"
                   control={control}
                   defaultValue=""
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      id="pix-nome-favorecido"
-                      type="text"
-                      placeholder="Nome completo"
-                      required
-                    />
+                  rules={{ required: "O nome do favorecido é obrigatório." }}
+                  render={({ field, fieldState: { error } }) => (
+                    <>
+                      <input
+                        id="pix-nome-favorecido"
+                        type="text"
+                        placeholder="Nome completo"
+                        name={field.name}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                      />
+                      {error && (
+                        <S.ErrorMessage>
+                          <S.ErrorIcon size={14} /> {error.message}
+                        </S.ErrorMessage>
+                      )}
+                    </>
                   )}
                 />
               </S.InputGroup>
-            </div>
+            </S.FullWidthGridItem>
 
             <S.InputGroup>
               <label htmlFor="select-tipo-pix">Tipo de Chave</label>
@@ -162,7 +213,11 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                 control={control}
                 defaultValue="cnpj_cpf"
                 render={({ field }) => (
-                  <select {...field} id="select-tipo-pix">
+                  <select
+                    {...field}
+                    id="select-tipo-pix"
+                    value={field.value ?? "cnpj_cpf"}
+                  >
                     <option value="cnpj_cpf">CPF / CNPJ</option>
                     <option value="celular">Celular</option>
                     <option value="email">E-mail</option>
@@ -186,50 +241,71 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                 rules={{
                   validate: (v) => {
                     if (!v) return true;
-                    if (
-                      tipoChavePix === "cnpj_cpf" &&
-                      !(REGEX_CPF.test(v) || REGEX_CNPJ.test(v))
-                    )
-                      return "CPF ou CNPJ incompleto.";
-                    if (tipoChavePix === "celular" && !REGEX_TELEFONE.test(v))
-                      return "Telefone incompleto.";
-                    if (tipoChavePix === "email" && !REGEX_EMAIL.test(v))
-                      return "E-mail inválido.";
+                    const raw = v.trim();
+                    const digits = cleanDigits(raw);
+
+                    if (tipoChavePix === "cnpj_cpf") {
+                      if (digits.length === 0) return true;
+                      if (digits.length === 11 || digits.length === 14)
+                        return true;
+                      return digits.length < 11
+                        ? "CPF ou CNPJ incompleto."
+                        : "CPF ou CNPJ inválido.";
+                    }
+
+                    if (tipoChavePix === "celular") {
+                      if (!isPixKeyComplete(raw, tipoChavePix)) return true;
+                      return REGEX_TELEFONE.test(raw)
+                        ? true
+                        : "Telefone incompleto.";
+                    }
+
+                    if (tipoChavePix === "email") {
+                      if (!isPixKeyComplete(raw, tipoChavePix)) return true;
+                      return REGEX_EMAIL.test(raw) ? true : "E-mail inválido.";
+                    }
+
+                    if (tipoChavePix === "aleatoria") {
+                      return raw.length >= 36 || "Chave aleatória incompleta.";
+                    }
+
+                    if (tipoChavePix === "copia_cola") {
+                      return raw.length >= 20 || "Copia e cola incompleta.";
+                    }
+
                     return true;
                   },
                 }}
                 render={({ field, fieldState: { error } }) => (
                   <>
                     <input
-                      {...field}
                       id="input-chave-pix"
                       type="text"
                       placeholder={obterPlaceholderPix()}
+                      name={field.name}
                       value={
                         tipoChavePix === "cnpj_cpf"
-                          ? aplicarCpfCnpj(field.value || "")
+                          ? aplicarCpfCnpj(field.value ?? "")
                           : tipoChavePix === "celular"
-                            ? aplicarMascaraCelular(field.value || "")
-                            : field.value || ""
+                            ? aplicarMascaraCelular(field.value ?? "")
+                            : (field.value ?? "")
                       }
-                      onChange={(e) => field.onChange(e.target.value)}
-                      required
+                      onChange={(e) =>
+                        field.onChange(
+                          tipoChavePix === "cnpj_cpf"
+                            ? aplicarCpfCnpj(e.target.value)
+                            : tipoChavePix === "celular"
+                              ? aplicarMascaraCelular(e.target.value)
+                              : e.target.value,
+                        )
+                      }
+                      onBlur={field.onBlur}
+                      ref={field.ref}
                     />
                     {error && (
-                      <span
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "#0284c7",
-                          fontWeight: 600,
-                          marginTop: "6px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                        }}
-                      >
-                        <AlertCircle size={14} style={{ flexShrink: 0 }} />{" "}
-                        {error.message}
-                      </span>
+                      <S.ErrorMessage>
+                        <S.ErrorIcon size={14} /> {error.message}
+                      </S.ErrorMessage>
                     )}
                   </>
                 )}
@@ -250,10 +326,14 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                 defaultValue=""
                 render={({ field }) => (
                   <input
-                    {...field}
                     id="ted-banco"
                     type="text"
                     placeholder="Ex: Itaú"
+                    name={field.name}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
                   />
                 )}
               />
@@ -265,38 +345,28 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                 name="ted_agencia"
                 control={control}
                 defaultValue=""
-                rules={{
-                  validate: (v) =>
-                    !v ||
-                    v.length === 4 ||
-                    "Agência inválida (mínimo 4 dígitos).",
-                }}
                 render={({ field, fieldState: { error } }) => (
                   <>
                     <input
-                      {...field}
                       id="ted-agencia"
                       type="text"
                       placeholder="0001"
+                      name={field.name}
                       value={
                         field.value?.replace(/\D/g, "").substring(0, 4) || ""
                       }
-                      onChange={(e) => field.onChange(e.target.value)}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value.replace(/\D/g, "").substring(0, 4),
+                        )
+                      }
+                      onBlur={field.onBlur}
+                      ref={field.ref}
                     />
                     {error && (
-                      <span
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "#0284c7",
-                          fontWeight: 600,
-                          marginTop: "4px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                        }}
-                      >
-                        <AlertCircle size={14} /> {error.message}
-                      </span>
+                      <S.ErrorMessage>
+                        <S.ErrorIcon size={14} /> {error.message}
+                      </S.ErrorMessage>
                     )}
                   </>
                 )}
@@ -309,41 +379,27 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                 name="ted_conta"
                 control={control}
                 defaultValue=""
-                rules={{
-                  validate: (v) =>
-                    !v ||
-                    v.replace("-", "").length >= 5 ||
-                    "Conta corrente incompleta.",
-                }}
                 render={({ field, fieldState: { error } }) => (
                   <>
                     <input
-                      {...field}
                       id="ted-conta"
                       type="text"
                       placeholder="12345-6"
+                      name={field.name}
                       value={(() => {
-                        let v = (field.value || "").replace(/\D/g, "");
+                        let v = (field.value ?? "").replace(/\D/g, "");
                         if (v.length > 1)
                           v = v.replace(/(\d+)(\d{1})$/, "$1-$2");
                         return v;
                       })()}
                       onChange={(e) => field.onChange(e.target.value)}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
                     />
                     {error && (
-                      <span
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "#0284c7",
-                          fontWeight: 600,
-                          marginTop: "4px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                        }}
-                      >
-                        <AlertCircle size={14} /> {error.message}
-                      </span>
+                      <S.ErrorMessage>
+                        <S.ErrorIcon size={14} /> {error.message}
+                      </S.ErrorMessage>
                     )}
                   </>
                 )}
@@ -368,28 +424,21 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                 render={({ field, fieldState: { error } }) => (
                   <>
                     <input
-                      {...field}
                       id="ted-favorecido-doc"
                       type="text"
                       placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                      value={aplicarCpfCnpj(field.value || "")}
-                      onChange={(e) => field.onChange(e.target.value)}
+                      name={field.name}
+                      value={aplicarCpfCnpj(field.value ?? "")}
+                      onChange={(e) =>
+                        field.onChange(aplicarCpfCnpj(e.target.value))
+                      }
+                      onBlur={field.onBlur}
+                      ref={field.ref}
                     />
                     {error && (
-                      <span
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "#0284c7",
-                          fontWeight: 600,
-                          marginTop: "6px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "5px",
-                        }}
-                      >
-                        <AlertCircle size={14} style={{ flexShrink: 0 }} />{" "}
-                        {error.message}
-                      </span>
+                      <S.ErrorMessage>
+                        <S.ErrorIcon size={14} /> {error.message}
+                      </S.ErrorMessage>
                     )}
                   </>
                 )}
@@ -404,13 +453,25 @@ export const DynamicPaymentFields = memo(function DynamicPaymentFields({
                 name="ted_favorecido"
                 control={control}
                 defaultValue=""
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    id="ted-nome-titular"
-                    type="text"
-                    placeholder="Nome completo"
-                  />
+                rules={{ required: "O nome do favorecido é obrigatório." }}
+                render={({ field, fieldState: { error } }) => (
+                  <>
+                    <input
+                      id="ted-nome-titular"
+                      type="text"
+                      placeholder="Nome completo"
+                      name={field.name}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                    />
+                    {error && (
+                      <S.ErrorMessage>
+                        <S.ErrorIcon size={14} /> {error.message}
+                      </S.ErrorMessage>
+                    )}
+                  </>
                 )}
               />
             </S.InputGroup>

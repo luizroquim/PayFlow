@@ -72,7 +72,7 @@ function CampoCopiavel({ label, valor }: { label: string; valor: string }) {
     } else if (ehValorPagamento) {
       // 🎯 1. Limpa o "R$" e espaços, mantendo a estrutura padrão temporariamente
       const apenasNumerosPontosEVirgula = valor.replace(/[^0-9.,]/g, "").trim();
-      
+
       // 🎯 2. Deleta estritamente os pontos de milhar, mantendo apenas a vírgula para os bancos
       valorParaCopiar = apenasNumerosPontosEVirgula.split(".").join("");
     }
@@ -116,6 +116,16 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
   const ted_cpf_cnpj = solicitacao.ted_cpf_cnpj ?? undefined;
   const ted_favorecido = solicitacao.ted_favorecido ?? undefined;
 
+  function formatarContaCorrente(value?: string) {
+    const digitos = (value || "").replace(/\D/g, "");
+    if (!digitos) return "";
+    if (digitos.length === 1) return digitos;
+
+    const conta = digitos.slice(0, -1);
+    const dv = digitos.slice(-1);
+    return `${conta}-${dv}`;
+  }
+
   function obterNomeForma() {
     switch (forma_pagamento) {
       case "pix":
@@ -124,6 +134,8 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
         return "Dados Bancários (TED/DOC)";
       case "link_pagamento":
         return "Link de Pagamento";
+      case "cartao_credito":
+        return "Pagamento por Cartão de Crédito";
       default:
         return "Informações de Pagamento";
     }
@@ -145,9 +157,18 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
           />
         )}
 
+        {forma_pagamento === "cartao_credito" && (
+          <CampoApenasLeitura
+            label="Forma de Pagamento"
+            valor="Cartão de Crédito"
+          />
+        )}
+
         {/* MÓDULO: LINK DE PAGAMENTO */}
         {forma_pagamento === "link_pagamento" && pix_chave && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
             <CampoCopiavel label="Link para copiar" valor={pix_chave} />
             <a
               href={pix_chave}
@@ -189,7 +210,7 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
                 pix_tipo
                   ? MAPA_TIPO_CHAVE[pix_tipo] || aplicarTitleCase(pix_tipo)
                   : "Não informado"
-                }
+              }
             />
 
             <CampoCopiavel
@@ -223,7 +244,10 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
                 }
               />
               <CampoCopiavel label="Agência" valor={ted_agencia || ""} />
-              <CampoCopiavel label="Conta" valor={ted_conta || ""} />
+              <CampoCopiavel
+                label="Conta"
+                valor={formatarContaCorrente(ted_conta)}
+              />
             </S.GridTedLinhaUm>
           </>
         )}

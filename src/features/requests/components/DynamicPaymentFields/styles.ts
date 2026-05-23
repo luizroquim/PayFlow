@@ -1,4 +1,23 @@
 import styled from "styled-components";
+import { AlertCircle } from "lucide-react";
+
+export const ErrorMessage = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #0284c7;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 6px;
+`;
+
+export const ErrorIcon = styled(AlertCircle)`
+  flex-shrink: 0;
+`;
+
+export const FullWidthGridItem = styled.div`
+  grid-column: 1 / -1;
+`;
 
 export const InputGroup = styled.div`
   display: flex;

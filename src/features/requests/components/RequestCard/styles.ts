@@ -57,7 +57,8 @@ export const CardContainer = styled.div`
     gap: 10px;
     flex-wrap: wrap;
 
-    a, button {
+    a,
+    button {
       display: flex;
       align-items: center;
       gap: 4px;
@@ -248,18 +249,24 @@ export const ModalContent = styled.div<{ $maxWidth: string }>`
   display: flex;
   flex-direction: column;
   gap: 1px;
-  width: 100%;
-  max-width: ${(props) => props.$maxWidth};
+  width: fit-content;
+  min-width: 360px;
+  max-width: min(95vw, 720px);
   background-color: #fff;
   border-radius: 20px;
   padding: 25px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   box-sizing: border-box;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
 
   @media (max-width: 768px) {
     margin-top: 10px;
     margin-bottom: 30px;
     padding: 20px 16px;
+    min-width: auto;
+    width: 100%;
+    max-width: 100%;
   }
 `;
 

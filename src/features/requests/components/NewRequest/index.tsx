@@ -2,9 +2,13 @@ import { memo } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "../../../../lib/supabase";
 import emailjs from "@emailjs/browser";
-import { FileText } from "lucide-react";
+import { AlertCircle, FileText } from "lucide-react";
 import { DynamicPaymentFields } from "../DynamicPaymentFields";
 import * as S from "./styles";
+import { yupResolver } from "@hookform/resolvers/yup";
+
+import type { FormInputs } from "./types";
+import { newRequestSchema } from "./schema";
 
 export interface Solicitacao {
   id: string;
@@ -36,24 +40,6 @@ interface PagadorPerfil {
   id: string;
   nome_completo: string | null;
   email: string | null;
-}
-
-interface FormInputs {
-  titulo: string;
-  descricao: string;
-  link_compra: string;
-  forma_pagamento: string;
-  valor: string;
-  pix_tipo: string;
-  pix_chave: string;
-  ted_banco: string;
-  ted_agencia: string;
-  ted_conta: string;
-  ted_cpf_cnpj: string;
-  ted_favorecido: string;
-  boleto_file: File | null;
-  anexo_existente_url: string;
-  is_submitting: boolean;
 }
 
 // 🧠 FUNÇÕES PURAS EXTERNALIZADAS: Isoladas fora do escopo do componente
@@ -94,27 +80,35 @@ export const NewRequest = memo(function NewRequest({
   dadosParaEditar,
   onClose,
 }: NewRequestProps) {
-  const { control, register, handleSubmit, watch, setValue } =
-    useForm<FormInputs>({
-      mode: "onBlur",
-      defaultValues: {
-        titulo: dadosParaEditar?.titulo || "",
-        descricao: dadosParaEditar?.descricao || "",
-        link_compra: dadosParaEditar?.link_compra || "",
-        forma_pagamento: dadosParaEditar?.forma_pagamento || "",
-        valor: dadosParaEditar?.valor || "",
-        pix_tipo: dadosParaEditar?.pix_tipo || "cnpj_cpf",
-        pix_chave: dadosParaEditar?.pix_chave || "",
-        ted_banco: dadosParaEditar?.ted_banco || "",
-        ted_agencia: dadosParaEditar?.ted_agencia || "",
-        ted_conta: dadosParaEditar?.ted_conta || "",
-        ted_cpf_cnpj: dadosParaEditar?.ted_cpf_cnpj || "",
-        ted_favorecido: dadosParaEditar?.ted_favorecido || "",
-        boleto_file: null,
-        anexo_existente_url: dadosParaEditar?.boleto_url || "",
-        is_submitting: false,
-      },
-    });
+  const {
+    control,
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<FormInputs>({
+    mode: "onChange", // Validação dinâmica
+    resolver: yupResolver(newRequestSchema),
+    defaultValues: {
+      titulo: dadosParaEditar?.titulo || "",
+      descricao: dadosParaEditar?.descricao || "",
+      link_compra: dadosParaEditar?.link_compra || "",
+      forma_pagamento: dadosParaEditar?.forma_pagamento || "",
+      valor: dadosParaEditar?.valor || "",
+      pix_tipo:
+        (dadosParaEditar?.pix_tipo as FormInputs["pix_tipo"]) || "cnpj_cpf",
+      pix_chave: dadosParaEditar?.pix_chave || "",
+      ted_banco: dadosParaEditar?.ted_banco || "",
+      ted_agencia: dadosParaEditar?.ted_agencia || "",
+      ted_conta: dadosParaEditar?.ted_conta || "",
+      ted_cpf_cnpj: dadosParaEditar?.ted_cpf_cnpj || "",
+      ted_favorecido: dadosParaEditar?.ted_favorecido || "",
+      boleto_file: null,
+      anexo_existente_url: dadosParaEditar?.boleto_url || "",
+      is_submitting: false,
+    },
+  });
 
   const arquivoBoleto = watch("boleto_file");
   const anexoExistenteUrl = watch("anexo_existente_url");
@@ -131,7 +125,7 @@ export const NewRequest = memo(function NewRequest({
 
       const tituloLimpo = toTitleCase(data.titulo.trim());
       const descricaoLimpa = data.descricao.trim();
-      const linkCompraLimpo = data.link_compra.trim();
+      const linkCompraLimpo = data.link_compra?.trim() || "";
 
       let urlBoleto = data.anexo_existente_url;
 
@@ -247,18 +241,32 @@ export const NewRequest = memo(function NewRequest({
           <input
             type="text"
             placeholder="Ex: Monitor Dell 24 polegadas"
-            required
             {...register("titulo")}
           />
+          {errors.titulo && (
+            <S.ErrorHint>
+              <S.IconInline>
+                <AlertCircle size={14} />
+              </S.IconInline>
+              {errors.titulo.message}
+            </S.ErrorHint>
+          )}
         </S.InputGroup>
 
         <S.InputGroup>
           <label>Descrição Detalhada</label>
           <S.TextArea
             placeholder="Insira as especificações técnicas, marca, quantidade..."
-            required
             {...register("descricao")}
           />
+          {errors.descricao && (
+            <S.ErrorHint>
+              <S.IconInline>
+                <AlertCircle size={14} />
+              </S.IconInline>
+              {errors.descricao.message}
+            </S.ErrorHint>
+          )}
         </S.InputGroup>
 
         <S.InputGroup>
@@ -282,7 +290,9 @@ export const NewRequest = memo(function NewRequest({
               <S.NomeArquivo
                 onClick={() => window.open(anexoExistenteUrl, "_blank")}
               >
-                <FileText size={18} color="#64748b" style={{ flexShrink: 0 }} />
+                <S.IconInline>
+                  <FileText size={18} color="#64748b" />
+                </S.IconInline>
                 <span>{obterNomeDoAnexo(anexoExistenteUrl)}</span>
               </S.NomeArquivo>
               <S.BtnTextoRemover
@@ -301,11 +311,9 @@ export const NewRequest = memo(function NewRequest({
                 <S.TextoPlaceholder>
                   {arquivoBoleto ? (
                     <S.NomeArquivoNovo>
-                      <FileText
-                        size={18}
-                        color="#1e293b"
-                        style={{ flexShrink: 0 }}
-                      />
+                      <S.IconInline>
+                        <FileText size={18} color="#1e293b" />
+                      </S.IconInline>
                       <S.TextoNomeFiltrado>
                         {arquivoBoleto.name}
                       </S.TextoNomeFiltrado>

@@ -27,6 +27,7 @@ export const ContainerDados = styled.div`
   gap: 14px;
   width: 100%;
   margin-top: 10px;
+  min-width: 0;
 `;
 
 // 🎯 BLINDADO: Propriedade transiente $apenasLeitura evita qualquer warning no DOM
@@ -35,6 +36,7 @@ export const LinhaCopiavel = styled.div<{ $apenasLeitura?: boolean }>`
   flex-direction: column;
   gap: 4px;
   width: 100%;
+  min-width: 0;
 
   label {
     font-size: 0.8rem;
@@ -49,11 +51,15 @@ export const LinhaCopiavel = styled.div<{ $apenasLeitura?: boolean }>`
     display: flex;
     align-items: center;
     width: 100%;
+    min-width: 0;
   }
 
   input {
     width: 100%;
-    padding: ${(props) => (props.$apenasLeitura ? "10px 12px" : "10px 42px 10px 12px")};
+    min-width: 0;
+    box-sizing: border-box;
+    padding: ${(props) =>
+      props.$apenasLeitura ? "10px 12px" : "10px 42px 10px 12px"};
     border-radius: 8px;
     border: 1px solid #cbd5e1;
     background-color: #f8fafc;
@@ -62,9 +68,10 @@ export const LinhaCopiavel = styled.div<{ $apenasLeitura?: boolean }>`
     font-weight: 500;
     outline: none;
     cursor: ${(props) => (props.$apenasLeitura ? "default" : "pointer")};
-    
+
     &:hover {
-      border-color: ${(props) => (props.$apenasLeitura ? "#cbd5e1" : "#0284c7")};
+      border-color: ${(props) =>
+        props.$apenasLeitura ? "#cbd5e1" : "#0284c7"};
     }
   }
 
@@ -122,7 +129,7 @@ export const AlertaCopiado = styled.span`
   font-weight: 600;
   padding: 4px 8px;
   border-radius: 4px;
-  
+
   /* 🎯 POSICIONAMENTO: Balão flutuando logo acima do botão de cópia */
   position: absolute;
   top: -32px;
@@ -130,7 +137,7 @@ export const AlertaCopiado = styled.span`
   z-index: 10;
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  
+
   &::after {
     content: "";
     position: absolute;
@@ -144,9 +151,21 @@ export const AlertaCopiado = styled.span`
   animation: fadeInOut 1.5s ease-in-out forwards;
 
   @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(4px); }
-    15% { opacity: 1; transform: translateY(0); }
-    85% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-4px); }
+    0% {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    15% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    85% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
   }
 `;
