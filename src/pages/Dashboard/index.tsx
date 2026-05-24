@@ -340,7 +340,7 @@ export function Dashboard() {
       {/* 1. MODAL: NOVA / EDITAR SOLICITAÇÃO */}
       {/* 🎯 Note que NÃO passamos o onClose para o Modal aqui, mantendo a regra de que esse modal em específico só fecha no botão de Cancelar interno */}
       {mostrarModal && (
-        <Modal maxWidth="950px">
+        <Modal maxWidth="950px" fullScreenOnMobile>
           <NewRequest
             key={solicitacaoParaEditar?.id || "nova-solicitacao"}
             onSucesso={async () => {
@@ -354,7 +354,7 @@ export function Dashboard() {
       )}
 
       {/* 2. MODAL: FINALIZAR PROCESSO */}
-     
+
       {mostrarModalPagamento && itemEmPagamento && (
         <ModalCompleteProcess
           itemEmPagamento={itemEmPagamento}

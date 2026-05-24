@@ -6,7 +6,7 @@ import { DynamicPaymentFields } from "../DynamicPaymentFields";
 import * as S from "./styles";
 import { yupResolver } from "@hookform/resolvers/yup";
 
-// 🎯 IMPORTAÇÕES DOS NOSSOS NOVOS COMPONENTES GLOBAIS DE UI
+
 import { Input, TextArea, FileUploader,Button } from "../UI";
 
 import type { FormInputs } from "./types";
@@ -44,7 +44,7 @@ interface PagadorPerfil {
   email: string | null;
 }
 
-// 🧠 FUNÇÕES PURAS EXTERNALIZADAS
+
 function toTitleCase(str: string) {
   return str
     .toLowerCase()
@@ -231,13 +231,13 @@ export const NewRequest = memo(function NewRequest({
   }
 
   return (
-    <S.Form onSubmit={handleSubmit(onSubmitForm)}>
+    <S.Form onSubmit={handleSubmit(onSubmitForm)} >
       <S.TituloModal>
         {dadosParaEditar ? "Editar Solicitação" : "Nova Solicitação"}
       </S.TituloModal>
 
       <S.ColunaEsquerda>
-        {/* 🎯 Componente Inteligente: Título */}
+      
         <Input
           label="Título do Item"
           placeholder="Ex: Monitor Dell 24 polegadas"
@@ -245,7 +245,7 @@ export const NewRequest = memo(function NewRequest({
           {...register("titulo")}
         />
 
-        {/* 🎯 TextArea Global Integrado */}
+       
         <Controller<FormInputs>
           name="descricao"
           control={control}

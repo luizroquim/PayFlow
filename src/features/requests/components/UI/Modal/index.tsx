@@ -6,15 +6,16 @@ interface ModalProps {
   onClose?: () => void;
   maxWidth?: string;
   variant?: "default" | "confirm";
+  fullScreenOnMobile?: boolean;
 }
 
-export function Modal({ 
-  children, 
-  onClose, 
-  maxWidth = "950px", 
-  variant = "default" 
+export function Modal({
+  children,
+  onClose,
+  maxWidth = "950px",
+  variant = "default",
+  fullScreenOnMobile = false,
 }: ModalProps) {
-  
   // Função para fechar apenas se clicar no fundo escuro (Overlay)
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget && onClose) {
@@ -23,11 +24,19 @@ export function Modal({
   };
 
   return (
-    <S.Overlay onClick={handleOverlayClick}>
+    <S.Overlay
+      onClick={handleOverlayClick}
+      $fullScreenOnMobile={fullScreenOnMobile}
+    >
       {variant === "confirm" ? (
         <S.ConfirmContent>{children}</S.ConfirmContent>
       ) : (
-        <S.Content $maxWidth={maxWidth}>{children}</S.Content>
+        <S.Content
+          $maxWidth={maxWidth}
+          $fullScreenOnMobile={fullScreenOnMobile}
+        >
+          {children}
+        </S.Content>
       )}
     </S.Overlay>
   );

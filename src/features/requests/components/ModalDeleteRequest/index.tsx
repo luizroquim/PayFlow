@@ -1,6 +1,7 @@
 import { useState, memo } from "react";
 import { supabase } from "../../../../lib/supabase";
-import { Button, Modal } from "../../components/UI"; // 🎯 Importamos Button e Modal do mesmo lugar
+import { Button, Modal } from "../../components/UI"; 
+import * as S from "./styles"; 
 
 interface ModalDeleteRequestProps {
   onClose: () => void; // Fecha a modal se o usuário cancelar
@@ -8,7 +9,7 @@ interface ModalDeleteRequestProps {
   onSucesso: () => void; // Recarrega a lista da Dashboard após excluir
 }
 
-// 🎯 BLINDADO: memo() garante que alterações na Dashboard não fiquem travando ou re-renderizando a modal à toa
+
 export const ModalDeleteRequest = memo(function ModalDeleteRequest({
   onClose,
   idItemParaExcluir,
@@ -40,7 +41,7 @@ export const ModalDeleteRequest = memo(function ModalDeleteRequest({
   }
 
   return (
-    // 🎯 Trocamos a <div> estilizada pelo Modal global com variant="confirm"
+    
     <Modal variant="confirm" onClose={onClose}>
       <h3>Excluir Solicitação?</h3>
       <p>
@@ -49,6 +50,7 @@ export const ModalDeleteRequest = memo(function ModalDeleteRequest({
       </p>
 
       <div className="actions">
+        <S.ContainerAcoes>
         <Button
           type="button"
           variant="secondary"
@@ -63,9 +65,11 @@ export const ModalDeleteRequest = memo(function ModalDeleteRequest({
           onClick={handleExecutarExclusao}
           isLoading={excluindo}
         >
-          {/* Como seu Button já mostra "Processando...", ele gerencia sozinho o texto de carregamento */}
+          
           Sim, excluir
         </Button>
+
+        </S.ContainerAcoes>
       </div>
     </Modal>
   );

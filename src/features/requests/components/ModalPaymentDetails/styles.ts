@@ -148,3 +148,22 @@ export const AlertaCopiado = styled.span`
     }
   }
 `;
+
+export const FooterAcoes = styled.div`
+  display: flex;
+  justify-content: flex-end; 
+  width: 100%;
+  margin-top: 24px;
+
+  
+  @media (max-width: 767px) {
+    flex-direction: column;
+    
+    
+    button {
+      width: 100%;
+      justify-content: center;
+      padding: 14px; 
+    }
+  }
+`;

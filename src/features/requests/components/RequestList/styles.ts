@@ -28,8 +28,8 @@ export const PaginationButton = styled.button<PaginationButtonProps>`
   gap: 4px;
   
   /* UX Mobile: Tamanho mínimo de toque (44px) em telas pequenas */
-  min-height: 44px;
-  min-width: 44px;
+  min-height: 30px;
+  min-width: 30px;
   padding: 8px 12px;
   
   border-radius: 8px;
@@ -76,6 +76,7 @@ export const PaginationButton = styled.button<PaginationButtonProps>`
 
   @media (max-width: 480px) {
     padding: 8px;
-    min-width: 40px;
+    min-width: 32px;
+    
   }
 `;

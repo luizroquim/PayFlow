@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { supabase } from "../../../../lib/supabase";
-import { Button, FileUploader, Modal } from "../../components/UI"; // 🎯 Centralizamos os imports
+import { Button, FileUploader, Modal } from "../../components/UI";
+import * as S from "./styles"; 
 
-/* 🎯 NOMES ATUALIZADOS: Interface agora segue o padrão em inglês */
 interface ModalCompleteProcessProps {
-  onClose: () => void; // Função para fechar a modal
+  onClose: () => void;
   itemEmPagamento: {
     id: string;
     titulo: string;
   };
-  onSucesso: () => void; // Atualiza a lista da Dashboard após o upload
+  onSucesso: () => void;
 }
 
-/* 🎯 EXPORTAÇÃO DEFINITIVA: Nome da função atualizado para casar com a pasta */
 export function ModalCompleteProcess({
   onClose,
   itemEmPagamento,
@@ -69,23 +68,18 @@ export function ModalCompleteProcess({
   }
 
   return (
-    // 🎯 Utilizamos o Modal global configurando uma largura máxima agradável
     <Modal maxWidth="550px" onClose={onClose}>
       <h3>Finalizar Processo</h3>
-      {/* 🎯 A classe modal-description vem nativamente do nosso Modal global */}
       <p className="modal-description">
         Carregue o comprovante de transferência ou pagamento bancário para a
         solicitação: <strong>{itemEmPagamento.titulo}</strong>
       </p>
 
-      {/* Margem simples apenas para afastar o uploader do resto */}
-      <div style={{ marginBottom: "20px" }}>
+      <div style={{ marginBottom: "0" }}>
         <FileUploader
           arquivoBoleto={arquivo}
-          // Passamos vazio para satisfazer a tipagem, já que é um novo upload
           anexoExistenteUrl=""
           nomeAnexo={arquivo ? arquivo.name : "Nenhum comprovante anexado..."}
-          // Função nula pois não há o que remover de um anexo existente ainda
           onRemoverAnexo={() => {}}
           onRemoverNovoArquivo={(e) => {
             e.preventDefault();
@@ -96,8 +90,8 @@ export function ModalCompleteProcess({
         />
       </div>
 
-      {/* 🎯 A classe finalizar-acoes-container já existe no Modal global alinhando os botões */}
-      <div className="finalizar-acoes-container">
+      {/* 🎯 Utilizando o contêiner importado que empilha os botões no mobile */}
+      <S.ContainerAcoes>
         <Button
           variant="secondary"
           type="button"
@@ -114,7 +108,7 @@ export function ModalCompleteProcess({
         >
           Confirmar
         </Button>
-      </div>
+      </S.ContainerAcoes>
     </Modal>
   );
 }

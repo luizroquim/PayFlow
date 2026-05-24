@@ -145,11 +145,11 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
   }
 
   return (
-    // 🎯 Aplicamos o Modal Global (Coloquei 650px pois costuma ter mais colunas, ajuste se quiser menor)
+    
     <Modal maxWidth="650px" onClose={onClose}>
       <h3>{obterNomeForma()}</h3>
 
-      {/* 🎯 Trocamos a classe antiga pela modal-description global */}
+      
       <p className="modal-description">
         Clique no campo ou no ícone para copiar os dados limpos direto para o
         aplicativo do banco.
@@ -259,11 +259,13 @@ export const ModalPaymentDetails = memo(function ModalPaymentDetails({
         )}
       </S.ContainerDados>
 
-      {/* 🎯 Utilizamos a classe global finalizar-acoes-container no lugar da AcoesModalPagamento */}
+     
       <div className="finalizar-acoes-container">
+        <S.FooterAcoes>
         <Button variant="secondary" onClick={onClose}>
           Fechar informações
         </Button>
+        </S.FooterAcoes>
       </div>
     </Modal>
   );

@@ -2,17 +2,17 @@ import styled from "styled-components";
 
 export const Header = styled.header`
   background-color: #ffffff;
-  padding: 15px 20px;
+  padding: 12px 16px; /* Padding reduzido para otimização de espaço mobile */
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  flex-direction: row; /* Mantém tudo na mesma linha horizontal no mobile */
+  justify-content: space-between; /* Fixa a logo na esquerda e os botões na direita */
   align-items: center;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  width: 100%;
+  box-sizing: border-box;
 
   @media (min-width: 768px) {
-    flex-direction: row;
-    justify-content: space-between;
     padding: 15px 40px;
   }
 
@@ -20,6 +20,7 @@ export const Header = styled.header`
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0; /* Impede a logo de achatar se a tela for muito pequena */
 
     .logo-box {
       background-color: #ffffff;
@@ -42,6 +43,11 @@ export const Header = styled.header`
       font-size: 1.2rem;
       font-weight: 700;
       color: #676989;
+
+      /* 📱 Minimalismo: Esconde o título por extenso no mobile */
+      @media (max-width: 767px) {
+        display: none;
+      }
     }
   }
 
@@ -49,56 +55,70 @@ export const Header = styled.header`
     display: flex;
     align-items: center;
     gap: 12px;
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
 
     @media (min-width: 768px) {
-      width: auto;
       gap: 20px;
     }
-  
 
     .user-email {
-      font-size: 0.85rem;
-      color: #64748b;
-      max-width: 120px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      display: none;
 
-      @media (max-width: 600px) {
-        order: 2;
-        max-width: 110px;
-        text-align: right;
-        margin-left: auto;
-      }
-
-      @media (min-width: 480px) {
-        max-width: none;
+      @media (min-width: 768px) {
+        display: block;
+        font-size: 0.85rem;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
 
+    /* 📱 Controlando o botão "Nova Solicitação" herdado do seu componente UI */
+    button,
     .btn-new-request {
+      flex-shrink: 0;
+@media (max-width: 767px) {
+      order: 1; /* Permanece antes do avatar caso queira */
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      justify-content: center;
+      border-radius: 8px;
+      
+      /* Remove o texto mantendo apenas o ícone centralizado */
+      font-size: 0; 
+      svg {
+        margin: 0;
+        width: 18px;
+        height: 18px;
+      }
+    }
+      
+    }
+
+    /* 📱 Indicador do Usuário Minimalista (Avatar) */
+    .user-avatar {
       display: flex;
       align-items: center;
-      gap: 4px;
-      background-color: #0284c7;
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #f1f5f9;
+      color: #0284c7;
+      font-size: 0.85rem;
       font-weight: bold;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
+      text-transform: uppercase;
+      border: 1px solid #e2e8f0;
+      flex-shrink: 0;
 
-      @media (max-width: 600px) {
-        order: 1;
-        padding: 10px 12px;
+      @media (max-width: 767px) {
+        order: 2; /* 🚀 COLOCA O AVATAR LOGO APÓS O BOTÃO NOVA SOLICITAÇÃO */
       }
 
-      &:hover {
-        background-color: #079cdc;
+      @media (min-width: 768px) {
+        display: none; /* Esconde no desktop onde o e-mail completo reaparece */
       }
     }
 
@@ -110,14 +130,16 @@ export const Header = styled.header`
       display: flex;
       align-items: center;
       transition: transform 0.2s;
+      color: #64748b;
+      flex-shrink: 0;
 
-      @media (max-width: 600px) {
-        order: 3;
+      @media (max-width: 767px) {
+        order: 3; /* O botão de logout permanece como o último elemento à direita */
       }
 
       &:hover {
         transform: scale(1.1);
-        color: #079cdc;
+        color: ${({ theme }) => theme.colors.primaryHover || "#079cdc"};
       }
     }
   }

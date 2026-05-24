@@ -41,23 +41,24 @@ export const ColunaDireita = styled.div`
 `;
 
 export const ButtonContainer = styled.div`
+  /* 📱 REGRAS DO MOBILE (Celular): 
+     Mantém os botões empilhados (um embaixo do outro) e ocupando 100% da tela */
   display: flex;
   flex-direction: column-reverse;
   gap: 10px;
   margin-top: 10px;
   width: 100%;
 
+  /* 💻 REGRAS DO DESKTOP (Computador): 
+      */
   @media (min-width: 768px) {
-    grid-column: span 2;
-    flex-direction: row;
-    justify-content: center;
-    width: 50%;
-    margin-left: auto;
-    margin-right: auto;
+    grid-column: span 2; /* Ocupa a linha inteira do seu grid */
+    flex-direction: row; /* Coloca os botões lado a lado */
+    justify-content: flex-end; /* 🚀 Alinha totalmente à direita APENAS no desktop */
+    width: 100%; /* Usa todo o espaço do container pai */
     gap: 16px;
   }
 `;
-
 export const BlocoDinamicoAnimado = styled.div`
   display: flex;
   flex-direction: column;
