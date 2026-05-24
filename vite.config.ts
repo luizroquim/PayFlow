@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate", // text: "Atualiza o app automaticamente quando você subir versão nova"
+      devOptions: {
+        enabled: true,
+        type: 'module'},
       includeAssets: [
         "favicon.ico",
         "apple-touch-icon.png",

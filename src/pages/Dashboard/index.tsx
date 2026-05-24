@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { Header } from "../../features/requests/components/Header";
+import { NotificationToggle } from "../../features/requests/components/NotificationToggle";
 import { Loader2 } from "lucide-react";
 import { Modal } from "../../features/requests/components/UI";
 
@@ -267,6 +268,8 @@ export function Dashboard() {
         ref={secaoSolicitacoesRef}
         style={{ scrollMarginTop: "24px" }}
       >
+        <NotificationToggle />
+
         <RequestFilters
           valor={filtro}
           setValor={setFiltro}

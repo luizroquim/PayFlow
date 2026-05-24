@@ -78,23 +78,23 @@ export const Header = styled.header`
     button,
     .btn-new-request {
       flex-shrink: 0;
-@media (max-width: 767px) {
-      order: 1; /* Permanece antes do avatar caso queira */
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      justify-content: center;
-      border-radius: 8px;
-      
-      /* Remove o texto mantendo apenas o ícone centralizado */
-      font-size: 0; 
-      svg {
-        margin: 0;
-        width: 18px;
-        height: 18px;
+
+      @media (max-width: 767px) {
+        order: 1; /* Permanece antes do avatar caso queira */
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 8px;
+
+        /* Remove o texto mantendo apenas o ícone centralizado */
+        font-size: 0;
+        svg {
+          margin: 0;
+          width: 18px;
+          height: 18px;
+        }
       }
-    }
-      
     }
 
     /* 📱 Indicador do Usuário Minimalista (Avatar) */
