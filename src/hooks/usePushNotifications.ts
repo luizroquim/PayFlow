@@ -25,23 +25,27 @@ export function usePushNotifications() {
 
       let activeRegistration: ServiceWorkerRegistration | null = null;
 
-      // 🏢 ESTRATÉGIA 1: Tenta ler o Service Worker injetado pelo Vite PWA
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      if (registrations.length > 0) {
-        activeRegistration = registrations[0];
-      }
+      // 🏢 ESTRATÉGIA 1: Busca especificamente o Service Worker focado em Push
+const registrations = await navigator.serviceWorker.getRegistrations();
+if (registrations.length > 0) {
+  // Procura se já existe algum worker ativo que gerencia o nosso arquivo de push
+  activeRegistration = registrations.find(reg => 
+    reg.active && reg.active.scriptURL.includes('push-sw.js')
+  ) || null;
 
-      // 🛠️ ESTRATÉGIA 2 (FALLBACK): Se o PWA estiver em cache ou offline, registra um escopo genérico
-      if (!activeRegistration) {
-        console.log(
-          "Injetando fallback de Service Worker para o ambiente local...",
-        );
-        // O próprio Vite PWA gera um arquivo chamado sw.js ou registerSW.js no build.
-        // Vamos registrar diretamente a rota padrão do PWA para destravar o PushManager.
-        activeRegistration = await navigator.serviceWorker.register("/sw.js", {
-          scope: "/",
-        });
-      }
+  // Se não achou o de push, mas tem o padrão, usa o primeiro como plano B provisório
+  if (!activeRegistration) {
+    activeRegistration = registrations[0];
+  }
+}
+
+// 🛠️ ESTRATÉGIA 2 (FALLBACK): Se o nosso worker de Push não estiver rodando, registra ele agora!
+if (!activeRegistration) {
+  console.log("Injetando o Service Worker dedicado para Push de Notificações...");
+  activeRegistration = await navigator.serviceWorker.register("/push-sw.js", {
+    scope: "/",
+  });
+}
 
       if (!activeRegistration) {
         throw new Error("Não foi possível mapear nenhum Service Worker ativo.");
