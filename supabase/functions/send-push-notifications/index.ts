@@ -124,7 +124,8 @@ serve(async (req) => {
     const pushPayload = JSON.stringify({
       title: tituloNotificacao,
       body: corpoNotificacao,
-      icon: "/favicon.ico"
+      icon: "/favicon.ico",
+      requireInteraction: true
     })
 
     const disparos = subscriptions.map(async (sub) => {

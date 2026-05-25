@@ -1,4 +1,4 @@
-import { precacheAndRoute } from 'workbox-precaching';
+import { precacheAndRoute } from "workbox-precaching";
 
 // O Vite PWA precisa dessa linha para injetar o cache e ativar o botão de instalar
 precacheAndRoute(self.__WB_MANIFEST || []);
@@ -7,7 +7,7 @@ precacheAndRoute(self.__WB_MANIFEST || []);
 self.addEventListener("push", (event) => {
   // Mensagem padrão "coringa" caso o payload venha vazio
   let data = {
-    title: "🛒 Sistema de Compras",
+    title: " Sistema de Pagamentos",
     body: "Nova movimentação no seu painel!",
   };
 
@@ -18,7 +18,7 @@ self.addEventListener("push", (event) => {
     } catch (e) {
       // Caso venha como texto simples por algum motivo, joga no corpo da notificação
       data = {
-        title: "🛒 Sistema de Compras",
+        title: "Sistema de Pagamentos",
         body: event.data.text(),
       };
     }
