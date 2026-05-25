@@ -10,7 +10,7 @@ interface WebhookPayload {
     id: string;
     titulo: string;
     status: string;
-    user_id: string; // ID do comprador (quem criou a solicitação)
+    user_id: string; // ID do comprador que criou a solicitação
   };
   old_record?: {
     status: string;
@@ -48,49 +48,48 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Array que guardará os IDs de quem vai receber a notificação
     let targetUserIds: string[] = []
     let tituloNotificacao = "PayFlow"
     let corpoNotificacao = `A solicitação "${payload.record.titulo}" foi atualizada.`
 
     // ========================================================
-    // 🎯 REGRAS DINÂMICAS DE DIRECIONAMENTO (COMPRADOR VS FINANCEIRO)
+    // 🎯 AJUSTE DAS REGRAS COM BASE NOS PRINTS REAIS
     // ========================================================
     
     if (payload.type === 'INSERT') {
-      // 🛒 CASO 1: Comprador cria a solicitação -> Buscar todos do Financeiro dinamicamente
+      // 🛒 CASO 1: Comprador cria a solicitação -> Envia para quem tem funcao = 'pagador'
       tituloNotificacao = "🛒 Nova Solicitação!"
       corpoNotificacao = `Uma nova solicitação aguarda pagamento: ${payload.record.titulo}`
 
-      // 🔍 Busca na tabela 'usuarios' usando as colunas do seu print
-      const { data: financeiroUsers, error: userError } = await supabase
-        .from('usuarios') // Nome real da sua tabela de usuários
+      // 🟢 CORRIGIDO: Tabela 'perfis', coluna 'funcao', valor 'pagador'
+      const { data: pagadores, error: userError } = await supabase
+        .from('perfis') 
         .select('id')
-        .eq('tipo_usuario', 'financeiro') // Filtra pelo tipo exato do print
+        .eq('funcao', 'pagador') 
 
       if (userError) throw userError
 
-      if (financeiroUsers && financeiroUsers.length > 0) {
-        targetUserIds = financeiroUsers.map(u => u.id)
+      if (pagadores && pagadores.length > 0) {
+        targetUserIds = pagadores.map(p => p.id)
       }
 
     } else if (payload.type === 'UPDATE' && payload.record.status === 'comprado' && payload.old_record?.status !== 'comprado') {
-      // ✅ CASO 2: Mudou para "comprado" -> Envia de volta APENAS para o Comprador original (user_id)
+      // ✅ CASO 2: Mudou para "comprado" -> Envia EXCLUSIVAMENTE para o Comprador (user_id)
       targetUserIds = [payload.record.user_id]
       tituloNotificacao = "✅ Solicitação Paga!"
       corpoNotificacao = `Sua solicitação "${payload.record.titulo}" foi concluída e marcada como comprada.`
     }
 
-    // Se nenhuma regra de push bateu com o evento atual, encerra sem dar erro
+    // Se o evento não se encaixar em nenhuma regra, para aqui
     if (targetUserIds.length === 0) {
-      console.log("ℹ️ Evento ignorado. Nenhum destinatário qualificado para receber push.")
+      console.log("ℹ️ Nenhuma ação de push necessária para esta alteração.")
       return new Response(JSON.stringify({ message: "Nenhum push necessário para este evento." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       })
     }
 
-    // 4. BUSCA AS INSCRIÇÕES DE PUSH DOS USUÁRIOS SELECIONADOS 🎯
+    // 4. BUSCA AS INSCRIÇÕES APENAS DOS USUÁRIOS CHANCELADOS
     const { data: subscriptions, error: dbError } = await supabase
       .from("push_subscriptions")
       .select("*")
@@ -99,8 +98,8 @@ serve(async (req) => {
     if (dbError) throw dbError
 
     if (!subscriptions || subscriptions.length === 0) {
-      console.log(`⚠️ Nenhuma inscrição de push ativa encontrada para os alvos:`, targetUserIds)
-      return new Response(JSON.stringify({ message: "Nenhum dispositivo cadastrado para os destinatários." }), {
+      console.log(`⚠️ Nenhuma inscrição de push ativa para os IDs:`, targetUserIds)
+      return new Response(JSON.stringify({ message: "Nenhum dispositivo cadastrado." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       })
@@ -112,7 +111,6 @@ serve(async (req) => {
       icon: "/favicon.ico"
     })
 
-    // 6. Percorre os dispositivos filtrados e dispara o Push
     const disparos = subscriptions.map(async (sub) => {
       try {
         const pushSubscription = {
@@ -120,12 +118,11 @@ serve(async (req) => {
           keys: { p256dh: sub.p256dh, auth: sub.auth }
         }
         await webpush.sendNotification(pushSubscription, pushPayload)
-        console.log(`✅ Push enviado com sucesso para o usuário: ${sub.user_id}`)
+        console.log(`✅ Push enviado para o usuário: ${sub.user_id}`)
       } catch (err) {
-        console.error(`❌ Falha ao enviar para o dispositivo ${sub.id}:`, err)
+        console.error(`❌ Falha no dispositivo ${sub.id}:`, err)
         if (err.statusCode === 410 || err.statusCode === 404) {
           await supabase.from("push_subscriptions").delete().eq("id", sub.id)
-          console.log(`🗑️ Inscrição antiga removida do banco: ${sub.id}`)
         }
       }
     })
@@ -138,7 +135,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error("❌ Erro na execução da Edge Function:", error.message)
+    console.error("❌ Erro na Edge Function:", error.message)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
