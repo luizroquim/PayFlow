@@ -5,6 +5,7 @@ import { Header } from "../../features/requests/components/Header";
 import { NotificationToggle } from "../../features/requests/components/NotificationToggle";
 import { Loader2 } from "lucide-react";
 import { Modal } from "../../features/requests/components/UI";
+import { useSincronizarDispositivoPush } from "../../hooks/useSincronizarDispositivoPush";
 
 import {
   RequestFilters,
@@ -74,6 +75,8 @@ export function Dashboard() {
   const itensPorPagina = 6;
 
   const secaoSolicitacoesRef = useRef<HTMLDivElement>(null);
+
+  useSincronizarDispositivoPush(currentUserId || undefined);
 
   useEffect(() => {
     if (secaoSolicitacoesRef.current) {
