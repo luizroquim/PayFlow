@@ -1,16 +1,18 @@
+// src/components/Login/styles.ts
 import styled from 'styled-components';
 
 export const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  width: 100vw;
+  height: 100vh; /* 🎯 Fixa a altura na visão exata da tela para sumir com a rolagem */
+  width: 100%;
   background-color: #e9eff5; // Fundo azulado bem claro da imagem
   font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
 
   /* 🎯 AJUSTE PARA MONITOR PORTÁTIL: Evita que o card corte no topo/base */
-  padding: 40px 0; 
+  padding: 20px 0; 
   overflow-y: auto; 
 `;
 
@@ -108,6 +110,8 @@ export const Input = styled.input`
   background-color: #f8fafc;
   font-size: 1rem;
   outline: none;
+  width: 100%;
+  
 
   &:focus {
     border-color: #007bff;
@@ -245,6 +249,37 @@ export const SuccessMessage = styled.div`
     to {
       opacity: 1;
       transform: scale(1);
+    }
+  }
+`;
+
+/* ------------------------------------------------------------------ */
+/* 💙 ADICIONADO: Estilo do Erro do Campo (Azul Informativo)          */
+/* ------------------------------------------------------------------ */
+export const FieldError = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #079cdc; /* Alinhado perfeitamente com a cor principal (.Flow) do seu sistema */
+  font-size: 0.8rem;
+  margin-top: -8px; /* Ajuste sutil para encaixar logo abaixo do input correspondente */
+  margin-bottom: 2px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  animation: fieldFadeIn 0.2s ease-in-out;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  @keyframes fieldFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 `;
