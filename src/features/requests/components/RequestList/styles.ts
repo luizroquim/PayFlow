@@ -15,6 +15,13 @@ export const PaginationContainer = styled.div`
   margin-top: 32px;
   width: 100%;
   flex-wrap: wrap; // Essencial para telas pequenas
+  align-items: center;
+
+  @media (max-width: 768px) {
+    margin-bottom: 30px; /* No celular, dá uma folga ainda maior se precisar */
+    gap: 4px; /* Deixa os botões mais juntinhos no celular para garantir que não quebre */
+  }
+
 `;
 
 interface PaginationButtonProps {
