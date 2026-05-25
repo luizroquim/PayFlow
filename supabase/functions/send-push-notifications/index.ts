@@ -58,7 +58,7 @@ serve(async (req) => {
     
     if (payload.type === 'INSERT') {
       // 🛒 CASO 1: Comprador cria a solicitação -> Envia para quem tem funcao = 'pagador'
-      tituloNotificacao = "🛒 Nova Solicitação!"
+      tituloNotificacao = "💵 Nova Solicitação!"
       corpoNotificacao = `Uma nova solicitação aguarda pagamento: ${payload.record.titulo}`
 
       const { data: pagadores, error: userError } = await supabase
@@ -91,7 +91,7 @@ serve(async (req) => {
 
       targetUserIds = [compradorOriginalId]
       tituloNotificacao = "✅ Solicitação Paga!"
-      corpoNotificacao = `Sua solicitação "${payload.record.titulo}" foi concluída e marcada como comprada.`
+      corpoNotificacao = `Sua solicitação "${payload.record.titulo}" foi concluída!`
       
       console.log(`🎯 Notificação de pagamento direcionada estritamente para o comprador: ${compradorOriginalId}`)
     }
