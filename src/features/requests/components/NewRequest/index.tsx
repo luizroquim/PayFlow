@@ -6,8 +6,7 @@ import { DynamicPaymentFields } from "../DynamicPaymentFields";
 import * as S from "./styles";
 import { yupResolver } from "@hookform/resolvers/yup";
 
-
-import { Input, TextArea, FileUploader,Button } from "../UI";
+import { Input, TextArea, FileUploader, Button } from "../UI";
 
 import type { FormInputs } from "./types";
 import { newRequestSchema } from "./schema";
@@ -43,7 +42,6 @@ interface PagadorPerfil {
   nome_completo: string | null;
   email: string | null;
 }
-
 
 function toTitleCase(str: string) {
   return str
@@ -193,29 +191,36 @@ export const NewRequest = memo(function NewRequest({
         if (insertError) throw insertError;
 
         try {
-          const { data: pagadores } = await supabase
-            .from("perfis")
-            .select("id, nome_completo, email")
-            .eq("funcao", "pagador");
+          // 🛡️ ADICIONADO APENAS A CONDIÇÃO DO MOCK AQUI INTERNAMENTE:
+          if (import.meta.env.VITE_ENABLE_EMAIL === "true") {
+            const { data: pagadores } = await supabase
+              .from("perfis")
+              .select("id, nome_completo, email")
+              .eq("funcao", "pagador");
 
-          if (pagadores && pagadores.length > 0) {
-            const listaPagadores = pagadores as PagadorPerfil[];
-            const envios = listaPagadores.map(async (pagador) => {
-              if (pagador.email) {
-                return await emailjs.send(
-                  "service_duk9ekt",
-                  "template_w0kvdw5",
-                  {
-                    solicitante: user.email,
-                    titulo: tituloLimpo,
-                    email_pagador: pagador.email,
-                    valor: data.valor || "Não informado",
-                  },
-                  "6i9UszG5Qr_Afz3zi",
-                );
-              }
-            });
-            await Promise.all(envios);
+            if (pagadores && pagadores.length > 0) {
+              const listaPagadores = pagadores as PagadorPerfil[];
+              const envios = listaPagadores.map(async (pagador) => {
+                if (pagador.email) {
+                  return await emailjs.send(
+                    "service_duk9ekt",
+                    "template_w0kvdw5",
+                    {
+                      solicitante: user.email,
+                      titulo: tituloLimpo,
+                      email_pagador: pagador.email,
+                      valor: data.valor || "Não informado",
+                    },
+                    "6i9UszG5Qr_Afz3zi",
+                  );
+                }
+              });
+              await Promise.all(envios);
+            }
+          } else {
+            console.log(
+              "⚠️ [MOCK] VITE_ENABLE_EMAIL desativado. Simulação de envio feita com sucesso!",
+            );
           }
         } catch (mailErr) {
           console.error("❌ Erro no serviço do EmailJS:", mailErr);
@@ -231,13 +236,12 @@ export const NewRequest = memo(function NewRequest({
   }
 
   return (
-    <S.Form onSubmit={handleSubmit(onSubmitForm)} >
+    <S.Form onSubmit={handleSubmit(onSubmitForm)}>
       <S.TituloModal>
         {dadosParaEditar ? "Editar Solicitação" : "Nova Solicitação"}
       </S.TituloModal>
 
       <S.ColunaEsquerda>
-      
         <Input
           label="Título do Item"
           placeholder="Ex: Monitor Dell 24 polegadas"
@@ -245,7 +249,6 @@ export const NewRequest = memo(function NewRequest({
           {...register("titulo")}
         />
 
-       
         <Controller<FormInputs>
           name="descricao"
           control={control}
@@ -293,7 +296,7 @@ export const NewRequest = memo(function NewRequest({
         />
       </S.ColunaDireita>
 
-<S.ButtonContainer>
+      <S.ButtonContainer>
         <Button
           type="button"
           variant="secondary"
@@ -303,17 +306,12 @@ export const NewRequest = memo(function NewRequest({
           Voltar para a lista
         </Button>
 
-        <Button 
-          type="submit" 
-          variant="primary" 
-          isLoading={enviando}
-        >
+        <Button type="submit" variant="primary" isLoading={enviando}>
           {dadosParaEditar ? "Salvar Alterações" : "Criar Solicitação"}
         </Button>
       </S.ButtonContainer>
     </S.Form>
   );
 });
- 
 
 const CamposPaymentDynamicsWrapper = memo(DynamicPaymentFields);
