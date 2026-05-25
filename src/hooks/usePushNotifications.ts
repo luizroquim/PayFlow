@@ -11,7 +11,7 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-// Garanta que sua chave pública VAPID real está aqui
+// Chave pública VAPID real do seu projeto
 const PUBLIC_VAPID_KEY =
   "BDYPSXzHRoR5Ohbn63OMR5XVX_BCqknfPN96jCYjYPSnf2yEMiCVaSrxojvQaRnxYsmEIM4xM60iCoEX9tgwa2k";
 
@@ -25,27 +25,28 @@ export function usePushNotifications() {
 
       let activeRegistration: ServiceWorkerRegistration | null = null;
 
-      // 🏢 ESTRATÉGIA 1: Busca especificamente o Service Worker focado em Push
-const registrations = await navigator.serviceWorker.getRegistrations();
-if (registrations.length > 0) {
-  // Procura se já existe algum worker ativo que gerencia o nosso arquivo de push
-  activeRegistration = registrations.find(reg => 
-    reg.active && reg.active.scriptURL.includes('push-sw.js')
-  ) || null;
+      // 🏢 ESTRATÉGIA 1: Busca o Service Worker unificado gerado pelo Vite PWA
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      if (registrations.length > 0) {
+        // 🎯 AJUSTADO: Agora procura pelo 'sw.js' (que contém o PWA + as Notificações juntos)
+        activeRegistration = registrations.find(reg => 
+          reg.active && reg.active.scriptURL.includes('sw.js')
+        ) || null;
 
-  // Se não achou o de push, mas tem o padrão, usa o primeiro como plano B provisório
-  if (!activeRegistration) {
-    activeRegistration = registrations[0];
-  }
-}
+        // Se não achou por nome, mas tem algum rodando, assume ele como plano B
+        if (!activeRegistration) {
+          activeRegistration = registrations[0];
+        }
+      }
 
-// 🛠️ ESTRATÉGIA 2 (FALLBACK): Se o nosso worker de Push não estiver rodando, registra ele agora!
-if (!activeRegistration) {
-  console.log("Injetando o Service Worker dedicado para Push de Notificações...");
-  activeRegistration = await navigator.serviceWorker.register("/push-sw.js", {
-    scope: "/",
-  });
-}
+      // 🛠️ ESTRATÉGIA 2 (FALLBACK): Se nenhum worker do PWA estiver ativo, registra o sw.js
+      if (!activeRegistration) {
+        console.log("Injetando o Service Worker unificado do PWA...");
+        // 🎯 AJUSTADO: Mudado de '/push-sw.js' para '/sw.js'
+        activeRegistration = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+        });
+      }
 
       if (!activeRegistration) {
         throw new Error("Não foi possível mapear nenhum Service Worker ativo.");
@@ -58,7 +59,7 @@ if (!activeRegistration) {
         return null;
       }
 
-      // 🔑 Gera o token criptográfico de inscrição
+      // 🔑 Gera o token criptográfico de inscrição usando o worker do PWA
       const subscription = await activeRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
@@ -66,7 +67,6 @@ if (!activeRegistration) {
 
       return subscription;
     } catch (error) {
-      // 🎯 TIPAGEM SEGURA PARA O TS: Garante que o erro é um objeto de Erro do JS
       const errorMessage =
         error instanceof Error ? error.message : "Erro desconhecido";
       console.error("Erro no fluxo de push:", error);
