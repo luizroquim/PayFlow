@@ -19,7 +19,7 @@ export function NotificationToggle() {
 
   const [carregando, setCarregando] = useState(false);
 
-  // 🗄️ FUNÇÃO PARA SALVAR OS DADOS NA SUA TABELA DO SUPABASE (COM LOGS DE AUDITORIA)
+  // 🗄️ FUNÇÃO PARA SALVAR OS DADOS NA SUA TABELA DO SUPABASE (PROTEGIDA CONTRA TROCA DE CONTEXTO)
   const salvarInscricaoNoBanco = async (subscription: PushSubscription) => {
     try {
       console.log("🔍 [AUDITORIA 1] Buscando sessão ativa no Supabase...");
@@ -44,17 +44,18 @@ export function NotificationToggle() {
         auth: subJson.keys?.auth,
       };
 
-      console.log("🔍 [AUDITORIA 4] Enviando payload para o Supabase...", payload);
+      console.log("🔍 [AUDITORIA 4] Enviando payload com UPSERT de segurança...", payload);
 
+      // 🛡️ CORREÇÃO AQUI: Mudado de .insert() para .upsert() tratando o conflito de aparelho
       const { error } = await supabase
         .from("push_subscriptions")
-        .insert([payload]);
+        .upsert(payload, { onConflict: "endpoint" }); // 🔑 Se o endpoint já existir, sobrescreve o user_id antigo!
 
       if (error) {
         throw error;
       }
 
-      console.log("💾 [SUCESSO BANCO] Dispositivo registrado com sucesso no banco do Supabase!");
+      console.log("💾 [SUCESSO BANCO] Registro atualizado via UPSERT com sucesso no Supabase!");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       console.error("❌ [AUDITORIA ERRO CRÍTICO] Falha no try/catch do banco:", error);
