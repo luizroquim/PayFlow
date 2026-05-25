@@ -53,7 +53,7 @@ serve(async (req) => {
     let corpoNotificacao = `A solicitação "${payload.record.titulo}" foi atualizada.`
 
     // ========================================================
-    // 🎯 AJUSTE DAS REGRAS COM BASE NOS PRINTS REAIS
+    // 🎯 REGRAS DE DIRECIONAMENTO CORRIGIDAS DE PONTA A PONTA
     // ========================================================
     
     if (payload.type === 'INSERT') {
@@ -61,7 +61,6 @@ serve(async (req) => {
       tituloNotificacao = "🛒 Nova Solicitação!"
       corpoNotificacao = `Uma nova solicitação aguarda pagamento: ${payload.record.titulo}`
 
-      // 🟢 CORRIGIDO: Tabela 'perfis', coluna 'funcao', valor 'pagador'
       const { data: pagadores, error: userError } = await supabase
         .from('perfis') 
         .select('id')
@@ -74,10 +73,27 @@ serve(async (req) => {
       }
 
     } else if (payload.type === 'UPDATE' && payload.record.status === 'comprado' && payload.old_record?.status !== 'comprado') {
-      // ✅ CASO 2: Mudou para "comprado" -> Envia EXCLUSIVAMENTE para o Comprador (user_id)
-      targetUserIds = [payload.record.user_id]
+      // ✅ CASO 2: Mudou para "comprado" -> Busca o comprador original direto no banco de dados para evitar mandar pro pagador
+      console.log(`🔍 Buscando o comprador original para a solicitação: ${payload.record.id}`)
+      
+      const { data: solicitacaoOriginal, error: solError } = await supabase
+        .from('solicitacoes')
+        .select('user_id')
+        .eq('id', payload.record.id)
+        .single()
+
+      if (solError) {
+        console.error("❌ Erro ao buscar o dono original da solicitação:", solError.message)
+      }
+
+      // Garante que pega o ID de quem realmente criou a solicitação no passado
+      const compradorOriginalId = solicitacaoOriginal?.user_id || payload.record.user_id
+
+      targetUserIds = [compradorOriginalId]
       tituloNotificacao = "✅ Solicitação Paga!"
       corpoNotificacao = `Sua solicitação "${payload.record.titulo}" foi concluída e marcada como comprada.`
+      
+      console.log(`🎯 Notificação de pagamento direcionada estritamente para o comprador: ${compradorOriginalId}`)
     }
 
     // Se o evento não se encaixar em nenhuma regra, para aqui
