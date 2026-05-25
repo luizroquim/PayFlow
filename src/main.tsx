@@ -1,16 +1,18 @@
+// src/main.tsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import emailjs from '@emailjs/browser';
-import { registerSW } from 'virtual:pwa-register';
+// 🔴 Comentado temporariamente para desarmar o PWA que causava o loop de reload
+// import { registerSW } from 'virtual:pwa-register';
 
-// 🏁 Inicializações do app
+// 🏁 Inicializações do app (Roda uma vez antes de renderizar a tela)
 emailjs.init("6i9UszG5Qr_Afz3zi");
 
-// 1. Registra o PWA padrão do Vite (Para funcionamento offline)
-registerSW({ immediate: true });
+// 🔴 Comentado para impedir reloads infinitos na Vercel:
+// registerSW({ immediate: true });
 
-// 2. Registra o SEU Service Worker exclusivo para as Notificações Push (SEGURO)
+// 🟢 MANTIDO: Registro limpo e isolado do seu Service Worker de Push (Não causa reloads)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/push-sw.js')
@@ -19,7 +21,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// ✨ Renderização do React
+// ✨ Renderização do React na tela
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
