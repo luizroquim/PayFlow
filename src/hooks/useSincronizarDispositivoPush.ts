@@ -1,62 +1,76 @@
 // src/hooks/useSincronizarDispositivoPush.ts
 import { useEffect } from "react";
-import { supabase } from "../lib/supabase"; // 🎯 Ajuste o caminho relativo do seu cliente Supabase
+import { supabase } from "../lib/supabase";
+
+// Função utilitária para converter a chave VAPID
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+const PUBLIC_VAPID_KEY = "BDYPSXzHRoR5Ohbn63OMR5XVX_BCqknfPN96jCYjYPSnf2yEMiCVaSrxojvQaRnxYsmEIM4xM60iCoEX9tgwa2k";
 
 export function useSincronizarDispositivoPush(userId: string | undefined) {
   useEffect(() => {
-    // 🛡️ Guard Clauses: Só roda se houver usuário autenticado e suporte a Service Worker
-    if (!userId || !("serviceWorker" in navigator)) return;
+    if (!userId || !("serviceWorker" in navigator) || !("Notification" in window)) return;
 
-    const sincronizarAparelhoInbackground = async () => {
+    const sincronizarForcado = async () => {
       try {
-        console.log("🔄 [SILENCIOSO] Verificando tokens de push ativos para alinhar proprietário...");
-        
-        // 1. Captura as inscrições do Service Worker unificado do PWA
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        const activeReg = registrations.find(r => 
-          r.active && r.active.scriptURL.includes("sw.js")
-        );
-
-        if (!activeReg) {
-          console.log("ℹ️ [SILENCIOSO] Nenhum Service Worker do PWA ativo neste momento.");
+        // 1. Só rodamos a sincronização automática se a permissão nativa já for 'granted'
+        if (Notification.permission !== "granted") {
+          console.log("ℹ️ [SINC] Permissão de notificação não concedida ainda. Ignorando sincronização silenciosa.");
           return;
         }
 
-        // 2. Pega a assinatura/token criptográfico atual desse navegador
-        const subscription = await activeReg.pushManager.getSubscription();
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        const activeReg = registrations.find(r => r.active && r.active.scriptURL.includes("sw.js"));
 
-        if (subscription) {
-          const subJson = subscription.toJSON();
-          
-          console.log(`🎯 [SILENCIOSO] Token de push localizado! Forçando UPSERT para o usuário atual: ${userId}`);
-          
-          // 3. Executa o UPSERT. Se outra conta usou esse PC antes, o banco reescreve o user_id agora!
-          const { error } = await supabase
-            .from("push_subscriptions")
-            .upsert(
-              {
-                user_id: userId,
-                endpoint: subJson.endpoint,
-                p256dh: subJson.keys?.p256dh,
-                auth: subJson.keys?.auth,
-              },
-              { onConflict: "endpoint" } // Garante que a chave de verificação seja o link único do navegador
-            );
+        if (!activeReg) {
+          console.log("⚠️ [SINC] Service Worker ativo não localizado para sincronização.");
+          return;
+        }
 
-          if (error) {
-            console.error("❌ [SILENCIOSO] Erro ao executar upsert no Supabase:", error.message);
-          } else {
-            console.log("💾 [SILENCIOSO] Vínculo de dispositivo auto-corrigido e atualizado com sucesso!");
-          }
+        // 2. 🔥 O PULO DO GATO: Forçamos uma nova inscrição (subscribe) direto no Worker ativo.
+        // Se o token antigo estivesse em cache ou bugado, o pushManager.subscribe() renova e limpa o cache local na hora!
+        console.log("🔄 [SINC] Renovando/Buscando token de push diretamente no Service Worker...");
+        const subscription = await activeReg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
+        });
+
+        const subJson = subscription.toJSON();
+
+        console.log(`🎯 [SINC] Forçando UPSERT definitivo no banco para o usuário atual: ${userId}`);
+        
+        // 3. Registra ou atualiza no Supabase
+        const { error } = await supabase
+          .from("push_subscriptions")
+          .upsert(
+            {
+              user_id: userId,
+              endpoint: subJson.endpoint,
+              p256dh: subJson.keys?.p256dh,
+              auth: subJson.keys?.auth,
+            },
+            { onConflict: "endpoint" }
+          );
+
+        if (error) {
+          console.error("❌ [SINC] Erro ao atualizar no Supabase:", error.message);
         } else {
-          console.log("ℹ️ [SILENCIOSO] Este dispositivo ainda não possui nenhuma permissão ou token gerado.");
+          console.log("💾 [SINC] Sincronização executada com sucesso absoluto!");
         }
       } catch (error) {
-        console.error("❌ [SILENCIOSO ERROR] Falha crítica na sincronização automática em background:", error);
+        console.error("❌ [SINC ERROR] Falha na sincronização agressiva:", error);
       }
     };
 
-    // Dispara a verificação imediatamente ao carregar a sessão ou mudar de usuário
-    sincronizarAparelhoInbackground();
-  }, [userId]); // 🔥 Roda automaticamente SEMPRE que o userId mudar (troca de conta)
+    sincronizarForcado();
+  }, [userId]); // Executa toda vez que o ID do usuário mudar no login
 }
