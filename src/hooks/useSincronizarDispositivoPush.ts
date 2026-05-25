@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
-// Função utilitária para converter a chave VAPID
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -14,17 +13,19 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-const PUBLIC_VAPID_KEY = "BDYPSXzHRoR5Ohbn63OMR5XVX_BCqknfPN96jCYjYPSnf2yEMiCVaSrxojvQaRnxYsmEIM4xM60iCoEX9tgwa2k";
+const PUBLIC_VAPID_KEY = import.meta.env.VITE_PUBLIC_VAPID_KEY;
 
 export function useSincronizarDispositivoPush(userId: string | undefined) {
   useEffect(() => {
     if (!userId || !("serviceWorker" in navigator) || !("Notification" in window)) return;
 
+    // 🛡️ Trava de controle para evitar condições de corrida (race conditions)
+    let isCurrentRequestActive = true;
+
     const sincronizarForcado = async () => {
       try {
-        // 1. Só rodamos a sincronização automática se a permissão nativa já for 'granted'
         if (Notification.permission !== "granted") {
-          console.log("ℹ️ [SINC] Permissão de notificação não concedida ainda. Ignorando sincronização silenciosa.");
+          console.log("ℹ️ [SINC] Permissão de notificação não concedida ainda. Ignorando sincronização.");
           return;
         }
 
@@ -36,35 +37,49 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
           return;
         }
 
-        // 2. 🔥 O PULO DO GATO: Forçamos uma nova inscrição (subscribe) direto no Worker ativo.
-        // Se o token antigo estivesse em cache ou bugado, o pushManager.subscribe() renova e limpa o cache local na hora!
         console.log("🔄 [SINC] Renovando/Buscando token de push diretamente no Service Worker...");
         const subscription = await activeReg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
+          applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY || ""),
         });
 
         const subJson = subscription.toJSON();
 
-        console.log(`🎯 [SINC] Forçando UPSERT definitivo no banco para o usuário atual: ${userId}`);
-        
-        // 3. Registra ou atualiza no Supabase
+        if (!subJson.endpoint) {
+          console.warn("⚠️ [SINC] Endpoint de push inválido gerado pelo navegador.");
+          return;
+        }
+
+        // Se o useEffect desmontou enquanto buscava o token, aborta para não atropelar a próxima conta
+        if (!isCurrentRequestActive) return;
+
+        // Passo A: Remove obrigatoriamente qualquer vínculo antigo do mesmo endpoint
+        console.log(`🗑️ [SINC] Removendo vínculos anteriores deste dispositivo...`);
+        await supabase
+          .from("push_subscriptions")
+          .delete()
+          .eq("endpoint", subJson.endpoint);
+
+        // Checa novamente se a requisição ainda é válida antes do insert definitivo
+        if (!isCurrentRequestActive) return;
+
+        // Passo B: Cria o novo vínculo limpo para o usuário atual
+        console.log(`🎯 [SINC] Criando novo vínculo definitivo para o usuário atual: ${userId}`);
         const { error } = await supabase
           .from("push_subscriptions")
-          .upsert(
+          .insert([
             {
               user_id: userId,
               endpoint: subJson.endpoint,
               p256dh: subJson.keys?.p256dh,
               auth: subJson.keys?.auth,
-            },
-            { onConflict: "endpoint" }
-          );
+            }
+          ]);
 
         if (error) {
-          console.error("❌ [SINC] Erro ao atualizar no Supabase:", error.message);
+          console.error("❌ [SINC] Erro crítico ao sincronizar no Supabase:", error.message);
         } else {
-          console.log("💾 [SINC] Sincronização executada com sucesso absoluto!");
+          console.log("💾 [SINC] Dispositivo sincronizado com sucesso absoluto!");
         }
       } catch (error) {
         console.error("❌ [SINC ERROR] Falha na sincronização agressiva:", error);
@@ -72,5 +87,10 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
     };
 
     sincronizarForcado();
-  }, [userId]); // Executa toda vez que o ID do usuário mudar no login
+
+    // 🧹 Função de limpeza (cleanup): cancela execuções pendentes se o login mudar abruptamente
+    return () => {
+      isCurrentRequestActive = false;
+    };
+  }, [userId]); 
 }
