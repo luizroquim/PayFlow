@@ -1,3 +1,4 @@
+// vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa"; // 🚀 Importa o plugin
@@ -6,10 +7,14 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate", // text: "Atualiza o app automaticamente quando você subir versão nova"
+      strategies: "injectManifest", // 🟢 ADICIONADO: Avisa que vamos usar nosso próprio sw.js
+      srcDir: "src",                // 🟢 ADICIONADO: Pasta onde vai ficar o arquivo sw.js
+      filename: "sw.js",            // 🟢 ADICIONADO: Nome do arquivo de origem
+      registerType: "autoUpdate",   // Mantém a atualização automática ativa de forma segura
       devOptions: {
         enabled: true,
-        type: 'module'},
+        type: 'module'
+      },
       includeAssets: [
         "favicon.ico",
         "apple-touch-icon.png",
@@ -45,14 +50,12 @@ export default defineConfig({
             purpose: "maskable", // Garante que o ícone fique bonito em qualquer formato de botão no Android
           },
           {
-            // 🎯 FIX: Adicionado o favicon existente como fallback caso os PNGs falhem ou não existam na public
             src: "favicon.ico",
             sizes: "64x64 32x32 24x24 16x16 144x144 512x512",
             type: "image/x-icon",
             purpose: "any",
           },
         ],
-        // 🎯 FIX: Adicionadas as screenshots exigidas para habilitar a interface de instalação (Richer PWA Install UI)
         screenshots: [
           {
             src: "favicon.ico", // Provisório: Depois substitua por um print real da sua Dashboard em formato PC

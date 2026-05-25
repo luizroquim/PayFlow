@@ -1,4 +1,7 @@
-// public/push-sw.js
+import { precacheAndRoute } from 'workbox-precaching';
+
+// O Vite PWA precisa dessa linha para injetar o cache e ativar o botão de instalar
+precacheAndRoute(self.__WB_MANIFEST || []);
 
 // 🎧 Ouve o sinal de Push vindo do servidor (Google FCM / Supabase Edge Function)
 self.addEventListener("push", (event) => {
