@@ -1,3 +1,4 @@
+// src/pages/Dashboard/styles.ts
 import styled from "styled-components";
 
 export const Container = styled.div`
@@ -16,56 +17,6 @@ export const MainContent = styled.main`
 
   @media (min-width: 768px) {
     padding: 40px 20px;
-  }
-`;
-
-// --- SELETOR DE ABAS ---
-export const TabContainer = styled.div`
-  display: flex;
-  gap: 4px; // Reduzi um pouco o gap para caber melhor em telas pequenas
-  margin-bottom: 20px;
-  background-color: #f1f5f9;
-  padding: 4px;
-  border-radius: 12px;
-  width: 100%;
-
-  @media (min-width: 480px) {
-    width: fit-content;
-    gap: 8px;
-    padding: 5px;
-  }
-`;
-
-interface TabButtonProps {
-  $isActive: boolean;
-  $tabType: "pendente" | "comprado";
-}
-
-export const TabButton = styled.button<TabButtonProps>`
-  flex: 1;
-  padding: 12px 10px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-
-  /* Garantindo o estado ativo/inativo */
-  background-color: ${(props) => (props.$isActive ? "#ffffff" : "transparent")};
-  box-shadow: ${(props) =>
-    props.$isActive ? "0 2px 4px rgba(0, 0, 0, 0.05)" : "none"};
-
-  color: ${(props) => {
-    if (!props.$isActive) return "#64748b";
-    return props.$tabType === "pendente" ? "#0284c7" : "#10b981";
-  }};
-
-  /* Ajuste para Desktop */
-  @media (min-width: 480px) {
-    flex: none;
-    padding: 10px 25px;
-    font-size: 0.9rem;
   }
 `;
 
@@ -98,4 +49,3 @@ export const EmptyState = styled.div`
     }
   }
 `;
-

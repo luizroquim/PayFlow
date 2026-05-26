@@ -7,6 +7,9 @@ import { Loader2 } from "lucide-react";
 import { Modal } from "../../features/requests/components/UI";
 import { useSincronizarDispositivoPush } from "../../hooks/useSincronizarDispositivoPush";
 
+// 🎯 IMPORTADO: Seu novo componente isolado de abas
+import { TabSelector } from "../../features/requests/components/TabSelector";
+
 import {
   RequestFilters,
   RequestList,
@@ -49,6 +52,9 @@ export function Dashboard() {
 
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
+
+  // 🎯 ADICIONADO: Estado para monitorar novidades em tempo real na aba de Concluídas
+  const [temNovaConcluida, setTemNovaConcluida] = useState(false);
 
   // Controladores de Modais
   const [mostrarModal, setMostrarModal] = useState(false);
@@ -167,8 +173,16 @@ export function Dashboard() {
           schema: "public",
           table: "solicitacoes",
         },
-        () => {
+        (payload) => {
           carregarDadosDoBanco();
+
+          // 🎯 ADICIONADO: Ativa o sinalizador se houver novas solicitações concluídas e o usuário não estiver na aba delas
+          if (payload.eventType === "UPDATE" || payload.eventType === "INSERT") {
+            const novoStatus = payload.new?.status;
+            if (novoStatus === "comprado") {
+              setTemNovaConcluida(true);
+            }
+          }
         },
       )
       .subscribe();
@@ -200,12 +214,22 @@ export function Dashboard() {
     }
   }, [currentUserId, isPagador]);
 
+  // 🎯 ALTERADO: Zera a bolinha verde ao alternar para a aba "comprado"
   const handleTrocaAba = (novaAba: "pendente" | "comprado") => {
     if (abaAtiva === novaAba) return;
+
+    if (novaAba === "comprado") {
+      setTemNovaConcluida(false);
+    }
 
     setAbaAtiva(novaAba);
     setPaginaAtual(1);
   };
+
+  // 🎯 ADICIONADO: Conta a quantidade total de registros estritamente pendentes
+  const totalPendentesCount = useMemo(() => {
+    return solicitacoes.filter((item) => item.status === "pendente").length;
+  }, [solicitacoes]);
 
   const solicitacoesFiltradas = useMemo(() => {
     const termo = filtro.toLowerCase().trim();
@@ -282,22 +306,13 @@ export function Dashboard() {
           setDataFim={setDataFim}
         />
 
-        <S.TabContainer>
-          <S.TabButton
-            $isActive={abaAtiva === "pendente"}
-            onClick={() => handleTrocaAba("pendente")}
-            $tabType="pendente"
-          >
-            Pendentes
-          </S.TabButton>
-          <S.TabButton
-            $isActive={abaAtiva === "comprado"}
-            onClick={() => handleTrocaAba("comprado")}
-            $tabType="comprado"
-          >
-            Concluídas
-          </S.TabButton>
-        </S.TabContainer>
+        {/* 🎯 ALTERADO: Substituído o HTML rígido pelo novo componente isolado */}
+        <TabSelector
+          abaAtiva={abaAtiva}
+          onTrocaAba={handleTrocaAba}
+          totalPendentes={totalPendentesCount}
+          temNovaConcluida={temNovaConcluida}
+        />
 
         {carregando ? (
           <S.CardsStack>
@@ -344,7 +359,6 @@ export function Dashboard() {
       </S.MainContent>
 
       {/* 1. MODAL: NOVA / EDITAR SOLICITAÇÃO */}
-      {/* 🎯 Note que NÃO passamos o onClose para o Modal aqui, mantendo a regra de que esse modal em específico só fecha no botão de Cancelar interno */}
       {mostrarModal && (
         <Modal maxWidth="950px" fullScreenOnMobile>
           <NewRequest
@@ -360,7 +374,6 @@ export function Dashboard() {
       )}
 
       {/* 2. MODAL: FINALIZAR PROCESSO */}
-
       {mostrarModalPagamento && itemEmPagamento && (
         <ModalCompleteProcess
           itemEmPagamento={itemEmPagamento}
@@ -377,7 +390,6 @@ export function Dashboard() {
       )}
 
       {/* 3. MODAL: CONFIRMAR EXCLUSÃO */}
-      {/* 🎯 O mesmo vale aqui! Fica absurdamente mais legível. */}
       {mostrarModalExcluir && idItemParaExcluir && (
         <ModalDeleteRequest
           idItemParaExcluir={idItemParaExcluir}
