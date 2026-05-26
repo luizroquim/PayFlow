@@ -1,3 +1,4 @@
+// src/features/requests/components/ModalCompleteProcess/index.tsx
 import { useState } from "react";
 import { supabase } from "../../../../lib/supabase";
 import { Button, FileUploader, Modal } from "../../components/UI";
@@ -76,7 +77,9 @@ export function ModalCompleteProcess({
       </p>
 
       <div style={{ marginBottom: "0" }}>
+        {/* 🎯 ALTERADO: Passando a nova prop label para customizar o texto do cabeçalho */}
         <FileUploader
+          label="Anexar comprovante de pagamento"
           arquivoBoleto={arquivo}
           anexoExistenteUrl=""
           nomeAnexo={arquivo ? arquivo.name : "Nenhum comprovante anexado..."}
@@ -90,7 +93,6 @@ export function ModalCompleteProcess({
         />
       </div>
 
-      {/* 🎯 Utilizando o contêiner importado que empilha os botões no mobile */}
       <S.ContainerAcoes>
         <Button
           variant="secondary"

@@ -3,6 +3,7 @@ import { FileText } from "lucide-react";
 import * as S from "./styles"; // Certifique-se de importar os estilos que extraímos
 
 interface FileUploaderProps {
+  label?: string; // 🎯 ADICIONADO: Propriedade opcional para o texto do label
   anexoExistenteUrl: string | null | undefined;
   arquivoBoleto: File | null | undefined;
   nomeAnexo: string;
@@ -12,6 +13,7 @@ interface FileUploaderProps {
 }
 
 export const FileUploader = memo(function FileUploader({
+  label, // 🎯 ADICIONADO: Recebendo a prop aqui
   anexoExistenteUrl,
   arquivoBoleto,
   nomeAnexo,
@@ -19,12 +21,12 @@ export const FileUploader = memo(function FileUploader({
   onRemoverNovoArquivo,
   onUploadArquivo,
 }: FileUploaderProps) {
-    const url = anexoExistenteUrl ?? "";
-  return (
+  const url = anexoExistenteUrl ?? "";
 
-    
+  return (
     <S.InputGroup>
-      <label>Anexar Boleto ou Orçamento (PDF/Imagem)</label>
+      {/* 🎯 ALTERADO: Se a prop 'label' existir, exibe ela. Se não, usa o texto padrão antigo */}
+      <label>{label || "Anexar Boleto ou Orçamento (PDF/Imagem)"}</label>
 
       {url ? (
         <S.AnexoEditContainer>
@@ -47,7 +49,9 @@ export const FileUploader = memo(function FileUploader({
                   <S.IconInline>
                     <FileText size={18} color="#1e293b" />
                   </S.IconInline>
-                  <S.TextoNomeFiltrado>{arquivoBoleto.name}</S.TextoNomeFiltrado>
+                  <S.TextoNomeFiltrado>
+                    {arquivoBoleto.name}
+                  </S.TextoNomeFiltrado>
                 </S.NomeArquivoNovo>
               ) : (
                 "Nenhum arquivo anexado..."
@@ -55,7 +59,10 @@ export const FileUploader = memo(function FileUploader({
             </S.TextoPlaceholder>
 
             {arquivoBoleto ? (
-              <S.BtnLimparArquivoNovo type="button" onClick={onRemoverNovoArquivo}>
+              <S.BtnLimparArquivoNovo
+                type="button"
+                onClick={onRemoverNovoArquivo}
+              >
                 Remover
               </S.BtnLimparArquivoNovo>
             ) : (

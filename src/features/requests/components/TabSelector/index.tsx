@@ -35,7 +35,9 @@ export function TabSelector({
         $tabType="comprado"
       >
         Concluídas
-        {temNovaConcluida && abaAtiva !== "comprado" && <S.NewNotificationDot />}
+        {temNovaConcluida && abaAtiva !== "comprado" && (
+          <S.NewNotificationDot />
+        )}
       </S.TabButton>
     </S.TabContainer>
   );
