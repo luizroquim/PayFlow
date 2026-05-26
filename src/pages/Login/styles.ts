@@ -5,9 +5,9 @@ export const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh; /* 🎯 Fixa a altura na visão exata da tela para sumir com a rolagem */
+  height: 100dvh; 
   width: 100%;
-  background-color: #e9eff5; // Fundo azulado bem claro da imagem
+  background-color: #e9eff5; /* Fundo azulado bem claro da imagem */
   font-family: 'Inter', sans-serif;
   box-sizing: border-box;
 
@@ -17,9 +17,9 @@ export const Container = styled.div`
 `;
 
 export const LoginCard = styled.div`
-  background-color: #ffffff;
+  background-color: ${props => props.theme.colors.background};
   padding: 40px;
-  border-radius: 24px; // Bordas bem arredondadas
+  border-radius: 24px; /* Bordas bem arredondadas */
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   width: 90%;
   max-width: 400px;
@@ -53,7 +53,7 @@ export const Header = styled.div`
   }
 
   .Flow {
-    color: #079cdc;
+    color: ${props => props.theme.colors.loginAction};
   }
 
   span {
@@ -84,9 +84,9 @@ export const TabButton = styled.button<{ active: boolean }>`
   border: none;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  background-color: ${props => props.active ? "#079cdc" : "transparent"};
-  color: ${props => props.active ? "white" : "#64748b"};
+  transition: ${props => props.theme.transitions.fast};
+  background-color: ${props => props.active ? props.theme.colors.loginAction : "transparent"};
+  color: ${props => props.active ? props.theme.colors.white : props.theme.colors.textSecondary};
 `;
 
 export const Form = styled.form`
@@ -94,52 +94,45 @@ export const Form = styled.form`
   flex-direction: column;
   gap: 16px;
   text-align: left;
-
+  
   label {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #475569;
+    font-size: ${props => props.theme.fonts.sizes.label};
+    font-weight: ${props => props.theme.fonts.weights.medium};
+    color: ${props => props.theme.colors.textSecondary};
     margin-bottom: -10px;
+  }
+
+  /* 🎯 Mapeado direto do seu design system centralizado */
+  button[type="submit"] {
+    background-color: ${props => props.theme.colors.loginAction} !important;
+    color: ${props => props.theme.colors.white} !important;
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: ${props => props.theme.colors.loginActionHover} !important;
+    }
   }
 `;
 
 export const Input = styled.input`
   padding: 12px 16px;
   border-radius: 10px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid ${props => props.theme.colors.border};
   background-color: #f8fafc;
   font-size: 1rem;
   outline: none;
   width: 100%;
-  
+  box-sizing: border-box;
 
   &:focus {
     border-color: #007bff;
   }
 `;
 
-export const ActionButton = styled.button`
-  background-color: #079cdc;
-  color: white;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  margin-top: 4px;
-  width: 100%; /* Garante preenchimento total do espaço disponível */
-
-  &:hover {
-    background-color: #0582b7;
-  }
-`;
-
-/* 🎯 NOVO: Botão de "Esqueceu sua senha?" (Alinhado à direita e azul) */
 export const ForgotPasswordLink = styled.button`
   background: none;
   border: none;
-  color: #475569;
+  color: ${props => props.theme.colors.textSecondary};
   font-size: 0.7rem;
   text-align: right;
   cursor: pointer;
@@ -150,35 +143,16 @@ export const ForgotPasswordLink = styled.button`
   transition: color 0.2s;
 
   &:hover {
-    color: #079cdc;
-  }
-`;
-
-/* 🎯 NOVO: Botão de "Voltar para o Login" (Centralizado e cinza com sublinhado) */
-export const BackToLoginButton = styled.button`
-  background: none;
-  border: none;
-  color: #64748b;
-  font-size: 0.85rem;
-  cursor: pointer;
-  margin-top: 10px;
-  font-weight: 500;
-  
-  font-family: 'Inter', sans-serif;
-  text-align: center;
-  transition: color 0.2s;
-
-  &:hover {
-    color: #079cdc;
+    color: ${props => props.theme.colors.loginAction};
   }
 `;
 
 export const ErrorMessage = styled.div`
-  background-color: #fef2f2; /* Fundo vermelho bem suave */
-  border: 1px solid #fee2e2;
-  color: #ef4444; /* Texto vermelho de atenção */
+  background-color: ${props => props.theme.colors.errorBackground};
+  border: 1px solid ${props => props.theme.colors.errorBorder};
+  color: ${props => props.theme.colors.errorText};
   padding: 12px 16px;
-  border-radius: 10px; /* Alinhado com o border-radius dos seus inputs */
+  border-radius: 10px;
   font-size: 0.88rem;
   font-weight: 500;
   line-height: 1.4;
@@ -205,18 +179,17 @@ export const SuccessMessage = styled.div`
   align-items: center;
   justify-content: center;
   padding: 30px 20px;
-  background-color: #f0fdf4; /* Fundo verde bem suave */
-  border: 1px solid #bbf7d0;
-  border-radius: 16px;
-  color: #166534;
+  background-color: ${props => props.theme.colors.successBackground};
+  border: 1px solid ${props => props.theme.colors.successBorder};
+  color: ${props => props.theme.colors.successText};
   margin: 20px 0;
   animation: scaleUp 0.3s ease-in-out;
   width: 100%;
   box-sizing: border-box;
 
   .icon-box {
-    background-color: #dcfce7;
-    color: #15803d;
+    background-color: ${props => props.theme.colors.successIconBox};
+    color: ${props => props.theme.colors.successIcon};
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -236,9 +209,20 @@ export const SuccessMessage = styled.div`
 
   p {
     font-size: 0.9rem;
-    color: #166534;
+    color: ${props => props.theme.colors.successText};
     line-height: 1.4;
     margin: 0;
+  }
+
+  /* 🎯 Botão interno da caixa de sucesso consumindo as chaves corretas */
+  button {
+    background-color: ${props => props.theme.colors.loginAction} !important;
+    color: ${props => props.theme.colors.white} !important;
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: ${props => props.theme.colors.loginActionHover} !important;
+    }
   }
 
   @keyframes scaleUp {
@@ -253,16 +237,13 @@ export const SuccessMessage = styled.div`
   }
 `;
 
-/* ------------------------------------------------------------------ */
-/* 💙 ADICIONADO: Estilo do Erro do Campo (Azul Informativo)          */
-/* ------------------------------------------------------------------ */
 export const FieldError = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #079cdc; /* Alinhado perfeitamente com a cor principal (.Flow) do seu sistema */
+  color: ${props => props.theme.colors.fieldErrorText}; 
   font-size: 0.8rem;
-  margin-top: -8px; /* Ajuste sutil para encaixar logo abaixo do input correspondente */
+  margin-top: -8px; 
   margin-bottom: 2px;
   font-weight: 600;
   font-family: 'Inter', sans-serif;

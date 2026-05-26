@@ -4,8 +4,11 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeClosed, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import conta from "../../assets/conta.png";
+
+// Seu componente global integrado
+import { Button } from "../../features/requests/components/UI";
 
 import { loginSchema, type LoginFormData } from "./loginSchema";
 import * as S from "./styles";
@@ -22,7 +25,6 @@ export function Login() {
   const [sucessoResetEmail, setSucessoResetEmail] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  // Inicializando o React Hook Form com o Yup Resolver
   const {
     register,
     handleSubmit,
@@ -39,7 +41,6 @@ export function Login() {
     },
   });
 
-  // Detecta o e-mail de recuperação vindo do Supabase se o usuário clicar no link da caixa de entrada
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && hash.includes("type=recovery")) {
@@ -47,14 +48,12 @@ export function Login() {
     }
   }, [navigate]);
 
-  // Função centralizada disparada no envio do formulário (Login, Cadastro ou Recuperação)
   const onSubmitForm = async (data: LoginFormData) => {
     setCarregando(true);
     setErroBackend(null);
 
     try {
       if (isForgotPassword) {
-        // 1️⃣ Fluxo de Esqueci Minha Senha
         const { error } = await supabase.auth.resetPasswordForEmail(
           data.email.trim(),
           {
@@ -66,7 +65,6 @@ export function Login() {
         setSucessoResetEmail(true);
         reset();
       } else if (isLogin) {
-        // 2️⃣ Fluxo de Login Puro
         const { error } = await supabase.auth.signInWithPassword({
           email: data.email.trim(),
           password: data.senha || "",
@@ -82,7 +80,6 @@ export function Login() {
         }
         navigate("/dashboard");
       } else {
-        // 3️⃣ Fluxo de Cadastro de Usuário
         const { error } = await supabase.auth.signUp({
           email: data.email.trim(),
           password: data.senha || "",
@@ -115,7 +112,6 @@ export function Login() {
     }
   };
 
-  // Atalho para resetar estados e alternar telas de forma limpa
   const alternarParaLoginPrincipal = () => {
     setIsForgotPassword(false);
     setSucessoResetEmail(false);
@@ -140,9 +136,6 @@ export function Login() {
 
         {erroBackend && <S.ErrorMessage>{erroBackend}</S.ErrorMessage>}
 
-        {/* ------------------------------------------------------------------ */}
-        {/* 📑 TELA A: Fluxo de Esqueci Minha Senha                            */}
-        {/* ------------------------------------------------------------------ */}
         {isForgotPassword ? (
           <>
             <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "20px" }}>
@@ -154,12 +147,23 @@ export function Login() {
                 <div className="icon-box">✓</div>
                 <h4>E-mail enviado!</h4>
                 <p>Verifique sua caixa de entrada para obter o link de redefinição.</p>
-                <S.ActionButton type="button" style={{ marginTop: "20px" }} onClick={alternarParaLoginPrincipal}>
+                
+                <Button
+                  type="button"
+                  style={{ marginTop: "20px", width: "100%", backgroundColor: "#079cdc" }}
+                  onClick={alternarParaLoginPrincipal}
+                >
                   Voltar para o Login
-                </S.ActionButton>
+                </Button>
               </S.SuccessMessage>
             ) : (
-              <S.Form onSubmit={handleSubmit(onSubmitForm)} noValidate>
+              <S.Form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit(onSubmitForm)(e);
+                }}
+                noValidate
+              >
                 <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "15px", textAlign: "center" }}>
                   Insira o e-mail da sua conta para receber o link de redefinição.
                 </p>
@@ -178,20 +182,28 @@ export function Login() {
                   </S.FieldError>
                 )}
 
-                <S.ActionButton type="submit" disabled={carregando}>
-                  {carregando ? "Enviando..." : "Enviar Link de Recuperação"}
-                </S.ActionButton>
+                {/* 🎯 CORRIGIDO: Retornado para a cor azul original (#079cdc) */}
+                <Button
+                  type="submit"
+                  isLoading={carregando}
+                  onClick={handleSubmit(onSubmitForm)}
+                  style={{ width: "100%", backgroundColor: "#079cdc" }}
+                >
+                  Enviar Link de Recuperação
+                </Button>
 
-                <S.BackToLoginButton type="button" onClick={alternarParaLoginPrincipal}>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={alternarParaLoginPrincipal}
+                  style={{ marginTop: "12px", width: "100%" }}
+                >
                   Voltar para o Login
-                </S.BackToLoginButton>
+                </Button>
               </S.Form>
             )}
           </>
         ) : (
-          /* ------------------------------------------------------------------ */
-          /* 📑 TELA B: Fluxo Normal de Login / Cadastro                        */
-          /* ------------------------------------------------------------------ */
           <>
             {!sucessoCadastro && (
               <S.TabSelector>
@@ -234,7 +246,13 @@ export function Login() {
                   {isLogin ? "Acesse sua conta para continuar" : "Crie sua conta"}
                 </p>
 
-                <S.Form onSubmit={handleSubmit(onSubmitForm)} noValidate>
+                <S.Form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSubmit(onSubmitForm)(e);
+                  }}
+                  noValidate
+                >
                   {!isLogin && (
                     <>
                       <label htmlFor="nome">Nome completo</label>
@@ -292,7 +310,7 @@ export function Login() {
                         alignItems: "center",
                       }}
                     >
-                      {mostrarSenha ? <EyeClosed size={18} /> : <Eye size={18} />}
+                      {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                   {errors.senha && (
@@ -315,13 +333,15 @@ export function Login() {
                     </S.ForgotPasswordLink>
                   )}
 
-                  <S.ActionButton type="submit" disabled={carregando}>
-                    {carregando
-                      ? "Aguarde..."
-                      : isLogin
-                        ? "Acessar Plataforma"
-                        : "Criar Conta"}
-                  </S.ActionButton>
+                  {/* 🎯 CORRIGIDO: Retornado para a cor azul original (#079cdc) */}
+                  <Button
+                    type="submit"
+                    isLoading={carregando}
+                    onClick={handleSubmit(onSubmitForm)}
+                    style={{ width: "100%", backgroundColor: "#079cdc" }}
+                  >
+                    {isLogin ? "Acessar Plataforma" : "Criar Conta"}
+                  </Button>
                 </S.Form>
               </>
             )}
