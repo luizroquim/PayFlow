@@ -1,6 +1,8 @@
 import { type ButtonHTMLAttributes, memo } from "react";
 import * as S from "./styles";
 
+
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'confirm' | 'ghost';
   isLoading?: boolean;

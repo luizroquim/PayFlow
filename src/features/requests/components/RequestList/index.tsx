@@ -14,6 +14,8 @@ interface RequestListProps {
   onEdit: (item: Solicitacao) => void;
   onDelete: (id: string) => void;
   onPay: (item: Solicitacao) => void;
+  onDesfazer: (id: string, motivo: string) => void;
+  
 }
 
 export const RequestList = memo(function RequestList({
@@ -26,6 +28,7 @@ export const RequestList = memo(function RequestList({
   onEdit,
   onDelete,
   onPay,
+  onDesfazer,
 }: RequestListProps) {
   // 🛠️ Função inteligente para calcular o miolo das páginas visíveis
   const obterPaginasVisiveis = () => {
@@ -59,6 +62,8 @@ export const RequestList = memo(function RequestList({
             onEdit={onEdit}
             onDelete={onDelete}
             onPay={onPay}
+            onDesfazer={onDesfazer}
+            
           />
         ))}
       </S.CardsStack>

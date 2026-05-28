@@ -1,6 +1,7 @@
 import styled from "styled-components";
+import { Button } from "../../components/UI";
 
-// 🎯 OTIMIZADO: Removido o generic antigo para evitar vazamento no DOM. Ele lê via classe CSS
+
 export const CardContainer = styled.div`
   background-color: #ffffff;
   padding: 20px;
@@ -290,4 +291,97 @@ export const ModalContent = styled.div<{ $maxWidth: string }>`
   }
 `;
 
+export const AlertaCancelamento = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  /* 🎯 INTEGRADO AO SEU THEME: Usa os fallbacks seguros baseados no design system do projeto */
+  background-color: ${props => props.theme.colors?.white === '#ffffff' ? '#f8fafc' : props.theme.colors?.white}; 
+  border-left: 3px solid ${props => props.theme.colors?.primary || '#0284c7'}; 
+  
+  padding: 10px 12px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 14px;
+  font-size: 0.82rem;
+  
+  /* Usa a cor primária padrão do tema para manter a harmonia */
+  color: ${props => props.theme.colors?.primary || '#0284c7'};
+
+  .header-alerta {
+    display: flex;
+    align-items: center;
+    gap: 6px; 
+    
+    /* Usa a cor de destaque principal do tema para o ícone */
+    color: ${props => props.theme.colors?.primary || '#0284c7'}; 
+  }
+
+  p {
+    margin: 0;
+    /* Usa a cor primária ou um fallback escuro estável */
+    color: #475569;
+    margin-top: 2px;
+    
+    strong {
+      color: ${props => props.theme.colors?.primaryHover || '#079cdc'};
+    }
+  }
+
+  .badge-erro {
+    font-weight: 600;
+    color: ${props => props.theme.colors?.primaryHover || '#079cdc'};
+    font-size: 0.8rem;
+  }
+
+  .status-aguarda {
+    font-size: 0.75rem;
+    font-style: italic;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+`;
+
+export const AreaConfirmacaoEstorno = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid #f1f5f9; 
+  padding-top: 15px;
+  margin-top: 4px;
+  width: 100%;
+`;
+
+export const AcoesConfirmacao = styled.div`
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+
+  @media (max-width: 767px) {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+ 
+`;
+
+export const BotaoConfirmacaoEstorno = styled(Button)`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  /* 📱 Sobrescreve as regras do 'size=sm' quando a tela for de celular */
+  @media (max-width: 767px) {
+    width: 100% !important;
+    min-height: 44px !important; /* Tamanho confortável de toque para o polegar */
+    justify-content: center !important;
+    padding: 14px 24px !important; /* Ganha o corpo robusto do botão de confirmar original */
+    font-size: 0.9rem !important; /* Ajusta a fonte para o padrão mobile maior */
+  }
+`;
 

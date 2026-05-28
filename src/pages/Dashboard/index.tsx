@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Modal } from "../../features/requests/components/UI";
 import { useSincronizarDispositivoPush } from "../../hooks/useSincronizarDispositivoPush";
 
-// 🎯 IMPORTADO: Seu novo componente isolado de abas
+
 import { TabSelector } from "../../features/requests/components/TabSelector";
 
 import {
@@ -31,6 +31,8 @@ export interface Solicitacao {
   boleto_url: string;
   comprovante_url: string;
   user_id: string;
+  revertida_em?: string | null;
+  motivo_reversao?: string | null;
   forma_pagamento?: string;
   valor?: string;
   pix_tipo?: string;
@@ -176,8 +178,11 @@ export function Dashboard() {
         (payload) => {
           carregarDadosDoBanco();
 
-          // 🎯 ADICIONADO: Ativa o sinalizador se houver novas solicitações concluídas e o usuário não estiver na aba delas
-          if (payload.eventType === "UPDATE" || payload.eventType === "INSERT") {
+         
+          if (
+            payload.eventType === "UPDATE" ||
+            payload.eventType === "INSERT"
+          ) {
             const novoStatus = payload.new?.status;
             if (novoStatus === "comprado") {
               setTemNovaConcluida(true);
@@ -214,7 +219,32 @@ export function Dashboard() {
     }
   }, [currentUserId, isPagador]);
 
-  // 🎯 ALTERADO: Zera a bolinha verde ao alternar para a aba "comprado"
+  const handleDesfazerConclusao = useCallback(
+    async (idSolicitacao: string, motivo: string) => {
+      try {
+        const { error } = await supabase
+          .from("solicitacoes")
+          .update({
+            status: "pendente",
+            data_pagamento: null,
+            comprovante_url: "",
+            revertida_em: new Date().toISOString(),
+            motivo_reversao: motivo, // 🎯 SALVA O MOTIVO NO BANCO
+          })
+          .eq("id", idSolicitacao);
+
+        if (error) throw error;
+
+        await forcarAtualizacaoManual();
+      } catch (e) {
+        console.error("Erro ao desfazer conclusão:", e);
+        alert("Não foi possível reverter esta solicitação.");
+      }
+    },
+    [forcarAtualizacaoManual],
+  );
+
+ 
   const handleTrocaAba = (novaAba: "pendente" | "comprado") => {
     if (abaAtiva === novaAba) return;
 
@@ -336,6 +366,7 @@ export function Dashboard() {
             totalPaginas={totalPaginas}
             paginaSegura={paginaSegura}
             setPaginaAtual={setPaginaAtual}
+            onDesfazer={handleDesfazerConclusao}
             onEdit={(itemEditar) => {
               setSolicitacaoParaEditar(itemEditar);
               setMostrarModal(true);

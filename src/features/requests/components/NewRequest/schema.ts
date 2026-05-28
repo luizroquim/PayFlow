@@ -86,10 +86,9 @@ export const newRequestSchema: yup.ObjectSchema<FormInputs> = yup.object({
             !!value && (REGEX_CPF.test(value) || REGEX_CNPJ.test(value)),
         ),
   }),
-  ted_favorecido: optionalString.when("forma_pagamento", {
-    is: (value: string) => value === "transferencia" || value === "pix",
-    then: (schema) => schema.required("O nome do favorecido é obrigatório."),
-  }),
+  
+  ted_favorecido: optionalString,
+
   boleto_file: yup.mixed<File>().nullable().notRequired(),
   anexo_existente_url: optionalString,
   is_submitting: yup.boolean().required(),
