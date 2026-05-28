@@ -12,7 +12,7 @@ import {
   Coins,
   Undo2,
   TriangleAlert,
-  X, 
+  
 } from "lucide-react";
 import { ModalPaymentDetails } from "../ModalPaymentDetails";
 import { Button, Input } from "../../components/UI"; 
@@ -253,7 +253,7 @@ function RequestCardComponent({
                   setErroValidacao("");
                 }}
               >
-                <X size={14} /> Cancelar
+                 Cancelar
               </S.BotaoConfirmacaoEstorno>
               
               <S.BotaoConfirmacaoEstorno
