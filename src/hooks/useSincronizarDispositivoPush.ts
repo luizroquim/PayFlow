@@ -1,5 +1,4 @@
-// src/hooks/useSincronizarDispositivoPush.ts
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -16,10 +15,12 @@ function urlBase64ToUint8Array(base64String: string) {
 const PUBLIC_VAPID_KEY = import.meta.env.VITE_PUBLIC_VAPID_KEY;
 
 export function useSincronizarDispositivoPush(userId: string | undefined) {
+  
+  const ultimoEndpointSincronizado = useRef<string | null>(null);
+
   useEffect(() => {
     if (!userId || !("serviceWorker" in navigator) || !("Notification" in window)) return;
 
-    // 🛡️ Trava de controle para evitar condições de corrida (race conditions)
     let isCurrentRequestActive = true;
 
     const sincronizarForcado = async () => {
@@ -37,11 +38,19 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
           return;
         }
 
-        console.log("🔄 [SINC] Renovando/Buscando token de push diretamente no Service Worker...");
-        const subscription = await activeReg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY || ""),
-        });
+        // Busca a inscrição de push atual no navegador
+        const existingSubscription = await activeReg.pushManager.getSubscription();
+        
+        let subscription = existingSubscription;
+
+        // Se não existir ou se a chave mudou, faz uma nova inscrição
+        if (!subscription) {
+          console.log("🔄 [SINC] Gerando nova inscrição de push diretamente no Service Worker...");
+          subscription = await activeReg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY || ""),
+          });
+        }
 
         const subJson = subscription.toJSON();
 
@@ -50,20 +59,23 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
           return;
         }
 
-        // Se o useEffect desmontou enquanto buscava o token, aborta para não atropelar a próxima conta
+       
+        if (ultimoEndpointSincronizado.current === subJson.endpoint) {
+          return;
+        }
+
         if (!isCurrentRequestActive) return;
 
-        // Passo A: Remove obrigatoriamente qualquer vínculo antigo do mesmo endpoint
+        console.log("🔄 [SINC] Renovando/Buscando token de push diretamente no Service Worker...");
         console.log(`🗑️ [SINC] Removendo vínculos anteriores deste dispositivo...`);
+        
         await supabase
           .from("push_subscriptions")
           .delete()
           .eq("endpoint", subJson.endpoint);
 
-        // Checa novamente se a requisição ainda é válida antes do insert definitivo
         if (!isCurrentRequestActive) return;
 
-        // Passo B: Cria o novo vínculo limpo para o usuário atual
         console.log(`🎯 [SINC] Criando novo vínculo definitivo para o usuário atual: ${userId}`);
         const { error } = await supabase
           .from("push_subscriptions")
@@ -79,6 +91,8 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
         if (error) {
           console.error("❌ [SINC] Erro crítico ao sincronizar no Supabase:", error.message);
         } else {
+          // 🎯 SALVA NA REFERÊNCIA: Bloqueia qualquer execução futura idêntica até o app fechar ou deslogar
+          ultimoEndpointSincronizado.current = subJson.endpoint;
           console.log("💾 [SINC] Dispositivo sincronizado com sucesso absoluto!");
         }
       } catch (error) {
@@ -88,9 +102,8 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
 
     sincronizarForcado();
 
-    // 🧹 Função de limpeza (cleanup): cancela execuções pendentes se o login mudar abruptamente
     return () => {
       isCurrentRequestActive = false;
     };
-  }, [userId]); 
+  }, [userId]); // Deixamos o userId seguro agora
 }

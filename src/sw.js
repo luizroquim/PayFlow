@@ -1,22 +1,44 @@
-import { precacheAndRoute } from "workbox-precaching";
+import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
+import { clientsClaim } from "workbox-core";
 
-// O Vite PWA precisa dessa linha para injetar o cache e ativar o botão de instalar
+// ==========================================
+// 🚀 ACELERAÇÃO E ATUALIZAÇÃO DO PWA
+// ==========================================
+
+// 🎯 Força o novo Service Worker a pular a espera e se instalar imediatamente
+self.skipWaiting();
+
+// 🎯 Faz o novo SW assumir o controle de todas as abas abertas de forma instantânea
+clientsClaim();
+
+// 🧹 Deleta caches de builds antigos da Vercel para liberar espaço e evitar conflitos
+cleanupOutdatedCaches();
+
+// 📦 O Vite PWA precisa dessa linha para injetar o cache e ativar o botão de instalar
 precacheAndRoute(self.__WB_MANIFEST || []);
 
-// 🎧 Ouve o sinal de Push vindo do servidor (Google FCM / Supabase Edge Function)
+// 🔄 Escuta o comando manual de atualização caso venha de algum componente front-end
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+// ==========================================
+// 🎧 GESTÃO DE NOTIFICAÇÕES PUSH (SEU CÓDIGO)
+// ==========================================
+
+// Ouve o sinal de Push vindo do servidor (Google FCM / Supabase Edge Function)
 self.addEventListener("push", (event) => {
-  // Mensagem padrão "coringa" caso o payload venha vazio
   let data = {
-    title: " Sistema de Pagamentos",
+    title: "Sistema de Pagamentos",
     body: "Nova movimentação no seu painel!",
   };
 
   if (event.data) {
     try {
-      // Tenta ler o JSON customizado enviado pela Edge Function (titulo e status)
       data = event.data.json();
     } catch (e) {
-      // Caso venha como texto simples por algum motivo, joga no corpo da notificação
       data = {
         title: "Sistema de Pagamentos",
         body: event.data.text(),
@@ -24,46 +46,44 @@ self.addEventListener("push", (event) => {
     }
   }
 
-  // Configurações visuais do balão nativo do Sistema Operacional
   const options = {
     body: data.body,
-    icon: data.icon || "/favicon.ico", // 🎯 Ajustado para usar o seu favicon.ico da pasta public
-    badge: "/favicon.ico", // 🎯 Ícone menor de status ajustado para o favicon.ico
-    vibrate: [100, 50, 100], // Padrão de vibração para dispositivos móveis
+    icon: data.icon || "/favicon.ico",
+    badge: "/favicon.ico",
+    vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
       primaryKey: "1",
     },
   };
 
-  // 🔥 Força o Service Worker a manter a thread viva até desenhar a notificação na tela
   event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
-// 🖱️ Define a ação de clique do usuário em cima do balão de notificação
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close(); // Fecha o balão imediatamente da tela após o clique
+// ==========================================
+// 🖱️ COMPORTAMENTO DE CLIQUE NA NOTIFICAÇÃO
+// ==========================================
 
-  // Mapeia as abas abertas para focar no sistema ou abrir uma nova aba
+// Define a ação de clique do usuário em cima do balão de notificação
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((windowClients) => {
-        // Percorre as abas do navegador que estão abertas
         for (let i = 0; i < windowClients.length; i++) {
           const client = windowClients[i];
 
-          // 🟢 Inteligente: Foca na aba se for localhost OU se for o link da sua Vercel
           const urlValida =
             client.url.includes("localhost") ||
             client.url.includes("vercel.app");
 
           if (urlValida && "focus" in client) {
-            return client.focus(); // Traz a aba existente para a frente da tela
+            return client.focus();
           }
         }
 
-        // Se o sistema não estava aberto em nenhuma aba, abre uma nova na raiz do projeto
         if (clients.openWindow) {
           return clients.openWindow("/");
         }
