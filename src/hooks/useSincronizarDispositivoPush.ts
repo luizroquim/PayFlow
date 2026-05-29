@@ -1,3 +1,4 @@
+// src/hooks/useSincronizarDispositivoPush.ts
 import { useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -16,7 +17,7 @@ const PUBLIC_VAPID_KEY = import.meta.env.VITE_PUBLIC_VAPID_KEY;
 
 export function useSincronizarDispositivoPush(userId: string | undefined) {
   
-  // 🎯 EVOLUÇÃO DA TRAVA: Agora guarda o endpoint E o userId que sincronizou por último nesta sessão
+  // 🎯 EVOLUÇÃO DA TRAVA: Guarda o endpoint E o userId que sincronizou por último nesta sessão
   const ultimaSincronizacao = useRef<{ endpoint: string; userId: string } | null>(null);
 
   useEffect(() => {
@@ -58,8 +59,7 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
           return;
         }
 
-        // 🎯 O SEGREDO AQUI: Só bloqueia o loop se for o MESMO endpoint E o MESMO usuário.
-        // Se o endpoint for igual mas o usuário mudou, ele ignora o return e executa a limpeza abaixo!
+        // 🎯 O FILTRO DE LOOP: Só bloqueia se for o mesmo endpoint E o mesmo usuário
         if (
           ultimaSincronizacao.current?.endpoint === subJson.endpoint &&
           ultimaSincronizacao.current?.userId === userId
@@ -69,35 +69,22 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
 
         if (!isCurrentRequestActive) return;
 
-        console.log("🔄 [SINC] Renovando/Buscando token de push diretamente no Service Worker...");
-        console.log(`🗑️ [SINC] Removendo vínculos anteriores deste dispositivo...`);
+        console.log("🔄 [SINC] Executando sincronização atômica via RPC no Supabase...");
         
-        // Remove de forma absoluta qualquer registro antigo com este endpoint (limpando o usuário antigo)
-        await supabase
-          .from("push_subscriptions")
-          .delete()
-          .eq("endpoint", subJson.endpoint);
-
-        if (!isCurrentRequestActive) return;
-
-        console.log(`🎯 [SINC] Criando novo vínculo definitivo para o usuário atual: ${userId}`);
-        const { error } = await supabase
-          .from("push_subscriptions")
-          .insert([
-            {
-              user_id: userId,
-              endpoint: subJson.endpoint,
-              p256dh: subJson.keys?.p256dh,
-              auth: subJson.keys?.auth,
-            }
-          ]);
+        // 🚀 AQUI ESTÁ A MUDANÇA: Substitui o .delete().insert() pela chamada da RPC segura
+        const { error } = await supabase.rpc("sincronizar_dispositivo_push_seguro", {
+          p_user_id: userId,
+          p_endpoint: subJson.endpoint,
+          p_p256dh: subJson.keys?.p256dh || null,
+          p_auth: subJson.keys?.auth || null,
+        });
 
         if (error) {
-          console.error("❌ [SINC] Erro crítico ao sincronizar no Supabase:", error.message);
+          console.error("❌ [SINC] Erro crítico na transação do Supabase:", error.message);
         } else {
-          // 🎯 Atualiza a referência com o par correto de dados
+          // 🎯 Atualiza a referência para travar loops locais
           ultimaSincronizacao.current = { endpoint: subJson.endpoint, userId };
-          console.log("💾 [SINC] Dispositivo sincronizado com sucesso absoluto!");
+          console.log("💾 [SINC] Dispositivo sincronizado com sucesso absoluto via RPC!");
         }
       } catch (error) {
         console.error("❌ [SINC ERROR] Falha na sincronização agressiva:", error);
