@@ -16,7 +16,8 @@ const PUBLIC_VAPID_KEY = import.meta.env.VITE_PUBLIC_VAPID_KEY;
 
 export function useSincronizarDispositivoPush(userId: string | undefined) {
   
-  const ultimoEndpointSincronizado = useRef<string | null>(null);
+  // 🎯 EVOLUÇÃO DA TRAVA: Agora guarda o endpoint E o userId que sincronizou por último nesta sessão
+  const ultimaSincronizacao = useRef<{ endpoint: string; userId: string } | null>(null);
 
   useEffect(() => {
     if (!userId || !("serviceWorker" in navigator) || !("Notification" in window)) return;
@@ -38,12 +39,10 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
           return;
         }
 
-        // Busca a inscrição de push atual no navegador
         const existingSubscription = await activeReg.pushManager.getSubscription();
         
         let subscription = existingSubscription;
 
-        // Se não existir ou se a chave mudou, faz uma nova inscrição
         if (!subscription) {
           console.log("🔄 [SINC] Gerando nova inscrição de push diretamente no Service Worker...");
           subscription = await activeReg.pushManager.subscribe({
@@ -59,8 +58,12 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
           return;
         }
 
-       
-        if (ultimoEndpointSincronizado.current === subJson.endpoint) {
+        // 🎯 O SEGREDO AQUI: Só bloqueia o loop se for o MESMO endpoint E o MESMO usuário.
+        // Se o endpoint for igual mas o usuário mudou, ele ignora o return e executa a limpeza abaixo!
+        if (
+          ultimaSincronizacao.current?.endpoint === subJson.endpoint &&
+          ultimaSincronizacao.current?.userId === userId
+        ) {
           return;
         }
 
@@ -69,6 +72,7 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
         console.log("🔄 [SINC] Renovando/Buscando token de push diretamente no Service Worker...");
         console.log(`🗑️ [SINC] Removendo vínculos anteriores deste dispositivo...`);
         
+        // Remove de forma absoluta qualquer registro antigo com este endpoint (limpando o usuário antigo)
         await supabase
           .from("push_subscriptions")
           .delete()
@@ -91,8 +95,8 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
         if (error) {
           console.error("❌ [SINC] Erro crítico ao sincronizar no Supabase:", error.message);
         } else {
-          // 🎯 SALVA NA REFERÊNCIA: Bloqueia qualquer execução futura idêntica até o app fechar ou deslogar
-          ultimoEndpointSincronizado.current = subJson.endpoint;
+          // 🎯 Atualiza a referência com o par correto de dados
+          ultimaSincronizacao.current = { endpoint: subJson.endpoint, userId };
           console.log("💾 [SINC] Dispositivo sincronizado com sucesso absoluto!");
         }
       } catch (error) {
@@ -105,5 +109,5 @@ export function useSincronizarDispositivoPush(userId: string | undefined) {
     return () => {
       isCurrentRequestActive = false;
     };
-  }, [userId]); // Deixamos o userId seguro agora
+  }, [userId]);
 }
