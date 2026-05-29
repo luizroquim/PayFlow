@@ -11,7 +11,6 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-// Chave pública VAPID real do seu projeto
 const PUBLIC_VAPID_KEY =
   "BDYPSXzHRoR5Ohbn63OMR5XVX_BCqknfPN96jCYjYPSnf2yEMiCVaSrxojvQaRnxYsmEIM4xM60iCoEX9tgwa2k";
 
@@ -28,12 +27,10 @@ export function usePushNotifications() {
       // 🏢 ESTRATÉGIA 1: Busca o Service Worker unificado gerado pelo Vite PWA
       const registrations = await navigator.serviceWorker.getRegistrations();
       if (registrations.length > 0) {
-        // 🎯 AJUSTADO: Agora procura pelo 'sw.js' (que contém o PWA + as Notificações juntos)
         activeRegistration = registrations.find(reg => 
           reg.active && reg.active.scriptURL.includes('sw.js')
         ) || null;
 
-        // Se não achou por nome, mas tem algum rodando, assume ele como plano B
         if (!activeRegistration) {
           activeRegistration = registrations[0];
         }
@@ -42,7 +39,6 @@ export function usePushNotifications() {
       // 🛠️ ESTRATÉGIA 2 (FALLBACK): Se nenhum worker do PWA estiver ativo, registra o sw.js
       if (!activeRegistration) {
         console.log("Injetando o Service Worker unificado do PWA...");
-        // 🎯 AJUSTADO: Mudado de '/push-sw.js' para '/sw.js'
         activeRegistration = await navigator.serviceWorker.register("/sw.js", {
           scope: "/",
         });
@@ -52,14 +48,22 @@ export function usePushNotifications() {
         throw new Error("Não foi possível mapear nenhum Service Worker ativo.");
       }
 
-      // 🔔 Pede permissão nativa (Abre o pop-up no navegador)
+      // 🎯 OTIMIZAÇÃO SÊNIOR: Verifica se já existe uma inscrição ativa antes de pedir/forçar
+      const inscricaoExistente = await activeRegistration.pushManager.getSubscription();
+      if (inscricaoExistente) {
+        console.log("ℹ️ [PUSH] Inscrição de push existente localizada. Reaproveitando token.");
+        return inscricaoExistente;
+      }
+
+      // 🔔 Pede permissão nativa (Abre o pop-up no navegador se ainda não foi aceito)
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
         console.warn("Usuário recusou as notificações.");
         return null;
       }
 
-      // 🔑 Gera o token criptográfico de inscrição usando o worker do PWA
+      // 🔑 Gera o token criptográfico de inscrição usando o worker do PWA de forma limpa
+      console.log("🔄 [PUSH] Criando nova inscrição criptográfica via PushManager...");
       const subscription = await activeRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
